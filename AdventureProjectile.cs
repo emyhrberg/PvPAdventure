@@ -147,7 +147,7 @@ public class AdventureProjectile : GlobalProjectile
                 position.Y,
                 0f,
                 0f,
-                298,
+                ProjectileID.SpiritHeal,
                 0,
                 0f,
                 self.owner,
