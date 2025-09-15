@@ -304,6 +304,11 @@ Mods: {
 					Label: Ghost Heal Multiplier Wearers
 					Tooltip: ""
 				}
+
+				GhostHealMaxDistanceNpc: {
+					Label: Ghost Heal Max Distance Npc
+					Tooltip: ""
+				}
 			}
 
 			AdventureClientConfig: {

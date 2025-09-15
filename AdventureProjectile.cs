@@ -23,6 +23,9 @@ public class AdventureProjectile : GlobalProjectile
 
         // Make Starlight only give 4-iframes (Projectile.playerImmune).
         IL_Projectile.Damage += EditProjectileDamage;
+
+        // Add configurable distance for Ghost Heal when damaging NPCs.
+        IL_Projectile.ghostHeal += EditProjectileghostHeal;
     }
 
     private static EntitySource_ItemUse GetItemUseSource(Projectile projectile, Projectile lastProjectile)
@@ -177,5 +180,25 @@ public class AdventureProjectile : GlobalProjectile
 
                 return 40;
             });
+    }
+
+    private void EditProjectileghostHeal(ILContext il)
+    {
+        var cursor = new ILCursor(il);
+
+        // Find a call to Entity.Distance and a float constant load...
+        cursor.GotoNext(i => i.MatchCall<Entity>("Distance") && i.Next.MatchLdcR4(out _));
+        // ...to go back to the float constant load...
+        cursor.Index += 1;
+
+        // ...to remove it...
+        cursor.Remove();
+
+        // ...and emit our own delegate to return the value.
+        cursor.EmitDelegate(() =>
+        {
+            var adventureConfig = ModContent.GetInstance<AdventureConfig>();
+            return adventureConfig.Combat.GhostHealMaxDistanceNpc;
+        });
     }
 }
