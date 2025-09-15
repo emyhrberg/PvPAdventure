@@ -201,4 +201,14 @@ public class AdventureProjectile : GlobalProjectile
             return adventureConfig.Combat.GhostHealMaxDistanceNpc;
         });
     }
+
+    public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers)
+    {
+        // Replicate what vanilla does against NPCs for the Staff of Earth
+        if (projectile.type == ProjectileID.BoulderStaffOfEarth && projectile.velocity.Length() < 3.5f)
+        {
+            modifiers.SourceDamage /= 2;
+            modifiers.Knockback /= 2;
+        }
+    }
 }
