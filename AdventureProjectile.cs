@@ -26,6 +26,9 @@ public class AdventureProjectile : GlobalProjectile
 
         // Add configurable distance for Ghost Heal when damaging NPCs.
         IL_Projectile.ghostHeal += EditProjectileghostHeal;
+
+        // Track if the Friendly Shadowbeam Staff has bounced.
+        IL_Projectile.HandleMovement += EditProjectileHandleMovement;
     }
 
     private static EntitySource_ItemUse GetItemUseSource(Projectile projectile, Projectile lastProjectile)
@@ -209,6 +212,46 @@ public class AdventureProjectile : GlobalProjectile
         {
             modifiers.SourceDamage /= 2;
             modifiers.Knockback /= 2;
+        }
+
+        var adventureConfig = ModContent.GetInstance<AdventureConfig>();
+        if (projectile.type == ProjectileID.ShadowBeamFriendly && projectile.localAI[1] > 0)
+            modifiers.SourceDamage *= 1.0f - adventureConfig.Combat.ProjectileCollisionDamageReduction;
+    }
+
+    private void EditProjectileHandleMovement(ILContext il)
+    {
+        var cursor = new ILCursor(il);
+
+        // Make sure when we emit we are put inside the respective label.
+        cursor.MoveAfterLabels();
+
+        // First, find a load to Projectile.type and a constant load to the Friendly Shadowbeam Staff projectile ID...
+        cursor.GotoNext(i => i.MatchLdfld<Projectile>("type") && i.Next.MatchLdcI4(ProjectileID.ShadowBeamFriendly));
+
+        // ...then find a load to Vector.X, an add instruction, and a store instruction...
+        cursor.GotoNext(i => i.MatchLdfld<Vector2>("X") && i.Next.MatchAdd() && i.Next.Next.MatchStindR4());
+
+        // ...and go forward to the store instruction...
+        cursor.Index += 3;
+        // ...to prepare a delegate call...
+        cursor.EmitLdarg0();
+        cursor.EmitDelegate(DidBounce);
+
+        // ...then find a load to Vector.Y, an add instruction, and a store instruction...
+        cursor.GotoNext(i => i.MatchLdfld<Vector2>("Y") && i.Next.MatchAdd() && i.Next.Next.MatchStindR4());
+
+        // ...and go forward to the store instruction...
+        cursor.Index += 3;
+        // ...to prepare a delegate call...
+        cursor.EmitLdarg0();
+        cursor.EmitDelegate(DidBounce);
+
+        return;
+
+        void DidBounce(Projectile self)
+        {
+            self.localAI[1] = 1;
         }
     }
 }

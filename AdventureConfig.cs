@@ -199,6 +199,9 @@ public class AdventureConfig : ModConfig
         [Range(0.0f, 3000.0f)]
         [DefaultValue(3000.0f)]
         public float GhostHealMaxDistanceNpc { get; set; }
+
+        [Description("Reduce the damage of certain projectiles after they have collided or bounced")]
+        public float ProjectileCollisionDamageReduction { get; set; }
     }
 
     public class Statistics : IEquatable<Statistics>
