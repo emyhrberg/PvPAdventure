@@ -296,6 +296,10 @@ public class GameManager : ModSystem
     {
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            // You can only use this command from chat in singleplayer.
+            if (caller.CommandType == CommandType.Chat && Main.netMode != NetmodeID.SinglePlayer)
+                return;
+
             if (args.Length == 0 || !int.TryParse(args[0], out var time))
             {
                 caller.Reply("Invalid time.", Color.Red);
@@ -319,7 +323,7 @@ public class GameManager : ModSystem
         }
 
         public override string Command => "startgame";
-        public override CommandType Type => CommandType.Console;
+        public override CommandType Type => CommandType.Chat | CommandType.Console;
     }
 
     public class TimeLeftCommand : ModCommand
