@@ -29,6 +29,9 @@ public class AdventureProjectile : GlobalProjectile
 
         // Track if the Friendly Shadowbeam Staff has bounced.
         IL_Projectile.HandleMovement += EditProjectileHandleMovement;
+
+        // Track if the Light Disc has bounced.
+        On_Projectile.LightDisc_Bounce += OnProjectileLightDisc_Bounce;
     }
 
     private static EntitySource_ItemUse GetItemUseSource(Projectile projectile, Projectile lastProjectile)
@@ -215,7 +218,12 @@ public class AdventureProjectile : GlobalProjectile
         }
 
         var adventureConfig = ModContent.GetInstance<AdventureConfig>();
-        if (projectile.type == ProjectileID.ShadowBeamFriendly && projectile.localAI[1] > 0)
+
+        var bounced =
+            projectile.type == ProjectileID.ShadowBeamFriendly && projectile.localAI[1] > 0
+            || projectile.type == ProjectileID.LightDisc && projectile.localAI[0] > 0;
+
+        if (bounced)
             modifiers.SourceDamage *= 1.0f - adventureConfig.Combat.ProjectileCollisionDamageReduction;
     }
 
@@ -253,5 +261,12 @@ public class AdventureProjectile : GlobalProjectile
         {
             self.localAI[1] = 1;
         }
+    }
+
+    private void OnProjectileLightDisc_Bounce(On_Projectile.orig_LightDisc_Bounce orig, Projectile self,
+        Vector2 hitPoint, Vector2 normal)
+    {
+        self.localAI[0] = 1;
+        orig(self, hitPoint, normal);
     }
 }
