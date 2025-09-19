@@ -202,6 +202,8 @@ public class AdventureConfig : ModConfig
 
         [Description("Reduce the damage of certain projectiles after they have collided or bounced")]
         public float ProjectileCollisionDamageReduction { get; set; }
+
+        public Dictionary<ProjectileDefinition, float> NoLineOfSightDamageReduction { get; set; } = new();
     }
 
     public class Statistics : IEquatable<Statistics>

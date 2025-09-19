@@ -225,6 +225,10 @@ public class AdventureProjectile : GlobalProjectile
 
         if (bounced)
             modifiers.SourceDamage *= 1.0f - adventureConfig.Combat.ProjectileCollisionDamageReduction;
+
+        if (adventureConfig.Combat.NoLineOfSightDamageReduction.TryGetValue(new(projectile.type),
+                out var damageReduction) && projectile.TryGetOwner(out var owner) && !Collision.CanHit(owner, target))
+            modifiers.SourceDamage *= 1.0f - damageReduction;
     }
 
     private void EditProjectileHandleMovement(ILContext il)
