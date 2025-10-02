@@ -233,7 +233,10 @@ public class PointsManager : ModSystem
 
         VisualizePointChange(pointsToAward, team, npc.position, $"[c/F58522:{fullName}]");
 
-        NetMessage.SendData(MessageID.WorldData);
+        if (Main.dedServ)
+            NetMessage.SendData(MessageID.WorldData);
+        else
+            UiScoreboard.Invalidate();
     }
 
     public void AwardPlayerKillToTeam(Player killer, Player victim)
@@ -264,7 +267,10 @@ public class PointsManager : ModSystem
             $"[c/{Main.teamColor[victim.team].Hex3()}:{victim.name}]");
         VisualizePointChange(-pointsToTrade, (Team)victim.team, victim.position);
 
-        NetMessage.SendData(MessageID.WorldData);
+        if (Main.dedServ)
+            NetMessage.SendData(MessageID.WorldData);
+        else
+            UiScoreboard.Invalidate();
     }
 
     public class UIScoreboard(PointsManager pointsManager) : UIState
