@@ -532,6 +532,42 @@ public class PointsManager : ModSystem
         }
     }
 
+    public class SetPointsCommand : ModCommand
+    {
+        public override void Action(CommandCaller caller, string input, string[] args)
+        {
+            // You can only use this command from chat in singleplayer.
+            if (caller.CommandType == CommandType.Chat && Main.netMode != NetmodeID.SinglePlayer)
+                return;
+
+            if (args.Length < 2)
+                return;
+
+            if (!Enum.TryParse(args[0], true, out Team team) || (int)team >= Enum.GetValues<Team>().Length)
+            {
+                caller.Reply("Invalid team.", Color.Red);
+                return;
+            }
+
+            if (!int.TryParse(args[1], out var points))
+            {
+                caller.Reply("Invalid points.", Color.Red);
+                return;
+            }
+
+            var pointsManager = ModContent.GetInstance<PointsManager>();
+            pointsManager._points[team] = points;
+
+            if (Main.dedServ)
+                NetMessage.SendData(MessageID.WorldData);
+            else
+                ModContent.GetInstance<PointsManager>().UiScoreboard.Invalidate();
+        }
+
+        public override string Command => "setpoints";
+        public override CommandType Type => CommandType.Chat | CommandType.Console;
+    }
+
     private static string FormatPointsVisually(int points) =>
         $"{points:+0;-#} point{(Math.Abs(points) == 1 ? "" : "s")}";
 }
