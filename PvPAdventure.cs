@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using MonoMod.Cil;
+using PvPAdventure.Core.Features.Matchmaking;
 using PvPAdventure.System;
 using Terraria;
 using Terraria.Enums;
@@ -45,12 +47,103 @@ public class PvPAdventure : Mod
         cursor.RemoveRange(5);
     }
 
+    #region Matchmaking
+    private readonly HashSet<int> _queuedPlayers = new();
+
+    internal void BroadcastQueueCounts()
+    {
+        if (Main.netMode != NetmodeID.Server) return;
+
+        var p = GetPacket();
+        p.Write((byte)AdventurePacketIdentifier.QueueCounts);
+        p.Write(GetOnlineCount());
+        p.Write(_queuedPlayers.Count);
+        p.Send();
+    }
+
+    internal void PruneQueueInactive()
+    {
+        if (Main.netMode != NetmodeID.Server) return;
+
+        // remove any queued indices that are no longer active
+        var toRemove = new List<int>();
+        foreach (var who in _queuedPlayers)
+        {
+            var plr = who >= 0 && who < Main.maxPlayers ? Main.player[who] : null;
+            if (plr == null || !plr.active) toRemove.Add(who);
+        }
+        if (toRemove.Count > 0)
+        {
+            foreach (var who in toRemove) _queuedPlayers.Remove(who);
+            BroadcastQueueCounts();
+        }
+    }
+    private void BroadcastCounts()
+    {
+        if (!Main.dedServ) return;
+
+        var p = GetPacket();
+        p.Write((byte)AdventurePacketIdentifier.QueueCounts);
+        p.Write(GetOnlineCount());
+        p.Write(_queuedPlayers.Count);
+        p.Send(); // to all
+    }
+
+    private static int GetOnlineCount()
+    {
+        int c = 0;
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            var p = Main.player[i];
+            if (p != null && p.active) c++;
+        }
+        return c;
+    }
+    #endregion Matchmaking
+
     public override void HandlePacket(BinaryReader reader, int whoAmI)
     {
         var id = (AdventurePacketIdentifier)reader.ReadByte();
 
         switch (id)
         {
+            case AdventurePacketIdentifier.QueueToggle:
+                {
+                    bool isQueuing = reader.ReadBoolean();
+
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        if (isQueuing) _queuedPlayers.Add(whoAmI);
+                        else _queuedPlayers.Remove(whoAmI);
+
+                        BroadcastCounts();
+                    }
+                    break;
+                }
+
+            case AdventurePacketIdentifier.QueueCounts:
+                {
+                    int online = reader.ReadInt32();
+                    int queuing = reader.ReadInt32();
+
+                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                        PvPClientBridge.ApplyCounts?.Invoke(online, queuing);
+
+                    break;
+                }
+
+            case AdventurePacketIdentifier.QueueCountsRequest:
+                {
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        var p = GetPacket();
+                        p.Write((byte)AdventurePacketIdentifier.QueueCounts);
+                        p.Write(GetOnlineCount());
+                        p.Write(_queuedPlayers.Count);
+                        p.Send(whoAmI);
+                    }
+                    break;
+                }
             case AdventurePacketIdentifier.BountyTransaction:
             {
                 var bountyTransaction = BountyManager.Transaction.Deserialize(reader);

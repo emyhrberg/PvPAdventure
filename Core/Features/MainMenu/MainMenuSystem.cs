@@ -22,12 +22,17 @@ internal sealed class MainMenuSystem : ModSystem
     {
         ui = new UserInterface();
 
-        pvpScreenState = new PVPScreenState(onBack: () =>
-        {
-            Main.menuMode = 0;    // vanilla main menu
-            ui.SetState(null);    // hide our UI
-            Main.blockMouse = false;
-        });
+        pvpScreenState = new PVPScreenState(
+            onBack: () => {
+                Main.menuMode = 0;
+                ui.SetState(null);
+                Main.blockMouse = false;
+            },
+            onCloseUi: () => {
+                ui.SetState(null);        
+                Main.blockMouse = false;
+            }
+        );
 
         pvpScreenState.Activate(); // ensures OnInitialize runs
 

@@ -7,5 +7,9 @@ public enum AdventurePacketIdentifier : byte
     WorldMapLighting,
     PingPong,
     PlayerItemPickup,
-    PlayerTeam
+    PlayerTeam,
+
+    QueueToggle,        // client -> server: player toggled queue on/off
+    QueueCounts,        // server -> client: online + queued counts
+    QueueCountsRequest  // client -> server: please send counts to me
 }

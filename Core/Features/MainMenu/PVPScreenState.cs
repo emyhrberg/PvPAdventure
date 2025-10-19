@@ -1,129 +1,197 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using PvPAdventure.Core.Features.Matchmaking;
+using PvPAdventure.Core.Features.MainMenu.UI;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
+using Terraria.IO;
 using Terraria.UI;
 
 public sealed class PVPScreenState : UIState
 {
-    // Title
+    private const string Hostname = "Tpvpa.terraria.sh";
+    private const int Port = 7777;
+    private const int QueueTarget = 3;
+    private const float ConnectDelaySeconds = 1f;
+
     private UIText title;
-
-    // Matchmaking button
-    private UITextPanel<string> matchmakingButton;
-
-    // Back button
-    private UITextPanel<string> backButton;
+    private HoverButton matchmakingButton;
+    private HoverButton backButton;
     private readonly Action onBackButtonPressed;
-
-    // Debug text
+    private readonly Action onCloseUi;
     private UIText debugText;
 
-    // ----------------------------------------
-    // Matchmaking variables
-    private bool isQueuing = false;
+    private bool isQueuing;
+    private bool isConnecting;
+    private float connectTimer = -1f;
+    private string host;
+    private int port;
     private int playersOnlineCount = 1;
     private int playersQueuingCount = 0;
 
-    // Constructor
-    public PVPScreenState(Action onBack)
+    public PVPScreenState(Action onBack, Action onCloseUi)
     {
         onBackButtonPressed = onBack;
+        this.onCloseUi = onCloseUi;
     }
 
     public override void OnInitialize()
     {
-        // Title
-        title = new UIText("PvP Adventure", 1.1f, true) { HAlign = 0.5f };
-        title.Top.Set(200, 0f);
-        Append(title);
-
-        // Matchmaking button
-        matchmakingButton = new UITextPanel<string>("Matchmaking", 0.9f, true);
-        matchmakingButton.Width.Set(180f, 0f);
-        matchmakingButton.Height.Set(44f, 0f);
-        matchmakingButton.HAlign = 0.5f;
-        matchmakingButton.Top.Set(320, 0f);
-        matchmakingButton.DrawPanel = true;
-        matchmakingButton.BackgroundColor = new Color(63, 82, 151) * 0.7f;
-        matchmakingButton.BorderColor = Color.Black;
-        matchmakingButton.OnLeftClick += (_, __) => onMatchmakingPressed();
-        matchmakingButton.OnMouseOver += (_, __) =>
+        MatchmakingClient.OnCounts = (online, queuing) =>
         {
-            SoundEngine.PlaySound(SoundID.MenuTick);
-            matchmakingButton.BorderColor = new Color(255, 240, 20);
+            playersOnlineCount = online;
+            playersQueuingCount = queuing;
+            UpdateDebug();
         };
-        matchmakingButton.OnMouseOut += (_, __) => matchmakingButton.BorderColor = Color.Black;
-        Append(matchmakingButton);
+        MatchmakingClient.RequestCounts();
 
-        // Back button
-        backButton = new UITextPanel<string>("Back", 0.9f, true);
-        backButton.Width.Set(180f, 0f);
-        backButton.Height.Set(44f, 0f);
-        backButton.HAlign = 0.5f;
-        backButton.Top.Set(700, 0);
-        backButton.DrawPanel = true;
-        backButton.BackgroundColor = new Color(63, 82, 151) * 0.7f;
-        backButton.BorderColor = Color.Black;
-        backButton.OnLeftClick += (_, __) => onBackButtonPressed?.Invoke();
-        backButton.OnMouseOver += (_, __) =>
-        {
-            SoundEngine.PlaySound(SoundID.MenuTick);
-            backButton.BorderColor = new Color(255, 240, 20);
-        };
-        backButton.OnMouseOut += (_, __) => backButton.BorderColor = Color.Black;
-        Append(backButton);
+        title = UiFactory.Title("PvP Adventure", 200f, this);
+        matchmakingButton = UiFactory.Button("Play Ranked", 400f, this);
+        backButton = UiFactory.Button("Back", 700f, this);
 
-        // Debug text
-        debugText = new("PvP Adventure Info", textScale: 1, large: false);
+        matchmakingButton.OnLeftClick += (_, __) => OnMatchmakingPressed();
+        backButton.OnLeftClick += (_, __) => GoBack();
+
+        debugText = new UIText("PvP Adventure Info", 1, false) { HAlign = 0.5f };
         debugText.Top.Set(255, 0);
-        debugText.Left.Set(0, 0);
-        debugText.HAlign = 0.5f;
         Append(debugText);
 
-        // TODO: Initialize matchmaking variables from server
-        // TODO: Send this client's matchmaking status to server
+        UpdateDebug();
     }
 
-    private void onMatchmakingPressed()
+    private void OnMatchmakingPressed()
     {
-        // Toggle flag
+        if (isConnecting)
+        {
+            isConnecting = false;
+            connectTimer = -1f;
+
+            if (isQueuing)
+            {
+                isQueuing = false;
+                playersQueuingCount--;
+                if (playersQueuingCount < 0) playersQueuingCount = 0;
+                MatchmakingClient.SendToggle(false);
+            }
+
+            matchmakingButton.SetLabel("Play Ranked");
+            SoundEngine.PlaySound(SoundID.MenuClose);
+            UpdateDebug();
+            return;
+        }
+
         isQueuing = !isQueuing;
-        
-        // Play sound
-        SoundEngine.PlaySound(isQueuing ? SoundID.MenuClose : SoundID.MenuOpen);
+        matchmakingButton.SetLabel(isQueuing ? "Cancel" : "Play Ranked");
+        SoundEngine.PlaySound(isQueuing ? SoundID.MenuOpen : SoundID.MenuClose);
 
-        // Set text
-        matchmakingButton.SetText(isQueuing ? "Cancel" : "Play Ranked");
-
-        // Set players queuing count
         playersQueuingCount += isQueuing ? 1 : -1;
+        if (playersQueuingCount < 0) playersQueuingCount = 0;
+
+        MatchmakingClient.SendToggle(isQueuing);
+        UpdateDebug();
+
+        if (isQueuing && playersQueuingCount >= QueueTarget)
+        {
+            isConnecting = true;
+            connectTimer = ConnectDelaySeconds;
+            host = Hostname; 
+
+            // TODO temp fix
+            host = "94.130.143.111";
+
+            port = Port;
+        }
     }
 
     public override void Draw(SpriteBatch sb)
     {
         base.Draw(sb);
-
-        // Debug text
-        debugText.SetText(
-            $"Players Online: {playersOnlineCount} \n" +
-            $"Players Queuing: {playersQueuingCount} \n"
-        );
     }
 
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
-        if (Main.hasFocus &&
-            Main.keyState.IsKeyDown(Keys.Escape) &&
-            !Main.oldKeyState.IsKeyDown(Keys.Escape))
+
+        if (Main.menuMode == 14 || Main.menuMode == 10)
+            onCloseUi?.Invoke();
+
+        if (Main.hasFocus && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
         {
-            SoundEngine.PlaySound(SoundID.MenuClose);
-            onBackButtonPressed?.Invoke();
+            GoBack();
+            return;
         }
+
+        if (isConnecting && connectTimer > 0f)
+        {
+            connectTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (connectTimer <= 0f)
+            {
+                connectTimer = 0f;
+                isConnecting = false;
+                matchmakingButton.SetLabel("Play Ranked");
+                AutoConnect(host, port);
+            }
+            UpdateDebug();
+        }
+    }
+
+    private void UpdateDebug()
+    {
+        var phase = isConnecting && connectTimer > 0f
+            ? $"Connecting in {(int)Math.Ceiling(connectTimer)}…"
+            : (isQueuing ? "Searching…" : "Idle");
+
+        debugText?.SetText(
+            $"Server: {Hostname}:{Port}\n" +
+            $"Players Online: {playersOnlineCount}\n" +
+            $"Players Queuing: {playersQueuingCount} / {QueueTarget}\n" +
+            phase
+        );
+    }
+
+    private void GoBack()
+    {
+        if (isQueuing)
+        {
+            isQueuing = false;
+            matchmakingButton.SetLabel("Play Ranked");
+            playersQueuingCount--;
+            if (playersQueuingCount < 0) playersQueuingCount = 0;
+            MatchmakingClient.SendToggle(false);
+            UpdateDebug();
+        }
+
+        isConnecting = false;
+        connectTimer = -1f;
+        SoundEngine.PlaySound(SoundID.MenuClose);
+        onBackButtonPressed?.Invoke();
+    }
+
+    private void AutoConnect(string h, int p)
+    {
+        onCloseUi?.Invoke();
+
+        Main.LoadPlayers();
+        var player = Main.PlayerList.FirstOrDefault();
+        if (player != null) Main.SelectPlayer(player);
+
+        Main.menuMultiplayer = true;  
+        Main.menuServer = false;     
+        Main.autoPass = true;
+
+        Netplay.ListenPort = p;
+        Main.getIP = (h ?? "").Trim();
+
+        Netplay.SetRemoteIPAsync(Main.getIP, () =>
+        {
+            Main.menuMode = 14;                     
+            Main.statusText = $"Connecting to {h}:{p}";
+            Netplay.StartTcpClient();              
+        });
     }
 }
