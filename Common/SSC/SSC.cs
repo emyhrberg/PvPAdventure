@@ -268,7 +268,7 @@ public class SSC : ModSystem
                     //$"Welcome, {steamName}! — " +
                     $"Playtime: {FormatPlayTime(Main.ActivePlayerFileData.GetPlayTime())}" +
                     $"{positionText}",
-                    Color.MediumPurple
+                    Main.OurFavoriteColor
                 );
             }
             catch (Exception e)

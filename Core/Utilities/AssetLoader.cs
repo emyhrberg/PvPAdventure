@@ -43,7 +43,9 @@ public static class Ass
     public static Asset<Texture2D> Spawnbox;
 
     // Admin tools assets
-    public static Asset<Texture2D> Icon_Reset;
+    public static Asset<Texture2D> Icon_Refresh;
+    public static Asset<Texture2D> Icon_Refresh2;
+    public static Asset<Texture2D> Icon_Refresh3;
     public static Asset<Texture2D> Icon_Resize;
     public static Asset<Texture2D> Slider;
     public static Asset<Texture2D> SliderHighlight;
@@ -72,9 +74,13 @@ public static class Ass
     // Spectate
     public static Asset<Texture2D> BG_Shimmer; 
     public static Asset<Texture2D> BG_Biome;
-    public static Asset<Texture2D> BG_WorldInfo;
+    public static Asset<Texture2D> BG_Ship;
     public static Asset<Texture2D> Shimmer; // 32x32
     public static Asset<Texture2D> Biome; // 32x32
+    public static Asset<Texture2D> CollapseDown; // 32x32
+    public static Asset<Texture2D> CollapseUp; // 32x32
+    public static Asset<Texture2D> Ghost; // 18x18. for use in map
+    public static Asset<Texture2D> GhostLeft; // 18x18. for use in map
 
     public static Asset<Texture2D> HeldItem; // 32x32
     public static Asset<Texture2D> ButtonTeleport; // 32x32
@@ -86,6 +92,7 @@ public static class Ass
     public static Asset<Texture2D> Icon_Eye2; // 32x32
     public static Asset<Texture2D> Icon_Eye3; // 32x32
     public static Asset<Texture2D> Icon_NPC; // 32x32
+    public static Asset<Texture2D> Icon_NPCs; // 32x32
     public static Asset<Texture2D> List; // 32x32
     public static Asset<Texture2D> Grid; // 32x32
     public static Asset<Texture2D> Sort; // 32x32
@@ -209,6 +216,8 @@ public static class Ass
                 }
             }
         }
+
+        Icon_NPCs ??= Icon_NPC;
 
         Initialized = true;
     }

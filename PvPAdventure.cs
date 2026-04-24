@@ -97,7 +97,7 @@ public class PvPAdventure : Mod
                 break;
 
             case AdventurePacketIdentifier.Spectator:
-                Common.Spectator.SpectatorNetHandler.Receive(r, whoAmI);
+                Common.Spectator.Net.SpectatorNetHandler.Receive(r, whoAmI);
                 break;
 
             case AdventurePacketIdentifier.SessionTracker:

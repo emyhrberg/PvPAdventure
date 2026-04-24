@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PvPAdventure.Common.Chat;
+using PvPAdventure.Common.Spectator;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
@@ -19,6 +21,7 @@ public class SpawnHooks : ModSystem
     {
         On_Player.HasUnityPotion += ForceUnityPotion;
         On_Player.Spawn_SetPosition += ApplySelectedSpawn;
+        On_Player.Teleport += TPOverride;
         On_Main.DrawInterface_35_YouDied += DrawDeathText;
         On_Main.TriggerPing += SkipPingWhileHoveringSelector;
     }
@@ -26,6 +29,7 @@ public class SpawnHooks : ModSystem
     public override void Unload()
     {
         On_Player.HasUnityPotion -= ForceUnityPotion;
+        On_Player.Teleport -= TPOverride;
         On_Player.Spawn_SetPosition -= ApplySelectedSpawn;
         On_Main.DrawInterface_35_YouDied -= DrawDeathText;
         On_Main.TriggerPing -= SkipPingWhileHoveringSelector;
@@ -33,11 +37,21 @@ public class SpawnHooks : ModSystem
 
     private static bool ForceUnityPotion(On_Player.orig_HasUnityPotion orig, Player self)
     {
+        // Spectators/ghosts can always teleport
+        if (self.whoAmI == Main.myPlayer && SpectatorSystem.IsInSpectateMode(self))
+            return true;
+
+        // Spawn selector UI is open and player can teleport, allow teleportation
         if (SpawnSystem.IsUiOpen && SpawnSystem.CanTeleport)
             return true;
 
         return false;
         //return orig(self);
+    }
+
+    private void TPOverride(On_Player.orig_Teleport orig, Player self, Vector2 newPos, int Style = 0, int extraInfo = 0)
+    {
+        orig(self, newPos, Style, extraInfo);
     }
 
     private static void TeleportAndSync(Player p, Vector2 pos)
@@ -84,7 +98,7 @@ public class SpawnHooks : ModSystem
                 Player.Spawn_ForceClearArea(fx, fy);
 
             orig(self, fx, fy);
-            TeleportChat.Announce(self, type);
+            SpawnSelectorChat.Announce(self, type);
             sp.ClearSelection();
             return;
         }
@@ -98,7 +112,7 @@ public class SpawnHooks : ModSystem
             else
             {
                 self.TeleportationPotion();
-                TeleportChat.Announce(self, type);
+                SpawnSelectorChat.Announce(self, type);
             }
 
             sp.ClearSelection();
@@ -110,7 +124,7 @@ public class SpawnHooks : ModSystem
             if (PortalSystem.TryGetPortalWorldPos(self, out Vector2 portalWorldPos))
             {
                 TeleportAndSync(self, PortalTeleportPos(self, portalWorldPos));
-                TeleportChat.Announce(self, type);
+                SpawnSelectorChat.Announce(self, type);
             }
 
             sp.ClearSelection();
@@ -126,7 +140,7 @@ public class SpawnHooks : ModSystem
                 if (PortalSystem.TryGetPortalWorldPos(portalOwner, out Vector2 portalWorldPos))
                 {
                     TeleportAndSync(self, PortalTeleportPos(self, portalWorldPos));
-                    TeleportChat.Announce(self, type, idx);
+                    SpawnSelectorChat.Announce(self, type, idx);
                 }
             }
 
