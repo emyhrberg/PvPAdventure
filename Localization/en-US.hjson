@@ -235,7 +235,8 @@ Mods: {
 				Tooltip:
 					'''
 					Gaze in the mirror to go on adventures
-					Right click to use
+					Creates a portal 
+					Allows you to choose a spawn
 					'''
 			}
 
@@ -458,7 +459,7 @@ Mods: {
 				}
 
 				ShowDebugMessages: {
-					Label: Debug Messages
+					Label: Show Debug Messages
 					Tooltip:
 						'''
 						Sends lots of chat messages useful for development flow and debugging.
@@ -467,7 +468,7 @@ Mods: {
 				}
 
 				ShowSavePlayerMessages: {
-					Label: Save Messages
+					Label: Show Save Messages
 					Tooltip: Sends a local chat message whenever the player file is saved
 				}
 
@@ -527,8 +528,13 @@ Mods: {
 				}
 
 				ShowTeleportPlayerMessages: {
-					Label: Show Teleport Player Messages
+					Label: Show Teleport Messages
 					Tooltip: Sends a team message when players use the spawn selector to teleport
+				}
+
+				ShowChatChannelPrefixes: {
+					Label: Show Chat Channel Prefixes
+					Tooltip: ""
 				}
 			}
 
@@ -831,6 +837,11 @@ Mods: {
 
 				AutoAdmins: {
 					Label: Auto Admins
+					Tooltip: ""
+				}
+
+				SpawnTeleportCooldownSeconds: {
+					Label: Spawn Teleport Cooldown Seconds
 					Tooltip: ""
 				}
 			}

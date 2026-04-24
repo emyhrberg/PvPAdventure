@@ -3,10 +3,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using PvPAdventure.Common.Arenas.UI;
 using PvPAdventure.Common.Bounties;
+using PvPAdventure.Common.Chat;
 using PvPAdventure.Common.GameTimer;
 using PvPAdventure.Common.Spectator.UI.State;
 using PvPAdventure.Common.Statistics;
-using PvPAdventure.Common.Teams;
 using PvPAdventure.Content.Items;
 using PvPAdventure.Core.Config;
 using Terraria;
@@ -26,6 +26,20 @@ public class Keybinds : ModSystem
     public ModKeybind ArenasMenu { get; private set; }
     public ModKeybind SpectateMenu { get; private set; }
     public ModKeybind UseAdventureMirror { get; private set; }
+
+    #region Adventure mirror label
+    public static string UseAdventureMirrorLabel => GetLabel(ModContent.GetInstance<Keybinds>().UseAdventureMirror, "assign a keybind in Controls");
+    private static string GetLabel(ModKeybind keybind, string unboundText = "assign a keybind in Controls")
+    {
+        if (keybind is null)
+            return unboundText;
+
+        var keys = keybind.GetAssignedKeys();
+        keys.RemoveAll(static key => string.IsNullOrWhiteSpace(key));
+
+        return keys.Count > 0 ? string.Join(" / ", keys) : unboundText;
+    }
+    #endregion
 
     public override void Load()
     {

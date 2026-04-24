@@ -59,12 +59,12 @@ public class ClientConfig : ModConfig
     public SoundEffectConfig SoundEffect = new();
 
     [Header("Chat")]
-    [DefaultValue(false)] public bool TabToSwitchChannel;
+    [DefaultValue(true)] public bool ShowChatChannelPrefixes;
     [DefaultValue(true)] public bool ShowSavePlayerMessages;
     [DefaultValue(true)] public bool ShowTeleportPlayerMessages;
     [DefaultValue(false)] public bool ShowDebugMessages;
 
-    #region Configs
+    #region NestedConfigTypes
     public class SoundEffectConfig
     {
         public abstract class MarkerConfig<TEnum>
