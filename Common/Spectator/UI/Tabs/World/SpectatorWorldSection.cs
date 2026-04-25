@@ -6,7 +6,7 @@ using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator._Deprecated.World;
+namespace PvPAdventure.Common.Spectator.UI.Tabs.World;
 
 internal sealed class SpectatorWorldSection : UIPanel
 {

@@ -4,7 +4,7 @@ using ReLogic.Content;
 using System;
 using Terraria;
 
-namespace PvPAdventure.Common.Spectator.UI.Players;
+namespace PvPAdventure.Common.Spectator.UI.Tabs.Players;
 
 internal sealed class PlayerStatDefinition
 {

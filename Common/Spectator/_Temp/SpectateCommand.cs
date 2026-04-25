@@ -1,4 +1,4 @@
-﻿using PvPAdventure.Common.Spectator.UI.State;
+﻿using PvPAdventure.Common.Spectator.UI;
 using Terraria;
 using Terraria.ModLoader;
 

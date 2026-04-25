@@ -72,7 +72,7 @@ public static class Ass
     // Spectate
     public static Asset<Texture2D> BG_Shimmer; 
     public static Asset<Texture2D> BG_Biome;
-    public static Asset<Texture2D> BG_WorldInfo;
+    public static Asset<Texture2D> BG_Ship;
     public static Asset<Texture2D> Shimmer; // 32x32
     public static Asset<Texture2D> Biome; // 32x32
 

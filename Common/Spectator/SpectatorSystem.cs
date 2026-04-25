@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using PvPAdventure.Common.Spectator.Map;
-using PvPAdventure.Common.Spectator.UI.State;
 using PvPAdventure.Core.Config;
 using System.Collections.Generic;
 using Terraria;

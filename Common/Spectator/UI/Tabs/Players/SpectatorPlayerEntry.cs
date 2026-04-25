@@ -2,9 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PvPAdventure.Common.Spectator.Drawers;
-using PvPAdventure.Common.Spectator.UI.State;
 using PvPAdventure.Core.Utilities;
-using PvPAdventure.UI;
 using ReLogic.Content;
 using System;
 using System.Text;
@@ -15,7 +13,7 @@ using Terraria.ID;
 using Terraria.ModLoader.UI;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator.UI.Players;
+namespace PvPAdventure.Common.Spectator.UI.Tabs.Players;
 
 internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 {

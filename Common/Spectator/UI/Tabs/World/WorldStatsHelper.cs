@@ -15,7 +15,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using TerrariaTeam = Terraria.Enums.Team;
 
-namespace PvPAdventure.Common.Spectator._Deprecated.World;
+namespace PvPAdventure.Common.Spectator.UI.Tabs.World;
 
 internal static class WorldStatsHelper
 {
@@ -369,12 +369,12 @@ internal static class WorldStatsHelper
         sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(x, y, width, 2), Color.White * 0.08f);
     }
 
-    public static void DrawWorldInfoBackground(SpriteBatch sb, Rectangle area)
+    public static void DrawShipBackground(SpriteBatch sb, Rectangle area)
     {
-        if (Ass.BG_WorldInfo == null || area.Width <= 0 || area.Height <= 0)
+        if (Ass.BG_Ship == null || area.Width <= 0 || area.Height <= 0)
             return;
 
-        Texture2D texture = Ass.BG_WorldInfo.Value;
+        Texture2D texture = Ass.BG_Ship.Value;
         if (texture == null)
             return;
 
@@ -392,5 +392,51 @@ internal static class WorldStatsHelper
             Color fadeColor = Color.Black * (1f - progress) * 0.85f;
             sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(destination.X + i, destination.Y, 1, destination.Height), fadeColor);
         }
+    }
+
+    public static Texture2D GetWorldIcon()
+    {
+        return WorldStatsHelper.TryGetWorldIconAsset()?.Value ?? Ass.Icon_World.Value;
+    }
+
+    public static Texture2D GetWorldSizeIcon()
+    {
+        string path = Main.maxTilesX switch
+        {
+            <= 4200 => "Images/UI/WorldCreation/IconSizeSmall",
+            <= 6400 => "Images/UI/WorldCreation/IconSizeMedium",
+            _ => "Images/UI/WorldCreation/IconSizeLarge"
+        };
+
+        return Main.Assets.Request<Texture2D>(path).Value;
+    }
+
+    public static Texture2D GetWorldDifficultyIcon()
+    {
+        string path = Main.GameMode switch
+        {
+            1 => "Images/UI/WorldCreation/IconDifficultyExpert",
+            2 => "Images/UI/WorldCreation/IconDifficultyMaster",
+            3 => "Images/UI/WorldCreation/IconDifficultyCreative",
+            _ => "Images/UI/WorldCreation/IconDifficultyNormal"
+        };
+
+        return Main.Assets.Request<Texture2D>(path).Value;
+    }
+
+    public static Texture2D GetWorldEvilIcon()
+    {
+        return Main.Assets.Request<Texture2D>(WorldGen.crimson ? "Images/UI/WorldCreation/IconEvilCrimson" : "Images/UI/WorldCreation/IconEvilCorruption").Value;
+    }
+
+    public static Texture2D GetWorldSeedIcon()
+    {
+        return Main.Assets.Request<Texture2D>("Images/UI/WorldCreation/IconRandomSeed").Value;
+    }
+
+    public static Texture2D GetSextantIcon()
+    {
+        int index = (Main.bloodMoon && !Main.dayTime) || (Main.eclipse && Main.dayTime) ? 8 : 7;
+        return TextureAssets.InfoIcon[index].Value;
     }
 }

@@ -40,8 +40,6 @@ public class ClientConfig : ModConfig
     [BackgroundColor(30, 150, 150)]
     [DefaultValue(true)] public bool ShowChooseYourSpawnText;
 
-    
-
     [BackgroundColor(30, 150, 150)]
     [DefaultValue(false)] public bool AutoSelectLatestSpawnOption;
 

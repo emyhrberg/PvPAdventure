@@ -6,7 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator.UI.State;
+namespace PvPAdventure.Common.Spectator.UI;
 
 [Autoload(Side = ModSide.Client)]
 public sealed class SpectatorUISystem : ModSystem

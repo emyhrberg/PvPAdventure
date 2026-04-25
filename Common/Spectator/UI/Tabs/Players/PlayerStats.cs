@@ -12,7 +12,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using static PvPAdventure.Common.Spectator.Drawers.BiomeHelper;
 
-namespace PvPAdventure.Common.Spectator.UI.Players;
+namespace PvPAdventure.Common.Spectator.UI.Tabs.Players;
 
 internal static class PlayerStats
 {

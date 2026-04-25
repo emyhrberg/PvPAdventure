@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using PvPAdventure.Common.Spectator;
-using PvPAdventure.Common.Spectator.UI.State;
+using PvPAdventure.Common.Spectator.UI;
 using Terraria;
 using Terraria.GameInput;
 using Terraria.ModLoader;

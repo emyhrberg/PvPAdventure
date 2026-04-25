@@ -5,7 +5,7 @@ using PvPAdventure.Common.Arenas.UI;
 using PvPAdventure.Common.Bounties;
 using PvPAdventure.Common.Chat;
 using PvPAdventure.Common.GameTimer;
-using PvPAdventure.Common.Spectator.UI.State;
+using PvPAdventure.Common.Spectator.UI;
 using PvPAdventure.Common.Statistics;
 using PvPAdventure.Content.Items;
 using PvPAdventure.Core.Config;

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PvPAdventure.Common.Spectator.UI.Players;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using ReLogic.Content;
@@ -10,14 +9,14 @@ using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator.UI.State;
+namespace PvPAdventure.Common.Spectator.UI;
 
 internal sealed class SpectatorUIState : UIState
 {
     private UIColoredImageButton spectatePlayersButton;
 
     private SpectatorControls spectatorControlsElement;
-    private SpectatorPlayerPanel spectatePanel;
+    private SpectatorPanel spectatePanel;
 
     private JoinPanel joinPanel;
     private bool showJoinPanel;
@@ -132,7 +131,7 @@ internal sealed class SpectatorUIState : UIState
         if (spectatePanel?.Parent is null)
         {
             //SpectatorPlayerEntry.ClearSelectedInventory();
-            spectatePanel ??= new SpectatorPlayerPanel();
+            spectatePanel ??= new SpectatorPanel();
             Append(spectatePanel);
         }
         else spectatePanel.Remove();
@@ -145,7 +144,7 @@ internal sealed class SpectatorUIState : UIState
 
         //SpectatorPlayerEntry.ClearSelectedInventory();
 
-        spectatePanel ??= new SpectatorPlayerPanel();
+        spectatePanel ??= new SpectatorPanel();
         Append(spectatePanel);
     }
 

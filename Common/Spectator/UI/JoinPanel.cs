@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using PvPAdventure.Common.Spectator.UI.State;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using Terraria.GameContent.UI.Elements;

@@ -1,0 +1,20 @@
+﻿using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+
+namespace PvPAdventure.Common.Spectator.UI.Tabs;
+
+internal interface ISpectatorTab
+{
+    SpectatorTab Tab { get; }
+    string Label { get; }
+    Asset<Texture2D> Icon { get; }
+    void Refresh();
+    void DrawOverlay(SpriteBatch sb);
+}
+
+internal enum SpectatorTab
+{
+    Player,
+    World,
+    NPCs
+}
