@@ -10,6 +10,18 @@ namespace PvPAdventure.Common.Spectator.Drawers;
 
 public static class EntityDrawer
 {
+    private static readonly RasterizerState ClippedCullNone = new()
+    {
+        CullMode = CullMode.None,
+        ScissorTestEnable = true
+    };
+
+    private static readonly RasterizerState ClippedCullCounterClockwise = new()
+    {
+        CullMode = CullMode.CullCounterClockwiseFace,
+        ScissorTestEnable = true
+    };
+
     #region Entity Background Texture
     public static Texture2D EntityBackground => Main.Assets.Request<Texture2D>("Images/UI/PlayerBackground").Value;
 
@@ -56,7 +68,6 @@ public static class EntityDrawer
     #endregion
 
     #region Player
-
     public static void DrawPlayerPreview(SpriteBatch sb, Player player, Rectangle area)
     {
         const float bottomPadding = 5f;
@@ -80,9 +91,12 @@ public static class EntityDrawer
     public static void DrawFullPlayer(SpriteBatch sb, Player player, Vector2 position, float scale = 1f)
     {
         Player drawPlayer = CreateFullDrawPlayer(player);
+        Rectangle oldScissor = sb.GraphicsDevice.ScissorRectangle;
+        RasterizerState oldRasterizer = sb.GraphicsDevice.RasterizerState;
 
         sb.End();
-        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+        sb.GraphicsDevice.ScissorRectangle = oldScissor;
+        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, ClippedCullNone, null, Main.UIScaleMatrix);
 
         FullBrightPlayerDrawer.ForceFullBrightOnce = true;
 
@@ -99,7 +113,8 @@ public static class EntityDrawer
         }
 
         sb.End();
-        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+        sb.GraphicsDevice.ScissorRectangle = oldScissor;
+        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, oldRasterizer, null, Main.UIScaleMatrix);
     }
 
     public static void DrawPlayerHead(SpriteBatch sb, Player player, Vector2 position, float scale = 1f)
@@ -129,14 +144,19 @@ public static class EntityDrawer
         if (text.Length > 0)
             StatDrawer.DrawBack(sb, area);
 
+        Rectangle oldScissor = sb.GraphicsDevice.ScissorRectangle;
+        RasterizerState oldRasterizer = sb.GraphicsDevice.RasterizerState;
+
         sb.End();
-        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+        sb.GraphicsDevice.ScissorRectangle = oldScissor;
+        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, ClippedCullCounterClockwise, null, Main.UIScaleMatrix);
 
         Rectangle headBox = new(area.X + 2, area.Y - 2, 16, 16);
         DrawPlayerHead(sb, player, new Vector2(headBox.X + headBox.Width * 0.5f, headBox.Y + headBox.Height * 0.5f), 0.85f);
 
         sb.End();
-        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+        sb.GraphicsDevice.ScissorRectangle = oldScissor;
+        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.None, oldRasterizer, null, Main.UIScaleMatrix);
 
         Utils.DrawBorderString(sb, text, new Vector2(textArea.X, textArea.Y), Color.White, 1f);
         return area.Contains(Main.MouseScreen.ToPoint()) ? $"Player: {player.name}" : null;
@@ -208,11 +228,9 @@ public static class EntityDrawer
 
         camera.SpriteBatch.Draw(TextureAssets.Ghost.Value, center, frame, color, 0f, origin, scale, effects, 0f);
     }
-
     #endregion
 
     #region NPC
-
     public static void DrawNPCPreview(SpriteBatch sb, NPC npc, Rectangle area)
     {
         const float bottomPadding = 5f;
@@ -228,8 +246,7 @@ public static class EntityDrawer
 
         Vector2 position = new(area.Center.X, area.Bottom - bottomPadding - source.Height * scale * 0.5f);
         SpriteEffects effects = npc.spriteDirection >= 0 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-        //Color color = npc.GetAlpha(Lighting.GetColor(npc.Center.ToTileCoordinates()));
-        Color color = npc.GetAlpha(Color.White); // draw fullbright!
+        Color color = npc.GetAlpha(Color.White);
 
         sb.Draw(texture, position, source, color, 0f, source.Size() * 0.5f, scale, effects, 0f);
     }
@@ -267,7 +284,6 @@ public static class EntityDrawer
 
         return area.Contains(Main.MouseScreen.ToPoint()) ? $"NPC: {npc.FullName}" : null;
     }
-
     #endregion
 
     #region Helpers
