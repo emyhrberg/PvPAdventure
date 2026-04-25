@@ -11,6 +11,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
+using static Terraria.GameContent.Skies.StardustSky;
 
 namespace PvPAdventure.Common.Spectator.UI.Tabs.World;
 
@@ -18,7 +19,8 @@ namespace PvPAdventure.Common.Spectator.UI.Tabs.World;
 internal sealed class WorldTab : UIElement, ISpectatorTab
 {
     public SpectatorTab Tab => SpectatorTab.World;
-    public string Label => "World";
+    public string HeaderText => "World";
+    public string TooltipText => "World stats";
     public Asset<Texture2D> Icon => Ass.Icon_World;
 
     public WorldTab()
@@ -68,7 +70,7 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
         sectionList.Add(new SpectatorWorldSection("World", 222f, static (_, sb, box) => DrawWorldInformation(sb, box)));
         sectionList.Add(new SpectatorWorldSection("Bosses", 226f, static (_, sb, box) => DrawBossInformation(sb, box)));
 
-        // Keep these commented out for now (see ExtraInfo region).
+        // Keep these commented out for now (see Unused region).
         //sectionList.Add(new SpectatorWorldSection("Town NPCs", 226f, static (_, sb, box) => DrawTownNPCs(sb, box)));
         //sectionList.Add(new SpectatorWorldSection("Events Information", 214f, static (_, sb, box) => DrawEventsInformation(sb, box)));
         //sectionList.Add(new SpectatorWorldSection("Players Information", 118f, static (_, sb, box) => DrawPlayersInformation(sb, box)));
@@ -88,16 +90,18 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
         const int rowHeight = 30;
         const int rowStep = 34;
 
-        WorldStatsHelper.DrawShipBackground(sb, new Rectangle(separatorX - 12, inner.Y, inner.Right - separatorX + 12, inner.Height));
-        WorldStatsHelper.DrawColumnSeparator(sb, inner, separatorX, 0, 0);
+        DrawShipBackground(sb, new Rectangle(separatorX - 12, inner.Y, inner.Right - separatorX + 12, inner.Height));
+        DrawColumnSeparator(sb, inner, separatorX, 0, 0);
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, separatorX - leftX - 18, rowHeight), WorldStatsHelper.GetWorldIcon(), $"{Main.worldName}", "Name");
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 1 * rowStep, separatorX - leftX - 18, rowHeight), WorldStatsHelper.GetWorldSizeIcon(), $"{WorldStatsHelper.GetWorldSizeText()}", "Size");
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, separatorX - leftX - 18, rowHeight), WorldStatsHelper.GetWorldDifficultyIcon(), $"{WorldStatsHelper.GetDifficultyText()}", "Difficulty", textColor: WorldStatsHelper.GetDifficultyColor());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, separatorX - leftX - 18, rowHeight), WorldStatsHelper.GetWorldEvilIcon(), $"{WorldStatsHelper.GetEvilText()}", "Evil", textColor: WorldStatsHelper.GetEvilColor());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, separatorX - leftX - 18, rowHeight), WorldStatsHelper.GetWorldSeedIcon(), $"{WorldStatsHelper.GetSeedText()}", "Seed");
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldIcon(), $"{WorldInfoHelper.GetNameText()}", "Name");
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 1 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSizeIcon(), $"{WorldInfoHelper.GetWorldSizeText()}", "Size");
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldDifficultyIcon(), $"{WorldInfoHelper.GetDifficultyText()}", "Difficulty", textColor: WorldInfoHelper.GetDifficultyColor());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldEvilIcon(), $"{WorldInfoHelper.GetEvilText()}", "Evil", textColor: WorldInfoHelper.GetEvilColor());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSeedIcon(), $"{WorldInfoHelper.GetSeedText()}", "Seed");
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY, inner.Right - rightX - 6, rowHeight), WorldStatsHelper.GetSextantIcon(), $"Moon Phase: {WorldStatsHelper.GetMoonText()}", "Moon Phase", iconSize: 24);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 0 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.InfoIcon[InfoDisplay.Watches.Type].Value, WorldInfoHelper.GetTimeText(), "Time", iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 1 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.InfoIcon[InfoDisplay.WeatherRadio.Type].Value, WorldInfoHelper.GetWeatherText(), "Weather", iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 2 * rowStep, inner.Right - rightX - 6, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), "Moon Phase", iconSize: 14);
     }
 
     private static void DrawBossInformation(SpriteBatch sb, Rectangle box)
@@ -107,14 +111,13 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
         int gridX = separatorX + 18;
         int gridY = inner.Y + 4;
         int gridColumns = Math.Max(1, (inner.Right - gridX + 8) / 46);
-        var bosses = WorldStatsHelper.GetBossEntries();
+        var bosses = WorldBossInfoHelper.GetBossEntries();
         Texture2D checkTexture = Ass.Icon_CheckmarkGreen.Value;
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, separatorX - inner.X - 24, 30), ItemID.DPSMeter, "Total Boss Damage: TBD", "Total damage dealt to bosses");
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 38, separatorX - inner.X - 24, 30), ItemID.LifeformAnalyzer, $"Current Bosses Alive: {WorldStatsHelper.CountActiveBosses()}", "Currently active boss NPCs");
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, separatorX - inner.X - 24, 30), ItemID.LifeformAnalyzer, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:");
 
-        WorldStatsHelper.DrawColumnSeparator(sb, inner, separatorX, 0, 0);
-        WorldStatsHelper.DrawRowSeparator(sb, inner.X, inner.Y + 82, separatorX - inner.X - 8);
+        DrawColumnSeparator(sb, inner, separatorX, 0, 0);
+        DrawRowSeparator(sb, inner.X, inner.Y + 82, separatorX - inner.X - 8);
 
         for (int i = 0; i < bosses.Length; i++)
         {
@@ -124,7 +127,7 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
 
             Utils.DrawInvBG(sb, slot, new Color(83, 97, 168) * 0.80f);
 
-            int headNpc = WorldStatsHelper.GetBossHeadNpcId(bosses[i].NpcId);
+            int headNpc = WorldBossInfoHelper.GetBossHeadNpcId(bosses[i].NpcId);
             if (headNpc >= 0 && headNpc < NPCID.Sets.BossHeadTextures.Length && NPCID.Sets.BossHeadTextures[headNpc] != -1)
                 Main.BossNPCHeadRenderer.DrawWithOutlines(null, NPCID.Sets.BossHeadTextures[headNpc], slot.Center.ToVector2(), bosses[i].Downed ? Color.White : Color.White * 0.25f, 0f, 0.78f, SpriteEffects.None);
 
@@ -135,6 +138,42 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
         }
     }
 
+    #region Helpers
+
+    private static void DrawColumnSeparator(SpriteBatch sb, Rectangle inner, int x, int topOffset = 0, int bottomOffset = 0)
+    {
+        sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(x, inner.Y + topOffset, 2, inner.Height - topOffset - bottomOffset), Color.White * 0.08f);
+    }
+
+    private static void DrawRowSeparator(SpriteBatch sb, int x, int y, int width)
+    {
+        sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(x, y, width, 2), Color.White * 0.08f);
+    }
+
+    private static void DrawShipBackground(SpriteBatch sb, Rectangle area)
+    {
+        if (Ass.BG_Ship == null || area.Width <= 0 || area.Height <= 0)
+            return;
+
+        Texture2D texture = Ass.BG_Ship.Value;
+        if (texture == null)
+            return;
+
+        int sourceWidth = Math.Min(texture.Width, area.Width);
+        int sourceHeight = Math.Min(texture.Height, area.Height);
+        Rectangle source = new((texture.Width - sourceWidth) / 2, (texture.Height - sourceHeight) / 2, sourceWidth, sourceHeight);
+        Rectangle destination = new(area.Right - sourceWidth, area.Y, sourceWidth, sourceHeight);
+
+        sb.Draw(texture, destination, source, Color.White * 0.22f);
+
+        int fadeWidth = Math.Min(140, destination.Width);
+        for (int i = 0; i < fadeWidth; i++)
+        {
+            float progress = i / (float)Math.Max(1, fadeWidth - 1);
+            Color fadeColor = Color.Black * (1f - progress) * 0.85f;
+            sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(destination.X + i, destination.Y, 1, destination.Height), fadeColor);
+        }
+    }
     private static void ShowHover(Rectangle area, string text)
     {
         if (!area.Contains(Main.MouseScreen.ToPoint()))
@@ -148,8 +187,9 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
     {
         return new Rectangle(box.X + 12, box.Y + 34, box.Width - 24, box.Height - 44);
     }
+    #endregion
 
-    #region Unused regions
+    #region Unused sections
     //private static void DrawEventsInformation(SpriteBatch sb, Rectangle box)
     //{
     //    Rectangle inner = Inner(box);

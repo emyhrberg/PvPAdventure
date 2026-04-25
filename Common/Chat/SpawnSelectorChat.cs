@@ -30,38 +30,44 @@ public static class SpawnSelectorChat
         SendSystemTeamMessage(player, $"{player.name} has teleported to {destination}", MessageColor);
     }
 
-    public static void SendSystemTeamMessage(Player player, string text, Color color)
+    public static void SendSystemTeamMessage(Player player, string text, Color color, string selfText = null)
     {
         if (player == null || !player.active)
             return;
 
+        selfText ??= text;
+
         if (Main.netMode == NetmodeID.SinglePlayer)
         {
-            Main.NewText(text, color);
+            Main.NewText(selfText, color);
             return;
         }
 
         if (Main.netMode == NetmodeID.MultiplayerClient)
         {
             if (player.whoAmI == Main.myPlayer)
-                Main.NewText(text, color);
+                Main.NewText(selfText, color);
 
             return;
         }
 
-        NetworkText message = NetworkText.FromLiteral(player.team == 0 ? text : ChatPrefixFormatter.TeamChannelMarker + text);
-
         if (player.team == 0)
         {
-            ChatHelper.SendChatMessageToClient(message, color, player.whoAmI);
+            ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(selfText), color, player.whoAmI);
             return;
         }
 
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             Player teammate = Main.player[i];
-            if (teammate != null && teammate.active && teammate.team == player.team)
-                ChatHelper.SendChatMessageToClient(message, color, i);
+
+            if (teammate == null || !teammate.active || teammate.team != player.team)
+                continue;
+
+            string targetText = i == player.whoAmI ? selfText : text;
+            NetworkText message = NetworkText.FromLiteral(ChatPrefixFormatter.TeamChannelMarker + targetText);
+
+            ChatHelper.SendChatMessageToClient(message, color, i);
         }
     }
 

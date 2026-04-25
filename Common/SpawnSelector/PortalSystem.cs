@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Chat;
+using PvPAdventure.Common.Spectator.Drawers;
+using PvPAdventure.Common.Spectator.UI.Tabs.Players;
 using PvPAdventure.Common.Teams;
 using Terraria;
 using Terraria.Audio;
@@ -34,7 +36,29 @@ public sealed class PortalSystem : ModSystem
         player.GetModPlayer<SpawnPlayer>().SetPortal(position);
 
         if (Main.netMode != NetmodeID.MultiplayerClient)
-            SpawnSelectorChat.SendSystemTeamMessage(player, $"{player.name} has created a portal", Color.Yellow);
+        {
+            string biome = PlayerStats.GetBiomeText(player);
+            int distance = (int)Vector2.Distance(player.Center, position) / 16;
+
+            SpawnSelectorChat.SendSystemTeamMessage(
+                player,
+                GetPortalMessage(player, biome, distance),
+                Main.OurFavoriteColor,
+                GetOwnPortalMessage(player, biome));
+        }
+    }
+
+    private static string GetOwnPortalMessage(Player player, string biome)
+    {
+        return $"You opened a portal in {biome}";
+    }
+
+    private static string GetPortalMessage(Player player, string biome, int distance)
+    {
+        //if (distance > 1500)
+            //return $"{player.name} opened a portal in {biome} (beyond sight)";
+
+        return $"{player.name} opened a portal in {biome} ({distance} tiles away)";
     }
 
     public static void ClearPortal(Player player)

@@ -209,7 +209,7 @@ internal static class PlayerStats
         return item == null || item.IsAir ? "Empty" : item.Name;
     }
 
-    private static string GetBiomeText(Player player)
+    public static string GetBiomeText(Player player)
     {
         PlayerBiomeVisual biome = BiomeHelper.GetBiomeVisual(player);
         string biomeName = Language.GetTextValue(biome.BestiaryBiome.GetDisplayNameKey());
@@ -546,7 +546,7 @@ internal static class PlayerStats
         }
 
         Vector2 position = area.Center.ToVector2();
-        PlayerDrawer.DrawPlayerHead(spriteBatch, target, position, 0.85f);
+        //EntityDrawer.DrawPlayerHead(spriteBatch, target, position, 0.85f);
     }
 
     private static Asset<Texture2D> GetLatestSummonStaffIcon(Player player)

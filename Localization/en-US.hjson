@@ -8,6 +8,11 @@ Mods: {
 			SteamTicketResponseFailure: Steam authentication failure
 		}
 
+		Biomes: {
+			Forest: Forest
+			Shimmer: Shimmer
+		}
+
 		Keybinds: {
 			Scoreboard.DisplayName: Scoreboard
 			BountyShop.DisplayName: Bounty Shop
@@ -534,7 +539,7 @@ Mods: {
 
 				ShowChatChannelPrefixes: {
 					Label: Show Chat Channel Prefixes
-					Tooltip: ""
+					Tooltip: Shows (TEAM) or (ALL) chat channel indicators before chat messages
 				}
 			}
 

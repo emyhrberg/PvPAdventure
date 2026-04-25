@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using PvPAdventure.Common.Spectator.Map;
+using PvPAdventure.Common.Spectator.Net;
 using PvPAdventure.Core.Config;
 using System.Collections.Generic;
 using Terraria;
@@ -239,5 +240,21 @@ internal sealed class SpectatorSystem : ModSystem
         int index = targets.IndexOf(target);
         index = index < 0 ? (forward ? 0 : targets.Count - 1) : forward ? (index + 1) % targets.Count : (index - 1 + targets.Count) % targets.Count;
         target = targets[index];
+    }
+}
+
+public class SpectatorPlayer : ModPlayer
+{
+    public override void OnEnterWorld()
+    {
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
+            var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
+            if (spectatorConfig.ForcePlayersToBeSpectatorsWhenJoining)
+            {
+                Log.Chat("Sending request to becoem a spectator");
+                SpectatorNetHandler.SendRequestSetMode(Player.whoAmI, PlayerMode.Spectator);
+            }
+        }
     }
 }

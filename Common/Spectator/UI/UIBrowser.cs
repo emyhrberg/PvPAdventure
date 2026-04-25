@@ -1,8 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
+using ReLogic.Content;
 using System;
 using System.Collections.Generic;
+using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader.UI;
 using Terraria.ModLoader.UI.Elements;
@@ -14,17 +17,25 @@ internal sealed class UIBrowser : UIElement
 {
     private readonly Action<List<UIBrowserEntry>> populateEntries;
     private readonly Func<List<UIBrowserSort>> getSorts;
+    private readonly Func<int, string> getHintText;
+    private readonly Func<List<UIBrowserFilter>> getFilters;
 
     private UIGrid grid;
     private UIScrollbar scrollbar;
-    private UIBrowserViewToggle viewToggle;
+
+    // Header row
     private UIElement headerRow;
     private UISearchbox searchbox;
-    private BrowserSizeSlider sizeSlider;
-    private UIBrowserSortButton sortButton;
+    private UIBrowserButton viewToggleButton;
+    private UIBrowserSizeSlider sizeSlider;
+    private UIBrowserButton sortButton;
+    private UIBrowserButton refreshButton;
 
+    // Content
+    private readonly List<UIBrowserButton> filterButtons = [];
     private readonly List<UIBrowserEntry> entries = [];
     private readonly List<UIBrowserSort> sorts = [];
+    private readonly List<UIBrowserFilter> filters = [];
 
     private bool listMode = true;
     private int sortIndex;
@@ -39,7 +50,7 @@ internal sealed class UIBrowser : UIElement
     public int MinEntrySize => listMode ? ListMinEntrySize : GridMinEntrySize;
     public int MaxEntrySize => listMode ? ListMaxEntrySize : GridMaxEntrySize;
 
-    private string CurrentSortText => sorts.Count > 0 ? $"Sort: {sorts[sortIndex].Name}" : "Sort";
+    private string CurrentSortText => sorts.Count > 0 ? sorts[sortIndex].Name : "Sort";
 
     private int CurrentEntrySize
     {
@@ -53,10 +64,12 @@ internal sealed class UIBrowser : UIElement
         }
     }
 
-    public UIBrowser(Action<List<UIBrowserEntry>> populateEntries, Func<List<UIBrowserSort>> getSorts = null)
+    public UIBrowser(Action<List<UIBrowserEntry>> populateEntries, Func<List<UIBrowserSort>> getSorts = null, Func<List<UIBrowserFilter>> getFilters = null, Func<int, string> getHintText = null)
     {
         this.populateEntries = populateEntries;
         this.getSorts = getSorts;
+        this.getFilters = getFilters;
+        this.getHintText = getHintText;
 
         Width.Set(0f, 1f);
         Height.Set(0f, 1f);
@@ -70,7 +83,17 @@ internal sealed class UIBrowser : UIElement
 
     public void Rebuild()
     {
+        string oldSearch = searchbox?.currentString ?? string.Empty;
+        HashSet<string> oldSelectedFilters = [];
+
+        foreach (UIBrowserFilter filter in filters)
+        {
+            if (filter.Selected)
+                oldSelectedFilters.Add(filter.Name);
+        }
+
         RemoveAllChildren();
+        filterButtons.Clear();
 
         headerRow = new UIElement();
         headerRow.Left.Set(8f, 0f);
@@ -80,7 +103,7 @@ internal sealed class UIBrowser : UIElement
         headerRow.SetPadding(0f);
         Append(headerRow);
 
-        searchbox = new UISearchbox("");
+        searchbox = new UISearchbox(string.Empty, oldSearch);
         searchbox.OnTextChanged += RefreshEntries;
         searchbox.Left.Set(0f, 0f);
         searchbox.Top.Set(0f, 0f);
@@ -88,25 +111,30 @@ internal sealed class UIBrowser : UIElement
         searchbox.Height.Set(32f, 0f);
         headerRow.Append(searchbox);
 
-        viewToggle = new UIBrowserViewToggle(listMode ? Ass.List : Ass.Grid, true, () => listMode);
-        viewToggle.Left.Set(240f, 0f);
-        viewToggle.Top.Set(0f, 0f);
-        viewToggle.SetVisibility(1f, 1f);
-        viewToggle.OnLeftClick += (_, _) =>
+        refreshButton = new UIBrowserButton(Ass.Icon_Refresh3, static () => "Refresh");
+        refreshButton.Left.Set(232f, 0f);
+        refreshButton.Top.Set(0f, 0f);
+        refreshButton.OnLeftClick += (_, _) => Rebuild();
+        headerRow.Append(refreshButton);
+
+        viewToggleButton = new UIBrowserButton(listMode ? Ass.List : Ass.Grid, () => listMode ? "List mode\nClick to switch to grid mode" : "Grid mode\nClick to switch to list mode");
+        viewToggleButton.Left.Set(268f, 0f);
+        viewToggleButton.Top.Set(0f, 0f);
+        viewToggleButton.OnLeftClick += (_, _) =>
         {
             listMode = !listMode;
             CurrentEntrySize = CurrentEntrySize;
-            viewToggle.SetImageWithoutSettingSize(listMode ? Ass.List : Ass.Grid);
+            viewToggleButton.SetImage(listMode ? Ass.List : Ass.Grid);
 
-            if (sizeSlider != null)
+            if (sizeSlider is not null)
                 sizeSlider.Ratio = (CurrentEntrySize - MinEntrySize) / (float)(MaxEntrySize - MinEntrySize);
 
             RefreshEntries();
         };
-        headerRow.Append(viewToggle);
+        headerRow.Append(viewToggleButton);
 
-        sizeSlider = new BrowserSizeSlider(this);
-        sizeSlider.Left.Set(290f, 0f);
+        sizeSlider = new UIBrowserSizeSlider(this);
+        sizeSlider.Left.Set(312f, 0f);
         sizeSlider.Top.Set(8f, 0f);
         sizeSlider.Width.Set(104f, 0f);
         sizeSlider.Height.Set(16f, 0f);
@@ -116,24 +144,40 @@ internal sealed class UIBrowser : UIElement
 
         sorts.Clear();
         sorts.AddRange(getSorts?.Invoke() ?? []);
+        sortIndex = sorts.Count > 0 ? Math.Clamp(sortIndex, 0, sorts.Count - 1) : 0;
 
         if (sorts.Count > 0)
         {
-            sortIndex = Math.Clamp(sortIndex, 0, sorts.Count - 1);
-
-            sortButton = new UIBrowserSortButton(Ass.Sort, true, () => CurrentSortText);
-            sortButton.Left.Set(402f, 0f);
+            sortButton = new UIBrowserButton(Ass.Sort, () => CurrentSortText);
+            sortButton.Left.Set(424f, 0f);
             sortButton.Top.Set(0f, 0f);
-            sortButton.SetVisibility(1f, 1f);
             sortButton.OnLeftClick += (_, _) =>
             {
-                if (sorts.Count == 0)
-                    return;
-
                 sortIndex = (sortIndex + 1) % sorts.Count;
                 RefreshEntries();
             };
             headerRow.Append(sortButton);
+        }
+
+        filters.Clear();
+        filters.AddRange(getFilters?.Invoke() ?? []);
+
+        for (int i = 0; i < filters.Count; i++)
+        {
+            UIBrowserFilter filter = filters[i];
+            filter.Selected = oldSelectedFilters.Contains(filter.Name);
+
+            UIBrowserButton button = new(filter.Icon, () => filter.Tooltip, () => filter.Selected);
+            button.Left.Set(GetFilterButtonLeft(i), 0f);
+            button.Top.Set(0f, 0f);
+            button.OnLeftClick += (_, _) =>
+            {
+                filter.Selected = !filter.Selected;
+                RefreshEntries();
+            };
+
+            filterButtons.Add(button);
+            headerRow.Append(button);
         }
 
         scrollbar = new UIScrollbar();
@@ -142,7 +186,7 @@ internal sealed class UIBrowser : UIElement
         scrollbar.Height.Set(-80f, 1f);
         Append(scrollbar);
 
-        grid = new UIClippedGrid();
+        grid = new UIGrid();
         grid.Left.Set(10f, 0f);
         grid.Top.Set(50f, 0f);
         grid.Width.Set(-50f, 1f);
@@ -167,14 +211,23 @@ internal sealed class UIBrowser : UIElement
         grid.Clear();
 
         string search = searchbox?.currentString?.Trim() ?? string.Empty;
-
         List<UIBrowserEntry> visibleEntries = [];
+        List<UIBrowserFilter> selectedFilters = [];
+
+        foreach (UIBrowserFilter filter in filters)
+        {
+            if (filter.Selected)
+                selectedFilters.Add(filter);
+        }
 
         foreach (UIBrowserEntry entry in entries)
         {
             bool visible = string.IsNullOrWhiteSpace(search) || entry.SearchText?.Contains(search, StringComparison.OrdinalIgnoreCase) == true;
 
             if (!visible)
+                continue;
+
+            if (selectedFilters.Count > 0 && !MatchesAnyFilter(entry, selectedFilters))
                 continue;
 
             entry.SetListMode(listMode);
@@ -185,9 +238,27 @@ internal sealed class UIBrowser : UIElement
         if (sorts.Count > 0)
             visibleEntries.Sort(sorts[sortIndex].Compare);
 
+        searchbox?.SetHintText(getHintText?.Invoke(visibleEntries.Count) ?? string.Empty);
+
         grid.AddRange(visibleEntries);
         grid.Recalculate();
         Recalculate();
+    }
+
+    private static bool MatchesAnyFilter(UIBrowserEntry entry, List<UIBrowserFilter> selectedFilters)
+    {
+        for (int i = 0; i < selectedFilters.Count; i++)
+        {
+            if (selectedFilters[i].Matches(entry))
+                return true;
+        }
+
+        return false;
+    }
+
+    private float GetFilterButtonLeft(int index)
+    {
+        return (sorts.Count > 0 ? 460f : 424f) + index * 36f;
     }
 
     private void SetEntrySizeFromSlider(float progress)
@@ -201,6 +272,9 @@ internal sealed class UIBrowser : UIElement
     {
         base.Update(gameTime);
 
+        if (IsMouseHovering)
+            Main.LocalPlayer.mouseInterface = true; // disble item use
+
         UpdateHeaderLayout();
         UpdateScrollbarVisibility();
     }
@@ -212,39 +286,24 @@ internal sealed class UIBrowser : UIElement
 
         float width = GetInnerDimensions().Width - 16f;
 
-        bool showViewToggle = width >= 300f;
-        bool showSlider = width >= 450f;
-        bool showSort = width >= 560f && sorts.Count > 0;
+        SetHeaderChild(refreshButton, width >= 264f);
+        SetHeaderChild(viewToggleButton, width >= 300f);
+        SetHeaderChild(sizeSlider, width >= 424f);
+        SetHeaderChild(sortButton, width >= 464f && sorts.Count > 0);
 
-        if (showViewToggle)
-        {
-            if (viewToggle?.Parent is null)
-                headerRow.Append(viewToggle);
-        }
-        else
-        {
-            viewToggle?.Remove();
-        }
+        for (int i = 0; i < filterButtons.Count; i++)
+            SetHeaderChild(filterButtons[i], width >= GetFilterButtonLeft(i) + 32f);
+    }
 
-        if (showSlider)
-        {
-            if (sizeSlider?.Parent is null)
-                headerRow.Append(sizeSlider);
-        }
-        else
-        {
-            sizeSlider?.Remove();
-        }
+    private void SetHeaderChild(UIElement element, bool visible)
+    {
+        if (element is null)
+            return;
 
-        if (showSort)
-        {
-            if (sortButton?.Parent is null)
-                headerRow.Append(sortButton);
-        }
-        else
-        {
-            sortButton?.Remove();
-        }
+        if (visible && element.Parent is null)
+            headerRow.Append(element);
+        else if (!visible)
+            element.Remove();
     }
 
     private void UpdateScrollbarVisibility()
@@ -260,19 +319,88 @@ internal sealed class UIBrowser : UIElement
             scrollbar.Remove();
     }
 
-    private sealed class BrowserSizeSlider : UISlider
+    private sealed class UIBrowserButton : UIColoredImageButton
+    {
+        private readonly Func<string> getTooltip;
+        private readonly Func<bool> isSelected;
+
+        public UIBrowserButton(Asset<Texture2D> texture, Func<string> getTooltip, Func<bool> isSelected = null) : base(texture, isSmall: true)
+        {
+            this.getTooltip = getTooltip;
+            this.isSelected = isSelected;
+
+            Width.Set(32f, 0f);
+            Height.Set(32f, 0f);
+            SetVisibility(1f, 1f);
+        }
+
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            SetSelected(isSelected?.Invoke() == true);
+            base.DrawSelf(spriteBatch);
+
+            if (IsMouseHovering)
+                UICommon.TooltipMouseText(getTooltip?.Invoke() ?? string.Empty);
+        }
+    }
+
+    private sealed class UIBrowserSizeSlider : UISlider
     {
         private readonly UIBrowser owner;
 
-        public BrowserSizeSlider(UIBrowser owner)
+        public UIBrowserSizeSlider(UIBrowser owner)
         {
             this.owner = owner;
 
             OnDraw += _ =>
             {
                 if (IsMouseHovering)
-                    UICommon.TooltipMouseText($"Button size: {(int)MathHelper.Lerp(owner.MinEntrySize, owner.MaxEntrySize, Ratio)}");
+                    UICommon.TooltipMouseText($"Size: {owner.CurrentEntrySize}");
             };
         }
     }
+}
+public class UIBrowserEntry : UIElement
+{
+    public string SearchText;
+
+    protected bool listMode = true;
+    protected int entrySize = 80;
+
+    public UIBrowserEntry()
+    {
+        Width.Set(0f, 1f);
+        Height.Set(entrySize, 0f);
+    }
+
+    public virtual void SetListMode(bool value)
+    {
+        listMode = value;
+        Width.Set(listMode ? 0f : entrySize, listMode ? 1f : 0f);
+        Height.Set(entrySize, 0f);
+        Recalculate();
+    }
+
+    public virtual void SetEntrySize(int size)
+    {
+        entrySize = size;
+        Width.Set(listMode ? 0f : entrySize, listMode ? 1f : 0f);
+        Height.Set(entrySize, 0f);
+        Recalculate();
+    }
+}
+
+internal sealed class UIBrowserSort(string name, Comparison<UIBrowserEntry> compare)
+{
+    public string Name { get; } = name;
+    public Comparison<UIBrowserEntry> Compare { get; } = compare;
+}
+
+internal sealed class UIBrowserFilter(string name, string tooltip, Asset<Texture2D> icon, Predicate<UIBrowserEntry> matches)
+{
+    public string Name { get; } = name;
+    public string Tooltip { get; } = tooltip;
+    public Asset<Texture2D> Icon { get; } = icon;
+    public Predicate<UIBrowserEntry> Matches { get; } = matches;
+    public bool Selected { get; set; }
 }

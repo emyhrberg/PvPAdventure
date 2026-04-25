@@ -39,14 +39,8 @@ public sealed class SpectatorUISystem : ModSystem
         SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
         CloseJoinUI();
         Main.playerInventory = false; // spectators should never see their inventory, so close it if they have it open.
+        Main.NewText("You are now a spectator. Use free camera or select a player to spectate.", Color.Yellow);
         EnsurePlayerSpectatorControlsOpen();
-        Main.NewText("You are now a spectator (and a ghost), and spectate controls are now available (see the player icon in the top right)", Color.Yellow);
-        TogglePlayerSpectatorControls();
-    }
-
-    public static void TogglePlayerSpectatorControls()
-    {
-        spectatorState?.ToggleSpectatorControlsElement();
     }
 
     public static void ToggleSpectatePanel()

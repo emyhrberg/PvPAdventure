@@ -43,7 +43,9 @@ public static class Ass
     public static Asset<Texture2D> Spawnbox;
 
     // Admin tools assets
-    public static Asset<Texture2D> Icon_Reset;
+    public static Asset<Texture2D> Icon_Refresh;
+    public static Asset<Texture2D> Icon_Refresh2;
+    public static Asset<Texture2D> Icon_Refresh3;
     public static Asset<Texture2D> Icon_Resize;
     public static Asset<Texture2D> Slider;
     public static Asset<Texture2D> SliderHighlight;

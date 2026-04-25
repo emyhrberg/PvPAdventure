@@ -6,9 +6,9 @@ using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator.UI;
 
-public class JoinPanel : UIElement
+public class SpectatorJoinPanel : UIElement
 {
-    public JoinPanel()
+    public SpectatorJoinPanel()
     {
         Width.Set(0f, 1f);
         Height.Set(0f, 1f);

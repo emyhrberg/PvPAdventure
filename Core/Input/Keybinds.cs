@@ -102,7 +102,8 @@ internal class KeybindsPlayer : ModPlayer
             {
                 if (PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))
                 {
-                    Main.NewText("You're in luck, as an admin you can change your spectate state.", Color.Yellow);
+                    Log.Chat("Special case opening spectate selector for admins");
+                    SpectatorUISystem.ToggleSpectateJoinUI();
                 }
                 else
                 {

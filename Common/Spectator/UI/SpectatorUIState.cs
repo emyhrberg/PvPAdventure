@@ -13,35 +13,16 @@ namespace PvPAdventure.Common.Spectator.UI;
 
 internal sealed class SpectatorUIState : UIState
 {
-    private UIColoredImageButton spectatePlayersButton;
-
     private SpectatorControls spectatorControlsElement;
     private SpectatorPanel spectatePanel;
 
-    private JoinPanel joinPanel;
+    private SpectatorJoinPanel joinPanel;
     private bool showJoinPanel;
 
     public override void OnActivate()
     {
         RemoveAllChildren();
-
-        spectatePlayersButton = CreateTopButton(2, ToggleSpectatePanel, Ass.Icon_Eye);
-
-        UpdateTopButtons();
         UpdateJoinPanel();
-    }
-
-    private static UIColoredImageButton CreateTopButton(int index, Action onClick, Asset<Texture2D> icon)
-    {
-        UIColoredImageButton button = new(icon, isSmall: true);
-        button.HAlign = 0.5f;
-        //button.VAlign = 0.5f;
-        button.Top.Set(4f, 0f);
-        //button.Left.Set(-400f - index * 32f, 0f);
-        button.Left.Set(200, 0);
-        button.SetVisibility(1f, 1f);
-        button.OnLeftClick += (_, _) => onClick();
-        return button;
     }
 
     internal void ToggleJoinPanel()
@@ -63,7 +44,7 @@ internal sealed class SpectatorUIState : UIState
         if (showJoinPanel)
         {
             joinPanel?.Remove();
-            joinPanel = new JoinPanel();
+            joinPanel = new SpectatorJoinPanel();
             Append(joinPanel);
         }
         else
@@ -71,40 +52,6 @@ internal sealed class SpectatorUIState : UIState
             joinPanel?.Remove();
             joinPanel = null;
         }
-    }
-
-    private void UpdateTopButtons()
-    {
-        bool shouldShow = SpectatorSystem.IsInSpectateMode(Main.LocalPlayer);
-
-        SetTopButtonVisible(spectatePlayersButton, shouldShow);
-
-        if (!shouldShow)
-        {
-            spectatePanel?.Remove();
-            spectatorControlsElement?.Remove();
-        }
-    }
-
-    private void SetTopButtonVisible(UIElement element, bool visible)
-    {
-        if (element is null)
-            return;
-
-        if (visible && element.Parent is null)
-            Append(element);
-        else if (!visible)
-            element.Remove();
-    }
-
-    private static bool HandleHover(UIElement element, string text)
-    {
-        if (element?.IsMouseHovering != true)
-            return false;
-
-        Main.instance.MouseText(text);
-        Main.LocalPlayer.mouseInterface = true;
-        return true;
     }
 
     internal void EnsurePlayerSpectatorControlsOpen()
@@ -118,47 +65,34 @@ internal sealed class SpectatorUIState : UIState
 
     internal void ToggleSpectatorControlsElement()
     {
-        if (spectatorControlsElement?.Parent is null)
-        {
-            spectatorControlsElement ??= new SpectatorControls();
-            Append(spectatorControlsElement);
-        }
-        else spectatorControlsElement.Remove();
+        EnsurePlayerSpectatorControlsOpen();
     }
 
     internal void ToggleSpectatePanel()
     {
         if (spectatePanel?.Parent is null)
         {
-            //SpectatorPlayerEntry.ClearSelectedInventory();
             spectatePanel ??= new SpectatorPanel();
             Append(spectatePanel);
         }
         else spectatePanel.Remove();
     }
 
-    internal void EnsureSpectatePanelOpen()
-    {
-        if (spectatePanel?.Parent is not null)
-            return;
-
-        //SpectatorPlayerEntry.ClearSelectedInventory();
-
-        spectatePanel ??= new SpectatorPanel();
-        Append(spectatePanel);
-    }
-
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
-
-        UpdateTopButtons();
 
         Player local = Main.LocalPlayer;
         if (local is null || !local.active)
             return;
 
-        HandleHover(spectatePlayersButton, "Toggle spectate panel");
+        if (SpectatorSystem.IsInSpectateMode(local))
+            EnsurePlayerSpectatorControlsOpen();
+        else
+        {
+            spectatorControlsElement?.Remove();
+            spectatePanel?.Remove();
+        }
 
         spectatorControlsElement?.UpdateTarget();
     }

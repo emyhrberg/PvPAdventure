@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Content;
+using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator.UI.Tabs.Players;
@@ -15,8 +17,10 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
     private readonly UIBrowser browser;
 
     public SpectatorTab Tab => SpectatorTab.Player;
-    public string Label => "Player";
+    public string HeaderText => "Players";
+    public string TooltipText => "Spectate players";
     public Asset<Texture2D> Icon => Ass.Icon_Player;
+    private readonly List<(int WhoAmI, string Name, int Team, bool Ghost)> playerSnapshot = [];
 
     public PlayerTab()
     {
@@ -24,11 +28,7 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
         Height.Set(0f, 1f);
         SetPadding(0f);
 
-        browser = new UIBrowser(PopulateEntries, GetSorts)
-        {
-            ListMinEntrySize = 60,
-            ListMaxEntrySize = 132
-        };
+        browser = new UIBrowser(PopulateEntries, GetSorts, GetFilters, GetHintText);
 
         browser.Width.Set(0f, 1f);
         browser.Height.Set(0f, 1f);
@@ -36,14 +36,19 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
         Append(browser);
     }
 
-    public void Refresh()
+    private static List<UIBrowserFilter> GetFilters()
     {
-        browser.Rebuild();
+        return
+        [
+            new("LowHealth", "Players below 50% health", TextureAssets.Heart, entry => entry is SpectatorPlayerEntry playerEntry && playerEntry.Player.statLife < playerEntry.Player.statLifeMax2 * 0.5f),
+        new("HighHealth", "Players at or above 50% health", TextureAssets.Heart2, entry => entry is SpectatorPlayerEntry playerEntry && playerEntry.Player.statLife >= playerEntry.Player.statLifeMax2 * 0.5f)
+        ];
     }
 
-    public void OnAction()
+    public void Refresh()
     {
-        SpectatorUISystem.TogglePlayerSpectatorControls();
+        RememberPlayerList();
+        browser.Rebuild();
     }
 
     public void DrawOverlay(SpriteBatch spriteBatch)
@@ -58,6 +63,8 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
 #if DEBUG
         PopulateDebugPlayers();
 #endif
+
+        RefreshIfPlayerListChanged();
     }
 
     private void PopulateEntries(List<UIBrowserEntry> entries)
@@ -66,12 +73,7 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
         {
             Player player = Main.player[i];
 
-#if !DEBUG
-            if (player.whoAmI == Main.myPlayer || player.ghost)
-                continue;
-#endif
-
-            if (player.active)
+            if (ShouldShowPlayer(player))
                 entries.Add(new SpectatorPlayerEntry(player));
         }
 
@@ -79,9 +81,106 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
             entries.Add(new SpectatorPlayerEntry(debugPlayer));
     }
 
+    private static string GetHintText(int count)
+    {
+#if !DEBUG
+    if (count <= 1) return "";
+#endif
+        return $"Search {count} players...";
+    }
+
+    private int CountPlayers()
+    {
+        int count = debugPlayers.Count;
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            if (ShouldShowPlayer(Main.player[i]))
+                count++;
+        }
+
+        return count;
+    }
+
+    private void RefreshIfPlayerListChanged()
+    {
+        List<(int WhoAmI, string Name, int Team, bool Ghost)> current = [];
+        BuildPlayerSnapshot(current);
+
+        if (MatchesPlayerSnapshot(current))
+            return;
+
+        playerSnapshot.Clear();
+        playerSnapshot.AddRange(current);
+        browser.Rebuild();
+    }
+
+    private void RememberPlayerList()
+    {
+        BuildPlayerSnapshot(playerSnapshot);
+    }
+
+    private void BuildPlayerSnapshot(List<(int WhoAmI, string Name, int Team, bool Ghost)> snapshot)
+    {
+        snapshot.Clear();
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            Player player = Main.player[i];
+
+            if (ShouldShowPlayer(player))
+                snapshot.Add((player.whoAmI, player.name, player.team, player.ghost));
+        }
+
+        for (int i = 0; i < debugPlayers.Count; i++)
+            snapshot.Add((-i - 1, debugPlayers[i].name, debugPlayers[i].team, debugPlayers[i].ghost));
+    }
+
+    private bool MatchesPlayerSnapshot(List<(int WhoAmI, string Name, int Team, bool Ghost)> current)
+    {
+        if (current.Count != playerSnapshot.Count)
+            return false;
+
+        for (int i = 0; i < current.Count; i++)
+        {
+            if (!current[i].Equals(playerSnapshot[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool ShouldShowPlayer(Player player)
+    {
+        if (player?.active != true)
+            return false;
+
+#if !DEBUG
+    if (player.whoAmI == Main.myPlayer || player.ghost)
+        return false;
+#endif
+
+        return true;
+    }
+
     private List<UIBrowserSort> GetSorts()
     {
-        return [];
+        return
+        [
+            new("Sort A-Z", static (a, b) =>
+        {
+            SpectatorPlayerEntry left = (SpectatorPlayerEntry)a;
+            SpectatorPlayerEntry right = (SpectatorPlayerEntry)b;
+            return string.Compare(left.Player.name, right.Player.name, StringComparison.OrdinalIgnoreCase);
+        }),
+
+        new("Sort Z-A", static (a, b) =>
+        {
+            SpectatorPlayerEntry left = (SpectatorPlayerEntry)a;
+            SpectatorPlayerEntry right = (SpectatorPlayerEntry)b;
+            return string.Compare(right.Player.name, left.Player.name, StringComparison.OrdinalIgnoreCase);
+        })
+        ];
     }
 
     private void PopulateDebugPlayers()

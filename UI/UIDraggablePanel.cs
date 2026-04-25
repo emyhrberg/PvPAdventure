@@ -39,9 +39,9 @@ public abstract class UIDraggablePanel : UIElement
     protected virtual bool IsTabButtonHovered() => false;
 
     /// <summary> Gets the minimum allowed width, in pixels, for resizing operations. </summary>
-    protected virtual float MinResizeW => 350f;
+    protected virtual float MinResizeW => 360;
     /// <summary> Gets the minimum allowed height, in pixels, when resizing. </summary>
-    protected virtual float MinResizeH => 220f;
+    protected virtual float MinResizeH => 250f;
     /// <summary> Gets the maximum allowed width, in pixels, for resizing operations. </summary>
     protected virtual float MaxResizeW => 1000f;
     /// <summary> Gets the maximum allowed height, in pixels, when resizing. </summary>
@@ -138,7 +138,7 @@ public abstract class UIDraggablePanel : UIElement
             RefreshPanel.OnMouseOut += (_, _) => RefreshPanel.BorderColor = Color.Black;
             RefreshPanel.SetPadding(0);
 
-            RefreshPanel.Append(new UIImage(Ass.Icon_Reset.Value)
+            RefreshPanel.Append(new UIImage(Ass.Icon_Refresh3.Value)
             {
                 HAlign = 0.5f,
                 VAlign = 0.5f

@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator;
+namespace PvPAdventure.Common.Spectator.Net;
 
 internal static class SpectatorNetHandler
 {

@@ -6,7 +6,8 @@ namespace PvPAdventure.Common.Spectator.UI.Tabs;
 internal interface ISpectatorTab
 {
     SpectatorTab Tab { get; }
-    string Label { get; }
+    string HeaderText { get; }
+    string TooltipText { get; }
     Asset<Texture2D> Icon { get; }
     void Refresh();
     void DrawOverlay(SpriteBatch sb);

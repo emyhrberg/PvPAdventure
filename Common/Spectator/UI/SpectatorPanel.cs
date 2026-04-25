@@ -44,8 +44,8 @@ internal sealed class SpectatorPanel : UIDraggablePanel
         VAlign = 0.45f;
 
         tabs.Add(new PlayerTab());
-        tabs.Add(new WorldTab());
         tabs.Add(new NPCTab());
+        tabs.Add(new WorldTab());
 
         currentTab = tabs[0];
 
@@ -57,25 +57,51 @@ internal sealed class SpectatorPanel : UIDraggablePanel
     {
         tabButtons.Clear();
 
-        float left = 80f;
+        float left = 0f;
 
         foreach (ISpectatorTab tab in tabs)
         {
             ISpectatorTab capturedTab = tab;
 
             SpectatorTabButton button = new(
-                capturedTab.Label,
-                capturedTab.Icon,
-                () => currentTab == capturedTab,
-                () => ShowTab(capturedTab.Tab));
+            capturedTab.HeaderText,
+            capturedTab.TooltipText,
+            capturedTab.Icon,
+            () => currentTab == capturedTab,
+            () => ShowTab(capturedTab.Tab),
+            GetTabIconYOffset(capturedTab.Tab),
+            GetLabelXOffset(capturedTab.Tab)
+            );
 
             button.Left.Set(left, 0f);
 
             TitlePanel.Append(button);
             tabButtons.Add(button);
 
-            left += 76f;
+            left += 100;
         }
+    }
+
+    private static float GetLabelXOffset(SpectatorTab tab)
+    {
+        return tab switch
+        {
+            SpectatorTab.Player => 0f,
+            SpectatorTab.NPCs => 6f,
+            SpectatorTab.World => 6f,
+            _ => 0f
+        };
+    }
+
+    private static float GetTabIconYOffset(SpectatorTab tab)
+    {
+        return tab switch
+        {
+            SpectatorTab.Player => -3f,
+            SpectatorTab.NPCs => -5f,
+            SpectatorTab.World => -5f,
+            _ => 0f
+        };
     }
 
     private void ShowTab(SpectatorTab tab)
@@ -126,12 +152,12 @@ internal sealed class SpectatorPanel : UIDraggablePanel
         private readonly Func<bool> isSelected;
         private readonly string hoverText;
 
-        public SpectatorTabButton(string text, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick)
+        public SpectatorTabButton(string headerText, string tooltipText, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick, float iconYOffset, float labelXOffset=0)
         {
             this.isSelected = isSelected;
-            hoverText = text;
+            hoverText = tooltipText;
 
-            Width.Set(76f, 0f);
+            Width.Set(100, 0f);
             Height.Set(0f, 1f);
             VAlign = 0.5f;
             SetPadding(0f);
@@ -141,36 +167,30 @@ internal sealed class SpectatorPanel : UIDraggablePanel
             UIImage image = new(icon.Value)
             {
                 Left = new StyleDimension(6f, 0f),
+                Top = new StyleDimension(iconYOffset, 0f),
                 VAlign = 0.5f,
                 Width = new StyleDimension(22f, 0f),
                 Height = new StyleDimension(22f, 0f)
             };
 
-            Append(image);
-
-            UIText label = new(text, textScale: 0.72f)
+            UIText label = new(headerText, textScale: 1.0f)
             {
-                Left = new StyleDimension(31f, 0f),
+                Left = new StyleDimension(31f+labelXOffset, 0f),
                 VAlign = 0.5f
             };
 
+            Append(image);
             Append(label);
         }
-
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
             BackgroundColor = isSelected() ? new Color(83, 97, 168) : new Color(63, 82, 151) * 0.85f;
-            BorderColor = IsMouseHovering ? Color.Yellow : GetBorderColor();
+            BorderColor = IsMouseHovering ? Color.Yellow : isSelected() ? Color.White : Color.Black;
 
             if (IsMouseHovering)
                 Main.instance.MouseText(hoverText);
-        }
-
-        private Color GetBorderColor()
-        {
-            return isSelected() ? Color.White : Color.Black;
         }
     }
 }

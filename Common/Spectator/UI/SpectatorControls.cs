@@ -2,6 +2,7 @@
 using PvPAdventure.UI;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader.UI;
 using Terraria.UI;
 
@@ -13,25 +14,43 @@ internal sealed class SpectatorControls : UIElement
     private readonly UIAutoScaleTextTextPanel<string> namePanel;
     private readonly UIAutoScaleTextTextPanel<string> nextButton;
 
+    private readonly UIElement root;
+    private readonly UIPanel basePanel;
+    private readonly UIExpandablePanel showMorePanel;
+    private readonly UIElement expandedContent;
+    private readonly UIAutoScaleTextTextPanel<string> placeholderPanel;
+
+    private bool showMoreExpanded;
+
     public SpectatorControls()
     {
-        Width.Set(300f, 0f);
-        Height.Set(36f, 0f);
+        Width.Set(240f, 0f);
+        Height.Set(80f, 0f);
         HAlign = 0.5f;
         VAlign = 1f;
-        Top.Set(-56f, 0f);
+        Top.Set(-100f, 0f);
+        SetPadding(0f);
 
-        UIElement root = new();
-        root.Width.Set(300f, 0f);
-        root.Height.Set(36f, 0f);
+        root = new UIElement();
+        root.Width.Set(240f, 0f);
+        root.Height.Set(80f, 0f);
+        root.SetPadding(0f);
         Append(root);
 
         Color backgroundColor = new Color(63, 82, 151) * 0.88f;
         Color borderColor = new(89, 116, 213);
 
+        basePanel = new UIPanel();
+        basePanel.Width.Set(240f, 0f);
+        basePanel.Height.Set(50f, 0f);
+        basePanel.SetPadding(0f);
+        basePanel.BackgroundColor = backgroundColor;
+        basePanel.BorderColor = borderColor;
+        root.Append(basePanel);
+
         prevButton = new UIAutoScaleTextTextPanel<string>("<", 0.8f);
         prevButton.Width.Set(36f, 0f);
-        prevButton.Height.Set(36f, 0f);
+        prevButton.Height.Set(50f, 0f);
         prevButton.Left.Set(0f, 0f);
         prevButton.SetPadding(0f);
         prevButton.UseInnerDimensions = true;
@@ -41,10 +60,10 @@ internal sealed class SpectatorControls : UIElement
         prevButton.OnLeftClick += (_, _) => SpectatorSystem.PreviousPlayerTarget();
         root.Append(prevButton);
 
-        namePanel = new UIAutoScaleTextTextPanel<string>("", 1);
-        namePanel.Width.Set(220f, 0f);
-        namePanel.Height.Set(36f, 0f);
-        namePanel.Left.Set(40f, 0f);
+        namePanel = new UIAutoScaleTextTextPanel<string>("", 1f);
+        namePanel.Width.Set(168f, 0f);
+        namePanel.Height.Set(50f, 0f);
+        namePanel.Left.Set(36f, 0f);
         namePanel.SetPadding(0f);
         namePanel.UseInnerDimensions = true;
         namePanel.BackgroundColor = backgroundColor;
@@ -55,8 +74,8 @@ internal sealed class SpectatorControls : UIElement
 
         nextButton = new UIAutoScaleTextTextPanel<string>(">", 0.8f);
         nextButton.Width.Set(36f, 0f);
-        nextButton.Height.Set(36f, 0f);
-        nextButton.Left.Set(264f, 0f);
+        nextButton.Height.Set(50f, 0f);
+        nextButton.Left.Set(204f, 0f);
         nextButton.SetPadding(0f);
         nextButton.UseInnerDimensions = true;
         nextButton.BackgroundColor = backgroundColor;
@@ -64,11 +83,45 @@ internal sealed class SpectatorControls : UIElement
         nextButton.TextColor = Color.White;
         nextButton.OnLeftClick += (_, _) => SpectatorSystem.NextPlayerTarget();
         root.Append(nextButton);
+
+        showMorePanel = new UIExpandablePanel();
+        showMorePanel.Width.Set(240f, 0f);
+        showMorePanel.Height.Set(30f, 0f);
+        showMorePanel.Top.Set(50f, 0f);
+        showMorePanel.SetPadding(0f);
+        showMorePanel.BackgroundColor = backgroundColor;
+        showMorePanel.BorderColor = borderColor;
+        showMorePanel.OnExpanded += () => showMoreExpanded = true;
+        showMorePanel.OnCollapsed += () => showMoreExpanded = false;
+        root.Append(showMorePanel);
+
+        expandedContent = new UIElement();
+        expandedContent.Width.Set(240f, 0f);
+        expandedContent.Height.Set(70f, 0f);
+        expandedContent.Top.Set(30f, 0f);
+        expandedContent.SetPadding(0f);
+        showMorePanel.VisibleWhenExpanded.Add(expandedContent);
+
+        placeholderPanel = new UIAutoScaleTextTextPanel<string>("More spectator controls", 0.8f);
+        placeholderPanel.Width.Set(240f, 0f);
+        placeholderPanel.Height.Set(28f, 0f);
+        placeholderPanel.SetPadding(0f);
+        placeholderPanel.UseInnerDimensions = true;
+        placeholderPanel.BackgroundColor = backgroundColor;
+        placeholderPanel.BorderColor = borderColor;
+        placeholderPanel.TextColor = Color.White;
+        expandedContent.Append(placeholderPanel);
     }
 
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
+
+        float height = showMoreExpanded ? 150f : 80f;
+
+        Height.Set(height, 0f);
+        root.Height.Set(height, 0f);
+        expandedContent.IgnoresMouseInteraction = !showMoreExpanded;
 
         string prevText = "Spectate prev player: -";
         string nextText = "Spectate next player: -";

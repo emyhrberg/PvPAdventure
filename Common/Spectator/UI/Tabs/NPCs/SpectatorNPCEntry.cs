@@ -1,234 +1,41 @@
-using DragonLens.Content.Tools.Gameplay;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PvPAdventure.Common.Spectator._Deprecated;
 using PvPAdventure.Common.Spectator.Drawers;
 using PvPAdventure.Core.Utilities;
-using ReLogic.Content;
-using System;
 using System.Text;
 using Terraria;
-using Terraria.GameContent.UI.Elements;
-using Terraria.Graphics.Light;
+using Terraria.GameContent;
 using Terraria.ID;
-using Terraria.ModLoader.UI;
 using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
 
-internal sealed class SpectatorNPCEntry : UIBrowserEntry
+internal sealed class SpectatorNPCEntry : SpectatorEntityEntry
 {
-    private readonly NPC npc;
-    private readonly UIElement listChrome;
-    private readonly UIText buttonLabel;
-    private bool initialized;
-    private bool needsLateLayout = true;
-    private string hoveredStatText;
-
     public NPC NPC => npc;
+    private readonly NPC npc;   
+    protected override string EntityName => npc.FullName;
 
-    public SpectatorNPCEntry(NPC targetNpc) : base()
+    public SpectatorNPCEntry(NPC targetNpc)
     {
         npc = targetNpc ?? new NPC();
         SearchText = BuildSearchText();
 
-        listChrome = new UIElement();
-        listChrome.Width.Set(0f, 1f);
-        listChrome.Height.Set(0f, 1f);
-        Append(listChrome);
+        float left = 0f;
+        AddEntityButton(TextureAssets.Item[ItemID.TeleportationPotion], ref left, "Teleport", OnTeleportClicked);
+        AddEntityButton(Ass.Icon_Eye, ref left, "Placeholder");
 
-        float right = -8f;
-
-        buttonLabel = new UIText("", 0.8f)
-        {
-            HAlign = 1f,
-            IgnoresMouseInteraction = true
-        };
-
-        buttonLabel.Left.Set(-180f, 0f);
-        buttonLabel.Top.Set(7f, 0f);
-        listChrome.Append(buttonLabel);
-
-        AddTopRightButton(Ass.ButtonTeleport, ref right, "Teleport", OnTeleportClicked);
-
-        buttonLabel.Left.Set(right - 4f, 0f);
-
-        initialized = true;
-        ApplyLayout();
+        FinishSetup();
     }
 
-    public override void SetListMode(bool value)
-    {
-        listMode = value;
+    protected override void DrawListPreview(SpriteBatch sb, Rectangle area) => EntityDrawer.DrawNPCPreview(sb, npc, area);
 
-        if (!initialized)
-            return;
+    protected override string DrawListStats(SpriteBatch sb, Rectangle area) => StatDrawer.DrawNPCListStats(sb, area, BuildStats(skipNpcHead: true));
 
-        ApplyLayout();
-    }
+    protected override string DrawHeadStat(SpriteBatch sb, Rectangle area) => EntityDrawer.DrawNPCHeadStat(sb, area, npc);
 
-    public override void SetEntrySize(int size)
-    {
-        entrySize = size;
-
-        if (!initialized)
-            return;
-
-        ApplyLayout();
-    }
-
-    private void ApplyLayout()
-    {
-        if (listMode)
-        {
-            Width.Set(0f, 1f);
-            Height.Set(entrySize, 0f);
-
-            if (listChrome.Parent is null)
-                Append(listChrome);
-        }
-        else
-        {
-            Width.Set(entrySize, 0f);
-            Height.Set(entrySize, 0f);
-
-            listChrome.Remove();
-            buttonLabel.SetText("");
-        }
-
-        Recalculate();
-    }
-
-    public override void Update(GameTime gameTime)
-    {
-        base.Update(gameTime);
-
-        ApplyLateLayout();
-
-        if (IsMouseHovering)
-            Main.LocalPlayer.mouseInterface = true;
-    }
-
-    private void ApplyLateLayout()
-    {
-        if (!needsLateLayout || Parent == null || GetDimensions().Width <= 0f)
-            return;
-
-        ApplyLayout();
-        listChrome.Recalculate();
-        buttonLabel.Recalculate();
-        Recalculate();
-
-        needsLateLayout = false;
-    }
-
-    protected override void DrawSelf(SpriteBatch spriteBatch)
-    {
-        Rectangle box = GetDimensions().ToRectangle();
-        hoveredStatText = null;
-
-        Utils.DrawInvBG(spriteBatch, box, Color.Black * 0.35f);
-        BackgroundDrawer.DrawMapFullscreenBackground(spriteBatch, box, npc, listMode);
-        Utils.DrawInvBG(spriteBatch, box, IsMouseHovering ? new Color(73, 94, 171, 185) : new Color(63, 82, 151, 145));
-
-        if (listMode)
-        {
-            NPCDrawer.DrawFullNPC(spriteBatch, npc, new Rectangle(box.X + 4, box.Y + 4, box.Height - 8, box.Height - 8));
-            DrawListMode(spriteBatch, box);
-        }
-        else
-        {
-            DrawGridMode(spriteBatch, box);
-        }
-
-        if (!string.IsNullOrEmpty(hoveredStatText))
-            UICommon.TooltipMouseText(hoveredStatText);
-    }
-
-    private void DrawListMode(SpriteBatch spriteBatch, Rectangle box)
-    {
-        int previewWidth = box.Height - 8;
-        Rectangle area = new(box.X + 4 + previewWidth + 5, box.Y + 30, box.Width - previewWidth - 22, box.Height - 50);
-
-        if (area.Width <= 0 || area.Height <= 0)
-            return;
-
-        hoveredStatText = StatDrawer.DrawNPCListStats(spriteBatch, area, BuildStats(skipNpcHead: true)) ?? hoveredStatText;
-    }
-
-    private void DrawGridMode(SpriteBatch spriteBatch, Rectangle box)
-    {
-        const int outerPadding = 6;
-        const int statSpacing = 2;
-        const int statHeight = 27;
-
-        int availableHeight = box.Height - outerPadding * 2;
-        int totalRows = Math.Max(0, (availableHeight + statSpacing) / (statHeight + statSpacing));
-
-        if (totalRows <= 0)
-            return;
-
-        Rectangle headStatBox = new(box.X + outerPadding, box.Y + outerPadding, box.Width - outerPadding * 2, statHeight);
-        DrawNPCHeadStat(spriteBatch, headStatBox);
-
-        int statRows = Math.Max(0, totalRows - 1);
-
-        if (statRows <= 0)
-            return;
-
-        int top = headStatBox.Bottom + statSpacing;
-        Rectangle statArea = new(box.X + outerPadding, top, box.Width - outerPadding * 2, box.Bottom - outerPadding - top);
-        int columns = StatDrawer.GetGridColumns(statArea);
-
-        DrawStatGrid(spriteBatch, statArea, BuildStats(skipNpcHead: true), columns, statRows, statHeight, statSpacing);
-    }
-
-    private void DrawNPCHeadStat(SpriteBatch spriteBatch, Rectangle area)
-    {
-        hoveredStatText = NPCDrawer.DrawNPCHeadStat(spriteBatch, area, npc) ?? hoveredStatText;
-    }
-
-    private void DrawStatGrid(SpriteBatch spriteBatch, Rectangle area, NPCStatSnapshot[] stats, int columns, int rows, int statHeight, int statSpacing)
-    {
-        if (rows <= 0 || columns <= 0 || stats.Length == 0)
-            return;
-
-        int panelWidth = (area.Width - statSpacing * (columns - 1)) / columns;
-        int count = Math.Min(stats.Length, columns * rows);
-        Point mouse = Main.MouseScreen.ToPoint();
-
-        for (int i = 0; i < count; i++)
-        {
-            int column = i % columns;
-            int row = i / columns;
-            Rectangle panel = new(area.X + column * (panelWidth + statSpacing), area.Y + row * (statHeight + statSpacing), panelWidth, statHeight);
-
-            StatDrawer.DrawNPCStat(spriteBatch, panel, stats[i]);
-
-            if (panel.Contains(mouse))
-                hoveredStatText = stats[i].HoverText;
-        }
-    }
-
-    private void AddTopRightButton(Asset<Texture2D> texture, ref float rightOffset, string label, UIElement.MouseEvent click = null)
-    {
-        UIImageButton button = new(texture)
-        {
-            HAlign = 1f
-        };
-
-        button.Top.Set(4f, 0f);
-        button.Left.Set(rightOffset, 0f);
-        button.OnMouseOver += (_, _) => buttonLabel.SetText(label);
-        button.OnMouseOut += (_, _) => buttonLabel.SetText("");
-
-        if (click != null)
-            button.OnLeftClick += click;
-
-        listChrome.Append(button);
-        rightOffset -= 24f;
-    }
-
+    protected override string DrawGridStats(SpriteBatch sb, Rectangle area, int columns, int rows, int statHeight, int statSpacing) =>
+        StatDrawer.DrawNPCStatGrid(sb, area, BuildStats(skipNpcHead: true), columns, rows, statHeight, statSpacing);
     private NPCStatSnapshot[] BuildStats(bool skipNpcHead)
     {
         int start = skipNpcHead ? 1 : 0;
@@ -261,7 +68,7 @@ internal sealed class SpectatorNPCEntry : UIBrowserEntry
 
     private void OnTeleportClicked(UIMouseEvent evt, UIElement listeningElement)
     {
-        if (npc is null || !npc.active)
+        if (npc?.active != true)
             return;
 
         Player localPlayer = Main.LocalPlayer;
