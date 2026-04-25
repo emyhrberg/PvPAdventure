@@ -35,6 +35,7 @@ public abstract class UIDraggablePanel : UIElement
     protected virtual void OnActionPanelLeftClick() { }
     protected virtual Asset<Texture2D> ActionPanelIconAsset => null;
     protected virtual string ActionPanelHoverText => null;
+    protected virtual bool IsCustomTitleControlHovered() => false;
 
     /// <summary> Gets the minimum allowed width, in pixels, for resizing operations. </summary>
     protected virtual float MinResizeW => 350f;
@@ -231,7 +232,7 @@ public abstract class UIDraggablePanel : UIElement
         if (Parent == null)
             return;
 
-        if (ClosePanel.IsMouseHovering || RefreshPanel.IsMouseHovering || ActionPanel?.IsMouseHovering == true || ResizeButton?.IsMouseHovering == true)
+        if (ClosePanel.IsMouseHovering || RefreshPanel.IsMouseHovering || ActionPanel?.IsMouseHovering == true || ResizeButton?.IsMouseHovering == true || IsCustomTitleControlHovered())
             return;
 
         if (dragging)
@@ -270,7 +271,7 @@ public abstract class UIDraggablePanel : UIElement
     {
         base.LeftMouseDown(evt);
 
-        if (ClosePanel.IsMouseHovering || RefreshPanel.IsMouseHovering || ActionPanel?.IsMouseHovering == true || ResizeButton?.IsMouseHovering == true)
+        if (ClosePanel.IsMouseHovering || RefreshPanel.IsMouseHovering || ActionPanel?.IsMouseHovering == true || ResizeButton?.IsMouseHovering == true || IsCustomTitleControlHovered())
             return;
 
         if (TitlePanel == null || !TitlePanel.ContainsPoint(evt.MousePosition) || Parent == null)

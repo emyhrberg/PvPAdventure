@@ -72,24 +72,21 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
         listEntrySize = Math.Clamp(listEntrySize, ListMinEntrySize, ListMaxEntrySize);
         gridEntrySize = Math.Clamp(gridEntrySize, GridMinEntrySize, GridMaxEntrySize);
 
-        Rebuild();
+        RebuildBrowser();
     }
 
     protected override bool ShowResizeButton => true;
     protected override void OnClosePanelLeftClick() => Remove();
-    protected override void OnRefreshPanelLeftClick() => Rebuild();
+    protected override void OnRefreshPanelLeftClick() => RebuildBrowser();
     protected virtual void OnViewModeChanged() { }
 
     protected abstract void PopulateEntries();
     #endregion
 
     #region Methods
-    private void Rebuild()
+    protected void RebuildBrowser()
     {
-        headerRow?.Remove();
-        scrollbar?.Remove();
-        grid?.Remove();
-        viewToggle?.Remove();
+        ClearBrowserContent();
 
         headerRow = new UIElement();
         headerRow.Left.Set(8f, 0f);
@@ -180,6 +177,19 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
         Recalculate();
     }
 
+    protected void ClearBrowserContent()
+    {
+        ContentPanel.RemoveAllChildren();
+        headerRow = null;
+        scrollbar = null;
+        grid = null;
+        viewToggle = null;
+        searchbox = null;
+        sizeSlider = null;
+        sortButton = null;
+        entries.Clear();
+    }
+
     public void RefreshEntries()
     {
         if (grid is null)
@@ -239,6 +249,9 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
 
     private void UpdateHeaderLayout()
     {
+        if (headerRow is null)
+            return;
+
         float width = ContentPanel.GetInnerDimensions().Width - 16;
 
         bool showViewToggle = width >= 300f;
@@ -269,6 +282,9 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
 
     private void UpdateScrollbarVisibility()
     {
+        if (scrollbar is null)
+            return;
+
         bool needsScroll = scrollbar.CanScroll;
 
         if (needsScroll && scrollbar.Parent is null)
@@ -288,7 +304,7 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
         if (Main.keyState.IsKeyDown(Keys.F5) && !Main.oldKeyState.IsKeyDown(Keys.F5))
         {
             Log.Chat("Rebuilding browser");
-            Rebuild();
+            RebuildBrowser();
         }
 #endif
     }

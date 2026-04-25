@@ -31,9 +31,6 @@ public class ClientConfig : ModConfig
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(false)] 
     public bool ShowVanityVisuals = false;
-    [BackgroundColor(50, 70, 120)]
-    [DefaultValue(false)]
-    public bool DrawGhostsForOthers = false;
 
     [Header("Movement")]
     [BackgroundColor(50, 70, 120)]

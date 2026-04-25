@@ -86,6 +86,7 @@ public static class Ass
     public static Asset<Texture2D> Icon_Eye2; // 32x32
     public static Asset<Texture2D> Icon_Eye3; // 32x32
     public static Asset<Texture2D> Icon_NPC; // 32x32
+    public static Asset<Texture2D> Icon_NPCs; // 32x32
     public static Asset<Texture2D> List; // 32x32
     public static Asset<Texture2D> Grid; // 32x32
     public static Asset<Texture2D> Sort; // 32x32
@@ -209,6 +210,8 @@ public static class Ass
                 }
             }
         }
+
+        Icon_NPCs ??= Icon_NPC;
 
         Initialized = true;
     }

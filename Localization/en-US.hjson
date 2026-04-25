@@ -1850,26 +1850,26 @@ Mods: {
 
 				DrawGhostsForOthers: {
 					Label: Draw Ghosts
-					Tooltip: "Show spectator ghosts to other players. Disable this if spectators should be fully invisible."
+					Tooltip: Show spectator ghosts to other players. Disable this if spectators should be fully invisible.
 				}
 
 				RevealFullMap: {
-				Label: Reveal Map
-				Tooltip:
-					'''
-					Reveals the full map when entering spectator mode.
-					WARNING! When leaving spectator mode, the map fully is cleared.
-					'''
+					Label: Reveal Map
+					Tooltip:
+						'''
+						Reveals the full map when entering spectator mode.
+						WARNING! When leaving spectator mode, the map fully is cleared.
+						'''
 				}
 
 				DrawAllPlayerHeadsOnMapWhileSpectating: {
 					Label: Show Map Heads
-					Tooltip: "Show all player head icons on the map while spectating"
+					Tooltip: Show all player head icons on the map while spectating
 				}
 
 				DrawAllPlayerNamesWhileSpectating: {
 					Label: Show Nameplates
-					Tooltip: "Show all player nameplates while spectating"
+					Tooltip: Show all player nameplates while spectating
 				}
 			}
 
