@@ -272,7 +272,6 @@ internal class AdventureMirror : ModItem
         if (shouldCreatePortal)
         {
             Log.Debug($"[Mirror] create {player.name} pos={player.Bottom}");
-            ShowPortalCreatedText(player);
             sp.SpawnedPortalThisUse = true;
             PortalSystem.CreatePortalAtPosition(player, player.Bottom);
             ResetUseState(player);
@@ -296,11 +295,6 @@ internal class AdventureMirror : ModItem
             color = PortalDrawer.GetPortalColor(player);
 
         ShowPopup(player, Language.GetTextValue(localizationKey), color);
-    }
-
-    private static void ShowPortalCreatedText(Player player)
-    {
-        ShowPopup(player, "portal created", PortalDrawer.GetPortalColor(player));
     }
 
     private static void ShowPopup(Player player, string text, Color color)

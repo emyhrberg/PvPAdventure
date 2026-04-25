@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PvPAdventure.Common.Spectator.UI.NPCs;
 using PvPAdventure.Common.Spectator.UI.Players;
-using PvPAdventure.Common.Spectator.UI.World;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using ReLogic.Content;
@@ -16,15 +14,10 @@ namespace PvPAdventure.Common.Spectator.UI.State;
 
 internal sealed class SpectatorUIState : UIState
 {
-    private UIColoredImageButton playerButton;
-    private UIColoredImageButton worldButton;
-    private UIColoredImageButton npcButton;
+    private UIColoredImageButton spectatePlayersButton;
 
-    private SpectatorControls playerSpectatorControls;
-    private SpectatorControls npcSpectatorControls;
-    private SpectatorPlayerPanel playerPanel;
-    private SpectatorWorldPanel worldPanel;
-    private SpectatorNPCPanel npcPanel;
+    private SpectatorControls spectatorControlsElement;
+    private SpectatorPlayerPanel spectatePanel;
 
     private JoinPanel joinPanel;
     private bool showJoinPanel;
@@ -33,23 +26,20 @@ internal sealed class SpectatorUIState : UIState
     {
         RemoveAllChildren();
 
-        playerButton = CreateTopButton(2, TogglePlayerPanel, Ass.Icon_PlayerHead);
-        worldButton = CreateTopButton(3, ToggleWorldPanel, Ass.Icon_World);
-        npcButton = CreateTopButton(4, ToggleNpcPanel, Ass.Icon_NPC);
+        spectatePlayersButton = CreateTopButton(2, ToggleSpectatePanel, Ass.Icon_Eye);
 
-        Append(playerButton);
-        Append(worldButton);
-        Append(npcButton);
-
+        UpdateTopButtons();
         UpdateJoinPanel();
     }
 
     private static UIColoredImageButton CreateTopButton(int index, Action onClick, Asset<Texture2D> icon)
     {
         UIColoredImageButton button = new(icon, isSmall: true);
-        button.HAlign = 1f;
-        button.Top.Set(80f, 0f);
-        button.Left.Set(-100f - index * 32f, 0f);
+        button.HAlign = 0.5f;
+        //button.VAlign = 0.5f;
+        button.Top.Set(4f, 0f);
+        //button.Left.Set(-400f - index * 32f, 0f);
+        button.Left.Set(200, 0);
         button.SetVisibility(1f, 1f);
         button.OnLeftClick += (_, _) => onClick();
         return button;
@@ -84,6 +74,30 @@ internal sealed class SpectatorUIState : UIState
         }
     }
 
+    private void UpdateTopButtons()
+    {
+        bool shouldShow = SpectatorSystem.IsInSpectateMode(Main.LocalPlayer);
+
+        SetTopButtonVisible(spectatePlayersButton, shouldShow);
+
+        if (!shouldShow)
+        {
+            spectatePanel?.Remove();
+            spectatorControlsElement?.Remove();
+        }
+    }
+
+    private void SetTopButtonVisible(UIElement element, bool visible)
+    {
+        if (element is null)
+            return;
+
+        if (visible && element.Parent is null)
+            Append(element);
+        else if (!visible)
+            element.Remove();
+    }
+
     private static bool HandleHover(UIElement element, string text)
     {
         if (element?.IsMouseHovering != true)
@@ -96,165 +110,66 @@ internal sealed class SpectatorUIState : UIState
 
     internal void EnsurePlayerSpectatorControlsOpen()
     {
-        if (playerSpectatorControls?.Parent is not null)
+        if (spectatorControlsElement?.Parent is not null)
             return;
 
-        playerSpectatorControls ??= new SpectatorControls(SpectatorTargetKind.Player);
-        Append(playerSpectatorControls);
+        spectatorControlsElement ??= new SpectatorControls();
+        Append(spectatorControlsElement);
     }
 
-    internal void EnsureNpcSpectatorControlsOpen()
+    internal void ToggleSpectatorControlsElement()
     {
-        if (npcSpectatorControls?.Parent is not null)
+        if (spectatorControlsElement?.Parent is null)
+        {
+            spectatorControlsElement ??= new SpectatorControls();
+            Append(spectatorControlsElement);
+        }
+        else spectatorControlsElement.Remove();
+    }
+
+    internal void ToggleSpectatePanel()
+    {
+        if (spectatePanel?.Parent is null)
+        {
+            //SpectatorPlayerEntry.ClearSelectedInventory();
+            spectatePanel ??= new SpectatorPlayerPanel();
+            Append(spectatePanel);
+        }
+        else spectatePanel.Remove();
+    }
+
+    internal void EnsureSpectatePanelOpen()
+    {
+        if (spectatePanel?.Parent is not null)
             return;
 
-        npcSpectatorControls ??= new SpectatorControls(SpectatorTargetKind.NPC);
-        Append(npcSpectatorControls);
-    }
+        //SpectatorPlayerEntry.ClearSelectedInventory();
 
-    internal void TogglePlayerSpectatorControls()
-    {
-        if (playerSpectatorControls?.Parent is null)
-        {
-            playerSpectatorControls ??= new SpectatorControls(SpectatorTargetKind.Player);
-            Append(playerSpectatorControls);
-        }
-        else playerSpectatorControls.Remove();
-    }
-
-    internal void ToggleNpcSpectatorControls()
-    {
-        if (npcSpectatorControls?.Parent is null)
-        {
-            npcSpectatorControls ??= new SpectatorControls(SpectatorTargetKind.NPC);
-            Append(npcSpectatorControls);
-        }
-        else npcSpectatorControls.Remove();
-    }
-
-    private void TogglePlayerPanel()
-    {
-        if (playerPanel?.Parent is null)
-        {
-            playerPanel ??= new SpectatorPlayerPanel();
-            Append(playerPanel);
-        }
-        else playerPanel.Remove();
-    }
-
-    private void ToggleWorldPanel()
-    {
-        if (worldPanel?.Parent is null)
-        {
-            worldPanel ??= new SpectatorWorldPanel();
-            Append(worldPanel);
-        }
-        else worldPanel.Remove();
-    }
-
-    private void ToggleNpcPanel()
-    {
-        if (npcPanel?.Parent is null)
-        {
-            npcPanel ??= new SpectatorNPCPanel();
-            Append(npcPanel);
-        }
-        else npcPanel.Remove();
-    }
-
-    private static void ToggleGhostState()
-    {
-        Player local = Main.LocalPlayer;
-        if (local is null || !local.active)
-            return;
-
-        if (local.ghost)
-            local.ghost = false;
-        else
-            local.ghost = true;
+        spectatePanel ??= new SpectatorPlayerPanel();
+        Append(spectatePanel);
     }
 
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
 
+        UpdateTopButtons();
+
         Player local = Main.LocalPlayer;
         if (local is null || !local.active)
             return;
 
-        HandleHover(playerButton, "Open player panel");
-        HandleHover(worldButton, "Open world panel");
-        HandleHover(npcButton, "Open NPC panel");
+        HandleHover(spectatePlayersButton, "Toggle spectate panel");
 
-        playerSpectatorControls?.UpdateTarget();
-        npcSpectatorControls?.UpdateTarget();
+        spectatorControlsElement?.UpdateTarget();
     }
 
     public override void Draw(SpriteBatch sb)
     {
-        if (playerButton is null || worldButton is null || npcButton is null)
-            return;
-
         base.Draw(sb);
 
 #if DEBUG
         //DebugDrawer.DrawElement(sb, eyeButton);
-        //DebugDrawer.DrawElement(sb, playerButton);
-        //DebugDrawer.DrawElement(sb, worldButton);
-        //DebugDrawer.DrawElement(sb, npcButton, drawSize: false);
 #endif
-    }
-}
-
-public sealed class JoinPanel : UIElement
-{
-    public JoinPanel()
-    {
-        Width.Set(0f, 1f);
-        Height.Set(0f, 1f);
-
-        UIDraggableElement root = new() { HAlign = 0.5f };
-        root.Width.Set(290f, 0f);
-        root.Height.Set(156f, 0f);
-        root.Top.Set(100f, 0f);
-        Append(root);
-
-        UITextPanel<string> title = new("Choose Player Mode", 0.6f, true)
-        {
-            HAlign = 0.5f,
-            BackgroundColor = new Color(73, 94, 171)
-        };
-        title.Width.Set(0f, 1f);
-        title.OnLeftMouseDown += (evt, _) => root.BeginDrag(evt);
-        title.OnLeftMouseUp += (evt, _) => root.EndDrag(evt);
-        root.Append(title);
-
-        root.Recalculate();
-        float titleHeight = title.GetOuterDimensions().Height;
-
-        UIPanel container = new()
-        {
-            BackgroundColor = new Color(33, 43, 79) * 0.8f
-        };
-        container.SetPadding(0f);
-        container.Top.Set(titleHeight, 0f);
-        container.Width.Set(0f, 1f);
-        container.Height.Set(-titleHeight, 1f);
-        root.Append(container);
-
-        UITextActionPanel playerRow = new("Player", SpectatorUISystem.EnterPlayerMode, titleHeight, 0.5f, true, Ass.Icon_Player.Value);
-        playerRow.Left.Set(8f, 0f);
-        playerRow.Top.Set(8f, 0f);
-        playerRow.Width.Set(-16f, 1f);
-
-        UITextActionPanel spectateRow = new("Spectator", SpectatorUISystem.EnterSpectateMode, titleHeight, 0.5f, true, Ass.Icon_Eye.Value);
-        spectateRow.Left.Set(8f, 0f);
-        spectateRow.Top.Set(8f + titleHeight + 8f, 0f);
-        spectateRow.Width.Set(-16f, 1f);
-
-        container.Append(playerRow);
-        container.Append(spectateRow);
-
-        root.Recalculate();
     }
 }

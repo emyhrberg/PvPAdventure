@@ -17,6 +17,18 @@ internal class SpectatorConfig : ModConfig
     public bool ForcePlayersToBeSpectatorsWhenJoining = false;
 
     [BackgroundColor(40, 40, 110)]
+    [DefaultValue(true)]
+    public bool RevealFullMap = true;
+
+    [BackgroundColor(40, 40, 110)]
     [DefaultValue(false)]
     public bool DrawGhostsForOthers = false;
+
+    [BackgroundColor(40, 40, 110)]
+    [DefaultValue(false)]
+    public bool DrawAllPlayerHeadsOnMapWhileSpectating = false;
+
+    [BackgroundColor(40, 40, 110)]
+    [DefaultValue(false)]
+    public bool DrawAllPlayerNamesWhileSpectating = false;
 }

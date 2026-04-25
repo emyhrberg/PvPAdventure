@@ -14,31 +14,10 @@ public sealed class SpectatorUISystem : ModSystem
     private static UserInterface spectatorInterface;
     private static SpectatorUIState spectatorState;
 
-    private static bool IsAutoJoinUiEnabled
-    {
-        get
-        {
-            var config = ModContent.GetInstance<SpectatorConfig>();
-            if (config == null)
-            {
-                Log.Warn("SpectateConfig not loaded – Spectate disabled by default");
-                return false;
-            }
-
-            return config.ShowSpectateOptionWhenJoining;
-        }
-    }
-
     public override void OnWorldLoad()
     {
         spectatorInterface = new();
         spectatorState = new();
-
-        // If not debugging and in singleplayer, don't open the UI
-#if !DEBUG
-        if (Main.netMode == NetmodeID.SinglePlayer)
-            return;
-#endif
 
         // If config wants it to open, then open!
         var config = ModContent.GetInstance<SpectatorConfig>();
@@ -52,7 +31,6 @@ public sealed class SpectatorUISystem : ModSystem
     {
         SpectatorSystem.RequestSetLocalMode(PlayerMode.Player);
         CloseJoinUI();
-        Main.LocalPlayer.ghost = false;
         Main.NewText("You are now a player.", Color.Yellow);
     }
 
@@ -60,21 +38,20 @@ public sealed class SpectatorUISystem : ModSystem
     {
         SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
         CloseJoinUI();
-        Main.LocalPlayer.ghost = true;
-        Main.playerInventory = false;
-        Main.NewText("You are now a spectator.", Color.Yellow);
-        Main.NewText("Use shift + wasd to move as a ghost.", Color.Yellow);
-        Main.NewText("Spectate is available in the top right corner of your screen^^", Color.Yellow);
+        Main.playerInventory = false; // spectators should never see their inventory, so close it if they have it open.
+        EnsurePlayerSpectatorControlsOpen();
+        Main.NewText("You are now a spectator (and a ghost), and spectate controls are now available (see the player icon in the top right)", Color.Yellow);
+        TogglePlayerSpectatorControls();
     }
 
     public static void TogglePlayerSpectatorControls()
     {
-        spectatorState?.TogglePlayerSpectatorControls();
+        spectatorState?.ToggleSpectatorControlsElement();
     }
 
-    public static void ToggleNpcSpectatorControls()
+    public static void ToggleSpectatePanel()
     {
-        spectatorState?.ToggleNpcSpectatorControls();
+        spectatorState?.ToggleSpectatePanel();
     }
 
     public static void ToggleSpectateJoinUI()
@@ -91,11 +68,6 @@ public sealed class SpectatorUISystem : ModSystem
     public static void EnsurePlayerSpectatorControlsOpen()
     {
         spectatorState?.EnsurePlayerSpectatorControlsOpen();
-    }
-
-    public static void EnsureNpcSpectatorControlsOpen()
-    {
-        spectatorState?.EnsureNpcSpectatorControlsOpen();
     }
 
     private static void EnsureInitialized()
@@ -144,9 +116,10 @@ public sealed class SpectatorUISystem : ModSystem
         if (Main.gameMenu)
             return false;
 
+        // Always Show the UI in debug mode for testing purposes.
 #if !DEBUG
-    if (Main.netMode == NetmodeID.SinglePlayer)
-        return false;
+        if (Main.netMode == NetmodeID.SinglePlayer)
+            return false;
 #endif
 
         Player local = Main.LocalPlayer;
@@ -156,6 +129,6 @@ public sealed class SpectatorUISystem : ModSystem
         if (spectatorState?.IsJoinPanelOpen() == true)
             return true;
 
-        return IsAutoJoinUiEnabled && SpectatorSystem.IsInSpectateMode(local);
+        return SpectatorSystem.IsInSpectateMode(local);
     }
 }

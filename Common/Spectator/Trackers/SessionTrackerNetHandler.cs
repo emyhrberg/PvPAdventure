@@ -9,57 +9,78 @@ namespace PvPAdventure.Common.Spectator.Trackers;
 
 internal static class SessionTrackerNetHandler
 {
-	public static void HandlePacket(BinaryReader reader, int sender)
-	{
-		string type = reader.ReadString();
+    private enum SessionTrackerOperation : byte
+    {
+        RequestFullSync,
+        FullSync
+    }
 
-		if (type == "FullSync")
-			ReceiveFullSync(reader);
-	}
+    public static void HandlePacket(BinaryReader reader, int sender)
+    {
+        SessionTrackerOperation operation = (SessionTrackerOperation)reader.ReadByte();
 
-	private static ModPacket GetPacket(string type)
-	{
-		ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
-		packet.Write((byte)AdventurePacketIdentifier.SessionTracker);
-		packet.Write("SessionTracker");
-		packet.Write(type);
-		return packet;
-	}
+        switch (operation)
+        {
+            case SessionTrackerOperation.RequestFullSync:
+                SendFullSync(sender);
+                break;
 
-	public static void SendFullSync(int toClient = -1)
-	{
-		if (Main.netMode != NetmodeID.Server)
-			return;
+            case SessionTrackerOperation.FullSync:
+                ReceiveFullSync(reader);
+                break;
+        }
+    }
 
-		ModPacket packet = GetPacket("FullSync");
-		packet.Write(SessionTracker.Sessions.Count);
+    private static ModPacket GetPacket(SessionTrackerOperation operation)
+    {
+        ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
+        packet.Write((byte)AdventurePacketIdentifier.SessionTracker);
+        packet.Write((byte)operation);
+        return packet;
+    }
 
-		DateTime now = DateTime.UtcNow;
+    public static void SendRequestFullSync()
+    {
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            return;
 
-		foreach ((int playerIndex, DateTime start) in SessionTracker.Sessions)
-		{
-			packet.Write(playerIndex);
-			packet.Write((now - start).Ticks);
-		}
+        GetPacket(SessionTrackerOperation.RequestFullSync).Send();
+    }
 
-		packet.Send(toClient);
-	}
+    public static void SendFullSync(int toClient = -1)
+    {
+        if (Main.netMode != NetmodeID.Server)
+            return;
 
-	private static void ReceiveFullSync(BinaryReader reader)
-	{
-		if (Main.netMode != NetmodeID.MultiplayerClient)
-			return;
+        ModPacket packet = GetPacket(SessionTrackerOperation.FullSync);
+        packet.Write(SessionTracker.Sessions.Count);
 
-		SessionTracker.Sessions.Clear();
+        DateTime now = DateTime.UtcNow;
 
-		int count = reader.ReadInt32();
-		DateTime now = DateTime.UtcNow;
+        foreach ((int playerIndex, DateTime start) in SessionTracker.Sessions)
+        {
+            packet.Write(playerIndex);
+            packet.Write((now - start).Ticks);
+        }
 
-		for (int i = 0; i < count; i++)
-		{
-			int playerIndex = reader.ReadInt32();
-			long elapsedTicks = reader.ReadInt64();
-			SessionTracker.Sessions[playerIndex] = now - new TimeSpan(elapsedTicks);
-		}
-	}
+        packet.Send(toClient);
+    }
+
+    private static void ReceiveFullSync(BinaryReader reader)
+    {
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            return;
+
+        SessionTracker.Sessions.Clear();
+
+        int count = reader.ReadInt32();
+        DateTime now = DateTime.UtcNow;
+
+        for (int i = 0; i < count; i++)
+        {
+            int playerIndex = reader.ReadInt32();
+            long elapsedTicks = reader.ReadInt64();
+            SessionTracker.Sessions[playerIndex] = now - new TimeSpan(elapsedTicks);
+        }
+    }
 }

@@ -98,19 +98,18 @@ internal class KeybindsPlayer : ModPlayer
         var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
         if (keybinds.SpectateMenu.JustPressed)
         {
-            //if (Main.netMode == NetmodeID.MultiplayerClient && spectatorConfig.ForcePlayersToBeSpectatorsWhenJoining)
-            //{
-            //if (PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))
-            //{
-            //Main.NewText("Opening spectate options for admin.", Color.Yellow);
-            //}
-            //else
-            //{
-            //Main.NewText("Spectator mode is enabled. Only admins can change your spectate status.", Color.OrangeRed);
-            //}
-
-            //return;
-
+            if (Main.netMode == NetmodeID.MultiplayerClient && spectatorConfig.ForcePlayersToBeSpectatorsWhenJoining)
+            {
+                if (PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))
+                {
+                    Main.NewText("You're in luck, as an admin you can change your spectate state.", Color.Yellow);
+                }
+                else
+                {
+                    Main.NewText("You cannot change your spectate state, only an admin can do that", Color.OrangeRed);
+                }
+                return;
+            }
             SpectatorUISystem.ToggleSpectateJoinUI();
         }
 

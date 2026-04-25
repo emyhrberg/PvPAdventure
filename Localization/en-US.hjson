@@ -1835,22 +1835,41 @@ Mods: {
 				Headers.Spectate: Spectate
 
 				ShowSpectateOptionWhenJoining: {
-					Label: Show Spectate Option When Joining
+					Label: Join Prompt
 					Tooltip: Whether to show the choose your spectator mode UI when players enter the world
 				}
 
 				ForcePlayersToBeSpectatorsWhenJoining: {
-					Label: Force Players To Be Spectators When Joining
+					Label: Force Spectate On Join
 					Tooltip:
 						'''
 						All players will be forced to spectate when entering the world.
-						This means an admin has to MANUALLY change their spectator status in DragonLens Player Manager to be able to play.
+						This means an admin has to change their spectator status in DragonLens Player Manager to be able to play.
 						'''
 				}
 
 				DrawGhostsForOthers: {
-					Label: Draw Ghosts For Others
-					Tooltip: ""
+					Label: Draw Ghosts
+					Tooltip: "Show spectator ghosts to other players. Disable this if spectators should be fully invisible."
+				}
+
+				RevealFullMap: {
+				Label: Reveal Map
+				Tooltip:
+					'''
+					Reveals the full map when entering spectator mode.
+					WARNING! When leaving spectator mode, the map fully is cleared.
+					'''
+				}
+
+				DrawAllPlayerHeadsOnMapWhileSpectating: {
+					Label: Show Map Heads
+					Tooltip: "Show all player head icons on the map while spectating"
+				}
+
+				DrawAllPlayerNamesWhileSpectating: {
+					Label: Show Nameplates
+					Tooltip: "Show all player nameplates while spectating"
 				}
 			}
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Spectator;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config.UI;
@@ -106,16 +107,23 @@ public class SpectateSystem : ModSystem
 
     public override void ModifyScreenPosition()
     {
+        Player local = Main.LocalPlayer;
+        if (local == null || !local.active)
+            return;
+
+        if (SpectatorSystem.IsInSpectateMode(local))
+        {
+            Restore();
+            return;
+        }
+
         if (IsAnyConfigUIOpen())
         {
             Restore();
             return;
         }
 
-        Player local = Main.LocalPlayer;
-        if (local == null || !local.active)
-            return;
-
+        
         if (!local.dead && !SpawnSystem.Enabled)
         {
             Restore();
