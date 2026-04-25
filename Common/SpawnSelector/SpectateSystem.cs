@@ -123,7 +123,13 @@ public class SpectateSystem : ModSystem
             return;
         }
 
-        
+        if (local.GetModPlayer<SpawnPlayer>().IsTeleportOnCooldown)
+        {
+            Restore();
+            return;
+        }
+
+
         if (!local.dead && !SpawnSystem.Enabled)
         {
             Restore();

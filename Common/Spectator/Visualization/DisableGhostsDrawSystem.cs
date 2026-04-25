@@ -6,7 +6,7 @@ using Terraria.Graphics;
 using Terraria.Graphics.Renderers;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator;
+namespace PvPAdventure.Common.Spectator.Visualization;
 
 [Autoload(Side = ModSide.Client)]
 internal sealed class DisableGhostsDrawSystem : ModSystem
@@ -35,6 +35,11 @@ internal sealed class DisableGhostsDrawSystem : ModSystem
             return true;
 
         if (drawPlayer.whoAmI == Main.myPlayer)
+            return true;
+
+        Player local = Main.LocalPlayer;
+
+        if (local?.active == true && local.ghost)
             return true;
 
         return ModContent.GetInstance<SpectatorConfig>().DrawGhostsForOthers;

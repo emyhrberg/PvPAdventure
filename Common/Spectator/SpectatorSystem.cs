@@ -43,7 +43,23 @@ internal sealed class SpectatorSystem : ModSystem
             !Main.player[slot].ghost;
     }
 
-    public static void SetPlayerTarget(int slot) => target = CanTarget(slot) ? slot : -1;
+    public static void SetPlayerTarget(int slot)
+    {
+        int next = CanTarget(slot) ? slot : -1;
+
+        if (target != next)
+            Log.Chat($"[Spectate] target {target}->{next}");
+
+        target = next;
+    }
+
+    public static void ClearTarget()
+    {
+        if (target != -1)
+            Log.Chat($"[Spectate] clear {target}");
+
+        target = -1;
+    }
 
     public static void RequestSetSpectatorMode(int slot) => RequestSetMode(slot, PlayerMode.Spectator);
 
@@ -162,34 +178,14 @@ internal sealed class SpectatorSystem : ModSystem
         return GetTargets(Main.myPlayer).Count == 0 ? "No players to spectate" : "Click to spectate any player";
     }
 
-    public static void TogglePlayerTargetSelection()
-    {
-        if (!IsInSpectateMode(Main.LocalPlayer))
-            return;
-
-        if (GetPlayerTarget() is not null)
-        {
-            ClearTarget();
-            return;
-        }
-
-        List<int> targets = GetTargets(Main.myPlayer);
-        target = targets.Count > 0 ? targets[0] : -1;
-
-        if (target < 0)
-            Main.NewText("No players found.", Color.OrangeRed);
-    }
-
-    public static void NextPlayerTarget() => CycleTarget(forward: true);
-
-    public static void PreviousPlayerTarget() => CycleTarget(forward: false);
-
-    public static void ClearTarget() => target = -1;
 
     public override void ModifyScreenPosition()
     {
         if (GetPlayerTarget() is Player player)
-            Main.screenPosition = player.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
+        {
+            Vector2 screenPosition = player.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
+            SpectateCameraFade.SetScreenPosition(screenPosition);
+        }
     }
 
     public override void PreUpdatePlayers()
@@ -225,6 +221,7 @@ internal sealed class SpectatorSystem : ModSystem
         ClearTarget();
     }
 
+    #region Cycle targets
     private static void CycleTarget(bool forward)
     {
         if (!IsInSpectateMode(Main.LocalPlayer))
@@ -241,20 +238,38 @@ internal sealed class SpectatorSystem : ModSystem
         index = index < 0 ? (forward ? 0 : targets.Count - 1) : forward ? (index + 1) % targets.Count : (index - 1 + targets.Count) % targets.Count;
         target = targets[index];
     }
+    public static void NextPlayerTarget() => CycleTarget(forward: true);
+
+    public static void PreviousPlayerTarget() => CycleTarget(forward: false);
+
+    #endregion
 }
 
 public class SpectatorPlayer : ModPlayer
 {
+    private int forceSpectatorDelayTicks;
+
     public override void OnEnterWorld()
     {
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-        {
-            var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
-            if (spectatorConfig.ForcePlayersToBeSpectatorsWhenJoining)
-            {
-                Log.Chat("Sending request to becoem a spectator");
-                SpectatorNetHandler.SendRequestSetMode(Player.whoAmI, PlayerMode.Spectator);
-            }
-        }
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            return;
+
+        var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
+        if (spectatorConfig.ForcePlayersToBeSpectatorsWhenJoining)
+            forceSpectatorDelayTicks = 30;
+    }
+
+    public override void PostUpdate()
+    {
+        if (forceSpectatorDelayTicks <= 0)
+            return;
+
+        forceSpectatorDelayTicks--;
+
+        if (forceSpectatorDelayTicks > 0)
+            return;
+
+        Log.Chat("Sending request to become a spectator");
+        SpectatorNetHandler.SendRequestSetMode(Player.whoAmI, PlayerMode.Spectator);
     }
 }

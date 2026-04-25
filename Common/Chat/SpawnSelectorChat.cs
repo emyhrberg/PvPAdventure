@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using PvPAdventure.Common.SpawnSelector;
 using PvPAdventure.Common.Teams;
 using PvPAdventure.Core.Config;
+using System;
 using Terraria;
 using Terraria.Chat;
 using Terraria.ID;
@@ -27,7 +28,8 @@ public static class SpawnSelectorChat
         if (destination == "")
             return;
 
-        SendSystemTeamMessage(player, $"{player.name} has teleported to {destination}", MessageColor);
+        Color teamColor = Main.teamColor[Math.Clamp(player.team, 0, Main.teamColor.Length - 1)];
+        SendSystemTeamMessage(player, $"{player.name} has teleported to {destination}", teamColor);
     }
 
     public static void SendSystemTeamMessage(Player player, string text, Color color, string selfText = null)

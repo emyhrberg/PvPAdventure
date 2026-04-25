@@ -1,5 +1,8 @@
 using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Chat;
+using PvPAdventure.Common.Spectator.UI.Tabs.Players;
 using PvPAdventure.Core.Net;
+using System;
 using System.IO;
 using Terraria;
 using Terraria.ID;
@@ -40,9 +43,30 @@ public static class PlayerPortalNetHandler
             return;
         }
 
-        player.GetModPlayer<SpawnPlayer>().ApplyPortalFromNet(hasPortal, worldPos, health, createTicks);
+        bool hadPortal = SpawnPlayer.TryGetPortalWorldPos(player, out Vector2 oldWorldPos);
+        bool createdOrMovedPortalOnServer = Main.netMode == NetmodeID.Server && hasPortal && (!hadPortal || oldWorldPos != worldPos);
+
+        SpawnPlayer spawnPlayer = player.GetModPlayer<SpawnPlayer>();
+        spawnPlayer.ApplyPortalFromNet(hasPortal, worldPos, health, createTicks);
 
         if (Main.netMode == NetmodeID.Server)
+        {
+            if (createdOrMovedPortalOnServer)
+                SendPortalCreatedMessage(player, worldPos);
+
             Send(playerId, hasPortal, worldPos, health, createTicks, toWho: -1, ignoreClient: whoAmI);
+        }
+    }
+
+    private static void SendPortalCreatedMessage(Player player, Vector2 worldPos)
+    {
+        string biome = PlayerStats.GetBiomeText(player);
+        int distance = (int)(Vector2.Distance(player.Center, worldPos) / 16f);
+
+        SpawnSelectorChat.SendSystemTeamMessage(
+            player,
+            PortalSystem.GetPortalMessage(player, biome, distance),
+            Main.teamColor[Math.Clamp(player.team, 0, Main.teamColor.Length - 1)],
+            PortalSystem.GetOwnPortalMessage(player, biome));
     }
 }

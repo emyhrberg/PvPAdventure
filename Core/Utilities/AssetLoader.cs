@@ -77,6 +77,10 @@ public static class Ass
     public static Asset<Texture2D> BG_Ship;
     public static Asset<Texture2D> Shimmer; // 32x32
     public static Asset<Texture2D> Biome; // 32x32
+    public static Asset<Texture2D> CollapseDown; // 32x32
+    public static Asset<Texture2D> CollapseUp; // 32x32
+    public static Asset<Texture2D> Ghost; // 18x18. for use in map
+    public static Asset<Texture2D> GhostLeft; // 18x18. for use in map
 
     public static Asset<Texture2D> HeldItem; // 32x32
     public static Asset<Texture2D> ButtonTeleport; // 32x32

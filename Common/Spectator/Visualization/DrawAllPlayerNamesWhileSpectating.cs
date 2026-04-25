@@ -8,7 +8,7 @@ using Terraria.GameContent.UI;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
 
-namespace PvPAdventure.Common.Spectator;
+namespace PvPAdventure.Common.Spectator.Visualization;
 
 [Autoload(Side = ModSide.Client)]
 internal sealed class DrawAllPlayerNamesWhileSpectating : ModSystem

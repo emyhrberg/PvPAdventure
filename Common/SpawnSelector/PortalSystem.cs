@@ -38,7 +38,7 @@ public sealed class PortalSystem : ModSystem
         if (Main.netMode != NetmodeID.MultiplayerClient)
         {
             string biome = PlayerStats.GetBiomeText(player);
-            int distance = (int)Vector2.Distance(player.Center, position) / 16;
+            int distance = (int)(Vector2.Distance(player.Center, position) / 16f);
 
             SpawnSelectorChat.SendSystemTeamMessage(
                 player,
@@ -48,16 +48,13 @@ public sealed class PortalSystem : ModSystem
         }
     }
 
-    private static string GetOwnPortalMessage(Player player, string biome)
+    internal static string GetOwnPortalMessage(Player player, string biome)
     {
         return $"You opened a portal in {biome}";
     }
 
-    private static string GetPortalMessage(Player player, string biome, int distance)
+    internal static string GetPortalMessage(Player player, string biome, int distance)
     {
-        //if (distance > 1500)
-            //return $"{player.name} opened a portal in {biome} (beyond sight)";
-
         return $"{player.name} opened a portal in {biome} ({distance} tiles away)";
     }
 

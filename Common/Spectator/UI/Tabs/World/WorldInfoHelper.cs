@@ -11,6 +11,11 @@ namespace PvPAdventure.Common.Spectator.UI.Tabs.World;
 
 internal static class WorldInfoHelper
 {
+    public static Texture2D GetWorldSignTexture()
+    {
+        return Main.Assets.Request<Texture2D>("Images/UI/WorldCreation/IconRandomName").Value;
+    }
+
     public static Texture2D GetWorldIcon()
     {
         return TryGetWorldIconAsset()?.Value ?? Ass.Icon_World.Value;
@@ -129,20 +134,40 @@ internal static class WorldInfoHelper
         return $"Seed: {Main.ActiveWorldFileData?.SeedText ?? "TBD"}";
     }
 
+    /// <summary>
+    /// Thanks to dragonlens
+    /// https://github.com/ScalarVector1/DragonLens/blob/master/Content/Tools/Gameplay/Time.cs#L203
+    /// </summary>
     public static string GetTimeText()
     {
-        double time = Main.time + (Main.dayTime ? 0.0 : Main.dayLength);
-        double hours = time / 3600.0 + 4.5;
+        string AmPm = Language.GetTextValue("GameUI.TimeAtMorning");
+        double time = Main.time;
+        if (!Main.dayTime)
+            time += 54000.0;
 
-        int hour = (int)hours % 12;
+        time = time / 86400.0 * 24.0;
+        double timeSubtractor = 7.5;
+        time = time - timeSubtractor - 12.0;
+        if (time < 0.0)
+            time += 24.0;
 
-        if (hour == 0)
-            hour = 12;
+        if (time >= 12.0)
+            AmPm = Language.GetTextValue("GameUI.TimePastMorning");
 
-        int minute = (int)(time % 3600.0 / 60.0);
-        string suffix = hours % 24.0 >= 12.0 ? "PM" : "AM";
+        int hoursString = (int)time;
+        double secondRemainder = time - hoursString;
+        secondRemainder = (int)(secondRemainder * 60.0);
+        string minutesString = secondRemainder.ToString() ?? "";
+        if (secondRemainder < 10.0)
+            minutesString = "0" + minutesString;
 
-        return $"Time: {hour}:{minute:D2}{suffix}";
+        if (hoursString > 12)
+            hoursString -= 12;
+
+        if (hoursString == 0)
+            hoursString = 12;
+
+        return Language.GetTextValue("CLI.Time", hoursString + ":" + minutesString + " " + AmPm);
     }
 
     public static string GetWeatherText()

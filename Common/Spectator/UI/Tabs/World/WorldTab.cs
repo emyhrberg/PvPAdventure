@@ -67,8 +67,8 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
     {
         sectionList.Clear();
 
-        sectionList.Add(new SpectatorWorldSection("World", 222f, static (_, sb, box) => DrawWorldInformation(sb, box)));
-        sectionList.Add(new SpectatorWorldSection("Bosses", 226f, static (_, sb, box) => DrawBossInformation(sb, box)));
+        sectionList.Add(new SpectatorWorldSection("World info", 222f, static (_, sb, box) => DrawWorldInformation(sb, box)));
+        sectionList.Add(new SpectatorWorldSection("Bosses defeated", 226f, static (_, sb, box) => DrawBossInformation(sb, box)));
 
         // Keep these commented out for now (see Unused region).
         //sectionList.Add(new SpectatorWorldSection("Town NPCs", 226f, static (_, sb, box) => DrawTownNPCs(sb, box)));
@@ -93,15 +93,16 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
         DrawShipBackground(sb, new Rectangle(separatorX - 12, inner.Y, inner.Right - separatorX + 12, inner.Height));
         DrawColumnSeparator(sb, inner, separatorX, 0, 0);
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldIcon(), $"{WorldInfoHelper.GetNameText()}", "Name");
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 1 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSizeIcon(), $"{WorldInfoHelper.GetWorldSizeText()}", "Size");
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldDifficultyIcon(), $"{WorldInfoHelper.GetDifficultyText()}", "Difficulty", textColor: WorldInfoHelper.GetDifficultyColor());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldEvilIcon(), $"{WorldInfoHelper.GetEvilText()}", "Evil", textColor: WorldInfoHelper.GetEvilColor());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSeedIcon(), $"{WorldInfoHelper.GetSeedText()}", "Seed");
+        //StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldIcon(), WorldInfoHelper.GetNameText(), WorldInfoHelper.GetNameText());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSignTexture(), WorldInfoHelper.GetNameText(), WorldInfoHelper.GetNameText());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 1 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSizeIcon(), WorldInfoHelper.GetWorldSizeText(), WorldInfoHelper.GetWorldSizeText());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldDifficultyIcon(), WorldInfoHelper.GetDifficultyText(), WorldInfoHelper.GetDifficultyText(), textColor: WorldInfoHelper.GetDifficultyColor());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldEvilIcon(), WorldInfoHelper.GetEvilText(), WorldInfoHelper.GetEvilText(), textColor: WorldInfoHelper.GetEvilColor());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSeedIcon(), WorldInfoHelper.GetSeedText(), WorldInfoHelper.GetSeedText());
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 0 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.InfoIcon[InfoDisplay.Watches.Type].Value, WorldInfoHelper.GetTimeText(), "Time", iconSize: 14);
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 1 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.InfoIcon[InfoDisplay.WeatherRadio.Type].Value, WorldInfoHelper.GetWeatherText(), "Weather", iconSize: 14);
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 2 * rowStep, inner.Right - rightX - 6, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), "Moon Phase", iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 0 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.InfoIcon[InfoDisplay.Watches.Type].Value, WorldInfoHelper.GetTimeText(), WorldInfoHelper.GetTimeText(), iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 1 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.InfoIcon[InfoDisplay.WeatherRadio.Type].Value, WorldInfoHelper.GetWeatherText(), WorldInfoHelper.GetWeatherText(), iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 2 * rowStep, inner.Right - rightX - 6, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), WorldInfoHelper.GetMoonText(), iconSize: 14);
     }
 
     private static void DrawBossInformation(SpriteBatch sb, Rectangle box)
@@ -114,10 +115,10 @@ internal sealed class WorldTab : UIElement, ISpectatorTab
         var bosses = WorldBossInfoHelper.GetBossEntries();
         Texture2D checkTexture = Ass.Icon_CheckmarkGreen.Value;
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, separatorX - inner.X - 24, 30), ItemID.LifeformAnalyzer, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:");
+        //StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, separatorX - inner.X - 24, 30), ItemID.LifeformAnalyzer, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:");
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, separatorX - inner.X - 24, 30), Ass.Icon_CheckmarkGreen.Value, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:", iconSize: 18);
 
         DrawColumnSeparator(sb, inner, separatorX, 0, 0);
-        DrawRowSeparator(sb, inner.X, inner.Y + 82, separatorX - inner.X - 8);
 
         for (int i = 0; i < bosses.Length; i++)
         {

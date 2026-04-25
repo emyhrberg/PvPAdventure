@@ -11,9 +11,14 @@ using Terraria.ModLoader;
 
 namespace PvPAdventure.Common.Authentication;
 
-//#if !DEBUG
 public class AuthenticationManager : ModSystem
 {
+#if DEBUG
+    private const bool DebugBypassAuthentication = true;
+#else
+    private const bool DebugBypassAuthentication = false;
+#endif
+
     private bool didServerRequestToAuthenticate;
 
     /// <summary>
@@ -108,6 +113,20 @@ public class AuthenticationManager : ModSystem
         if (Main.dedServ && messageType == MessageID.SendPassword)
         {
             var value = reader.ReadString();
+
+#if DEBUG
+            var debugClient = Netplay.Clients[playerNumber];
+
+            if (debugClient.IsActive && debugClient.State == -1)
+            {
+                Log.Warn($"DEBUG auth bypass accepted for {playerNumber}/{debugClient.Socket.GetRemoteAddress().GetIdentifier()}");
+                debugClient.State = 1;
+                NetMessage.SendData(MessageID.PlayerInfo, playerNumber);
+            }
+
+            return true;
+#endif
+
             var parts = value.Split('_');
 
             if (parts.Length != 2 || !ulong.TryParse(parts[0], out var id))
@@ -130,7 +149,7 @@ public class AuthenticationManager : ModSystem
                         {
                             var client = Netplay.Clients[whoAmI];
 
-                            if (!alreadyOk && client.IsActive && client.State == -1)
+                            if (client.IsActive && client.State == -1)
                             {
                                 Log.Info(
                                     $"{playerNumber}/{client.Socket.GetRemoteAddress().GetIdentifier()} successfully authenticated as {authedId}");
@@ -180,4 +199,3 @@ public class AuthenticationManager : ModSystem
         didServerRequestToAuthenticate = false;
     }
 }
-//#endif

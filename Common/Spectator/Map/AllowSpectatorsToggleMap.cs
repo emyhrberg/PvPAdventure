@@ -11,7 +11,7 @@ namespace PvPAdventure.Common.Spectator.Map;
 /// Also allows cycling the map styles as a ghost
 /// </summary>
 [Autoload(Side = ModSide.Client)]
-internal sealed class MapWhileSpectatingSystem : ModSystem
+internal sealed class AllowSpectatorsToggleMap : ModSystem
 {
     public override void PostUpdateInput()
     {
