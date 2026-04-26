@@ -246,7 +246,7 @@ public class SpectateSystem : ModSystem
             if (!PortalSystem.TryGetPortalWorldPos(Main.LocalPlayer, out Vector2 portalPos))
                 return;
 
-            Main.screenPosition = portalPos - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
+            SetCameraTo(portalPos);
             return;
         }
 

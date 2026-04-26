@@ -12,7 +12,7 @@ namespace PvPAdventure.Common.SpawnSelector.Net;
 
 public static class PlayerPortalNetHandler
 {
-    public static void Send(int playerId, bool hasPortal, Vector2 worldPos, int health, int createTicks, int toWho = -1, int ignoreClient = -1)
+    public static void Send(int playerId, bool hasPortal, Vector2 worldPos, int health, int createTicks, int maxHealth, int toWho = -1, int ignoreClient = -1)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
             return;
@@ -25,6 +25,7 @@ public static class PlayerPortalNetHandler
         packet.Write(worldPos.Y);
         packet.Write(health);
         packet.Write(createTicks);
+        packet.Write(maxHealth);
         packet.Send(toWho, ignoreClient);
     }
 
@@ -35,6 +36,7 @@ public static class PlayerPortalNetHandler
         Vector2 worldPos = new(reader.ReadSingle(), reader.ReadSingle());
         int health = reader.ReadInt32();
         int createTicks = reader.ReadInt32();
+        int maxHealth = reader.ReadInt32();
 
         if (playerId >= Main.maxPlayers ||
             Main.netMode == NetmodeID.Server && playerId != whoAmI ||
@@ -46,15 +48,22 @@ public static class PlayerPortalNetHandler
         bool hadPortal = SpawnPlayer.TryGetPortalWorldPos(player, out Vector2 oldWorldPos);
         bool createdOrMovedPortalOnServer = Main.netMode == NetmodeID.Server && hasPortal && (!hadPortal || oldWorldPos != worldPos);
 
+        if (Main.netMode == NetmodeID.Server && hasPortal)
+        {
+            maxHealth = PortalSystem.PortalMaxHealth;
+            health = Math.Clamp(health, 1, maxHealth);
+            createTicks = Math.Clamp(createTicks, 0, PortalSystem.PortalCreateAnimationTicks);
+        }
+
         SpawnPlayer spawnPlayer = player.GetModPlayer<SpawnPlayer>();
-        spawnPlayer.ApplyPortalFromNet(hasPortal, worldPos, health, createTicks);
+        spawnPlayer.ApplyPortalFromNet(hasPortal, worldPos, health, createTicks, maxHealth);
 
         if (Main.netMode == NetmodeID.Server)
         {
             if (createdOrMovedPortalOnServer)
                 SendPortalCreatedMessage(player, worldPos);
 
-            Send(playerId, hasPortal, worldPos, health, createTicks, toWho: -1, ignoreClient: whoAmI);
+            Send(playerId, hasPortal, worldPos, health, createTicks, maxHealth, toWho: -1, ignoreClient: whoAmI);
         }
     }
 

@@ -48,7 +48,7 @@ public class SpawnPlayer : ModPlayer
         hasPortal = true;
         portalWorldPos = worldPos;
         portalHealth = portalMaxHealth = PortalSystem.PortalMaxHealth;
-        portalCreateTicksRemaining = 0;
+        portalCreateTicksRemaining = PortalSystem.PortalCreateAnimationTicks;
 
         Log.Debug($"[Portal] set {Player.name} hp={portalHealth} pos={worldPos}");
         InvalidateSpawnRegionCaches();
@@ -77,13 +77,13 @@ public class SpawnPlayer : ModPlayer
             SyncPortal();
     }
 
-    internal void ApplyPortalFromNet(bool hasPortal, Vector2 worldPos, int health, int createTicks)
+    internal void ApplyPortalFromNet(bool hasPortal, Vector2 worldPos, int health, int createTicks, int maxHealth = 0)
     {
         Log.Debug($"[Portal] net {Player.name} has={hasPortal} hp={health}");
         bool changedSpawnRegion = this.hasPortal != hasPortal || this.portalWorldPos != worldPos;
 
         this.hasPortal = hasPortal;
-        portalMaxHealth = hasPortal ? PortalSystem.PortalMaxHealth : 0;
+        portalMaxHealth = hasPortal ? System.Math.Max(1, maxHealth > 0 ? maxHealth : PortalSystem.PortalMaxHealth) : 0;
         portalWorldPos = hasPortal ? worldPos : default;
         portalHealth = hasPortal ? Utils.Clamp(health, 1, portalMaxHealth) : 0;
         portalCreateTicksRemaining = hasPortal ? Utils.Clamp(createTicks, 0, PortalSystem.PortalCreateAnimationTicks) : 0;
@@ -117,7 +117,8 @@ public class SpawnPlayer : ModPlayer
 
         if (portalHealth <= 0)
         {
-            SpawnSelectorChat.SendSystemTeamMessage(Player, $"{Player.name}'s portal has been destroyed.", Color.Yellow);
+            Color color = Player.team > 0 ? Main.teamColor[Player.team] : Main.OurFavoriteColor;
+            SpawnSelectorChat.SendSystemTeamMessage(Player, $"{Player.name}'s portal has been destroyed.", color);
             Log.Debug($"[Portal] dead {Player.name} by {attackerName}");
             PortalFxNetHandler.Send(portalWorldPos, killed: true, damage);
             ClearPortal();
@@ -143,9 +144,15 @@ public class SpawnPlayer : ModPlayer
 
     public static bool TryGetPortal(Player player, out Vector2 worldPos, out int health, out int createTicksRemaining)
     {
+        return TryGetPortal(player, out worldPos, out health, out createTicksRemaining, out _);
+    }
+
+    public static bool TryGetPortal(Player player, out Vector2 worldPos, out int health, out int createTicksRemaining, out int maxHealth)
+    {
         worldPos = default;
         health = 0;
         createTicksRemaining = 0;
+        maxHealth = 0;
 
         if (player?.active != true)
             return false;
@@ -157,6 +164,7 @@ public class SpawnPlayer : ModPlayer
         worldPos = sp.portalWorldPos;
         health = sp.portalHealth;
         createTicksRemaining = sp.portalCreateTicksRemaining;
+        maxHealth = sp.portalMaxHealth;
         return true;
     }
     #endregion
@@ -492,7 +500,7 @@ public class SpawnPlayer : ModPlayer
         if (Main.netMode == NetmodeID.MultiplayerClient && Player.whoAmI != Main.myPlayer)
             return;
 
-        PlayerPortalNetHandler.Send(Player.whoAmI, hasPortal, portalWorldPos, portalHealth, portalCreateTicksRemaining);
+        PlayerPortalNetHandler.Send(Player.whoAmI, hasPortal, portalWorldPos, portalHealth, portalCreateTicksRemaining, portalMaxHealth);
     }
 
     public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
@@ -500,7 +508,7 @@ public class SpawnPlayer : ModPlayer
         if (!hasPortal)
             return;
 
-        PlayerPortalNetHandler.Send(Player.whoAmI, hasPortal, portalWorldPos, portalHealth, portalCreateTicksRemaining, toWho, fromWho);
+        PlayerPortalNetHandler.Send(Player.whoAmI, hasPortal, portalWorldPos, portalHealth, portalCreateTicksRemaining, portalMaxHealth, toWho, fromWho);
     }
 
     private void UpdatePlayerSpawnpoint()

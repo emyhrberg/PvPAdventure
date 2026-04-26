@@ -1,13 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using DragonLens.Content.Tools.Gameplay;
+using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Authentication;
 using PvPAdventure.Common.Statistics;
 using PvPAdventure.Core.Config;
 using PvPAdventure.Core.Net;
 using System;
 using System.IO;
-using PvPAdventure.Common.Authentication;
 using Terraria;
+using Terraria.Chat;
 using Terraria.ID;
 using Terraria.IO;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using static PvPAdventure.Common.SSC.Appearance;
@@ -348,6 +351,10 @@ public class SSC : ModSystem
             if (steamId == null)
             {
                 Log.Warn($"Not saving SSC for player {from} without Steam ID");
+                ChatHelper.SendChatMessageToClient(
+                    NetworkText.FromLiteral($"{nameFromClient} FAILED to save because Steam ID authentication failed or is missing (contact dr underscore if you see this)"),
+                    Color.OrangeRed,
+                    from);
                 return;
             }
 
@@ -376,8 +383,15 @@ public class SSC : ModSystem
             var config = ModContent.GetInstance<ClientConfig>();
             if (config.ShowSavePlayerMessages)
             {
+                //string time = DateTime.Now.ToString("HH:mm:ss");
+                //Main.NewText($"{nameFromClient} saved at {time}", Color.MediumPurple);
+
                 string time = DateTime.Now.ToString("HH:mm:ss");
-                Main.NewText($"{nameFromClient} saved at {time}", Color.MediumPurple);
+
+                ChatHelper.SendChatMessageToClient(
+                    NetworkText.FromLiteral($"{nameFromClient} saved at {time}"),
+                    Color.MediumPurple,
+                    from);
             }
         }
         catch (Exception e)

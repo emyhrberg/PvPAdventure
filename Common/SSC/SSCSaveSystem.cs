@@ -46,6 +46,11 @@ internal class SSCSaveSystem : ModSystem
     // Do not save SSC player files locally; send to server instead.
     private void OverrideSavePlayerFile(On_Player.orig_InternalSavePlayerFile orig, PlayerFileData fileData)
     {
+        Log.Chat("Vanilla save player file was called (usually after death or auto-save after a set time)");
+
+        if (Main.LocalPlayer.ghost)
+            return;
+
         if (Main.netMode == NetmodeID.MultiplayerClient &&
             fileData.ServerSideCharacter && fileData.Path.EndsWith("SSC"))
         {
@@ -59,6 +64,9 @@ internal class SSCSaveSystem : ModSystem
 
     public void SendPacketToSavePlayerFile()
     {
+        if (Main.LocalPlayer.ghost)
+            return;
+
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 

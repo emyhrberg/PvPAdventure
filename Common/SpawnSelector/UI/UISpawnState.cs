@@ -29,6 +29,7 @@ public class UISpawnState : UIState
     public UITextPanel<string> TitlePanel => chooseYourSpawnPanel;
 
     private int playerSignature = int.MinValue;
+    private bool bossOffsetApplied;
 
     // Debug
 #if DEBUG
@@ -44,10 +45,12 @@ public class UISpawnState : UIState
         int top = 85;
 
         var config = ModContent.GetInstance<ClientConfig>();
+        bossOffsetApplied = ShouldOffsetForBossBar();
+
         if (config.spawnSelectorPosition == ClientConfig.SpawnSelectorPosition.Bottom)
         {
             vAlign = 1;
-            top = -22;
+            top = bossOffsetApplied ? -82 : -22;
         }
 
         // Background panel
@@ -84,6 +87,54 @@ public class UISpawnState : UIState
         }
     }
 
+    private void ApplyPosition()
+    {
+        int vAlign = 0;
+        int top = 85;
+
+        var config = ModContent.GetInstance<ClientConfig>();
+        if (config.spawnSelectorPosition == ClientConfig.SpawnSelectorPosition.Bottom)
+        {
+            vAlign = 1;
+            top = bossOffsetApplied ? -82 : -22;
+        }
+
+        backgroundPanel.Top.Set(top, 0f);
+        backgroundPanel.VAlign = vAlign;
+
+        if (chooseYourSpawnPanel != null)
+        {
+            if (config.spawnSelectorPosition == ClientConfig.SpawnSelectorPosition.Bottom)
+                top -= 38;
+
+            chooseYourSpawnPanel.Top.Set(top - 38, 0f);
+            chooseYourSpawnPanel.VAlign = vAlign;
+        }
+
+        Recalculate();
+    }
+
+    private static bool ShouldOffsetForBossBar()
+    {
+        var config = ModContent.GetInstance<ClientConfig>();
+        bool bossBarActive = IsBossBarActive();
+
+        return config.spawnSelectorPosition == ClientConfig.SpawnSelectorPosition.Bottom && bossBarActive;
+    }
+
+    private static bool IsBossBarActive()
+    {
+        for (int i = 0; i < Main.npc.Length; i++)
+        {
+            NPC npc = Main.npc[i];
+
+            if (npc.active && (npc.boss || npc.GetBossHeadTextureIndex() >= 0))
+                return true;
+        }
+
+        return false;
+    }
+
     public override void Update(GameTime gameTime)
     {
 #if DEBUG
@@ -107,6 +158,14 @@ public class UISpawnState : UIState
             }
         }
 #endif
+
+        bool nextBossOffset = ShouldOffsetForBossBar();
+        if (nextBossOffset != bossOffsetApplied)
+        {
+            bossOffsetApplied = nextBossOffset;
+            ApplyPosition();
+            Rebuild();
+        }
 
         if (NeedsRebuild())
         {

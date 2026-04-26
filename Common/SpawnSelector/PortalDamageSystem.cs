@@ -68,12 +68,28 @@ internal static class PortalDamageHelper
     public static void TryDamageHitPortals(Player attacker, Rectangle hitbox, HashSet<int> hitPortalOwners, int damage, string source)
     {
         for (int i = 0; i < Main.maxPlayers; i++)
-            if (Main.player[i] is { active: true } owner &&
-                SpawnPlayer.TryGetPortal(owner, out Vector2 pos, out _) &&
+        {
+            Player owner = Main.player[i];
+
+            if (owner == null || !owner.active)
+                continue;
+
+            // Skip self
+#if !DEBUG
+            if (i == attacker.whoAmI)
+                continue;
+#endif
+
+            // Skip teammates
+            if (attacker.team != 0 && attacker.team == owner.team)
+                continue;
+
+            if (SpawnPlayer.TryGetPortal(owner, out Vector2 pos, out _) &&
                 hitbox.Intersects(PortalSystem.GetPortalHitbox(pos)) &&
                 hitPortalOwners.Add(i))
             {
                 PortalSystem.TryDamagePortal(attacker, i, damage, source);
             }
+        }
     }
 }

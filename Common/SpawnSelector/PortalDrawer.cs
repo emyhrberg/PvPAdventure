@@ -73,7 +73,7 @@ public static class PortalDrawer
             if (player == null || !player.active)
                 continue;
 
-            if (!SpawnPlayer.TryGetPortal(player, out Vector2 worldPos, out int health, out int createTicksRemaining))
+            if (!SpawnPlayer.TryGetPortal(player, out Vector2 worldPos, out int health, out int createTicksRemaining, out int maxHealth))
                 continue;
 
             float progress = GetCreateProgress(createTicksRemaining);
@@ -92,7 +92,7 @@ public static class PortalDrawer
             int visualHealth = (int)MathHelper.Lerp(0f, health, progress);
 
             DrawPortal(spriteBatch, texture, drawPos, source, origin, 1f, Color.White * (progress * rangeAlpha), borderColor, outline: inRange);
-            DrawPortalHealthBar(spriteBatch, worldPos + new Vector2(0f, 8f), visualHealth, PortalSystem.PortalMaxHealth, 1f, progress);
+            DrawPortalHealthBar(spriteBatch, worldPos + new Vector2(0f, 8f), visualHealth, maxHealth, 1f, progress);
 
             if (hovered)
             {
@@ -231,6 +231,9 @@ public static class PortalDrawer
 
     private static void DrawPortalHealthBar(SpriteBatch sb, Vector2 worldPos, int health, int maxHealth, float scale, float alpha)
     {
+        if (maxHealth <= 0)
+            return;
+
         float healthRatio = (float)health / maxHealth;
         if (healthRatio > 1f)
             healthRatio = 1f;
