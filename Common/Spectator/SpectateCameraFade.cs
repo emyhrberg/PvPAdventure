@@ -48,6 +48,8 @@ internal sealed class SpectateCameraFade : ModSystem
         if (index < 0)
             return;
 
+        return;
+
         layers.Insert(index, new LegacyGameInterfaceLayer(
             "PvPAdventure: Spectate Camera Fade",
             DrawFade,

@@ -24,7 +24,6 @@ public class Keybinds : ModSystem
     public ModKeybind AllChat { get; private set; }
     public ModKeybind Dash { get; private set; }
     public ModKeybind ArenasMenu { get; private set; }
-    public ModKeybind SpectateMenu { get; private set; }
     public ModKeybind UseAdventureMirror { get; private set; }
 
     #region Adventure mirror label
@@ -47,8 +46,7 @@ public class Keybinds : ModSystem
         BountyShop = KeybindLoader.RegisterKeybind(Mod, "BountyShop", Keys.P);
         AllChat = KeybindLoader.RegisterKeybind(Mod, "AllChat", Keys.U);
         Dash = KeybindLoader.RegisterKeybind(Mod, "Dash", Keys.F);
-        ArenasMenu = KeybindLoader.RegisterKeybind(Mod, "ArenasMenu", Keys.NumPad7);
-        SpectateMenu = KeybindLoader.RegisterKeybind(Mod, "SpectateMenu", Keys.NumPad8);
+        ArenasMenu = KeybindLoader.RegisterKeybind(Mod, "ArenasMenu", Keys.F1);
         UseAdventureMirror = KeybindLoader.RegisterKeybind(Mod, "UseAdventureMirror", Keys.G);
     }
 }
@@ -93,28 +91,6 @@ internal class KeybindsPlayer : ModPlayer
         {
             Log.Chat("Arenas menu keybind pressed");
             ArenasUISystem.Toggle();
-        }
-
-        // Spectator UI
-        var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
-        if (keybinds.SpectateMenu.JustPressed)
-        {
-            Log.Chat("Spectate menu keybind pressed");
-
-            if (Main.netMode == NetmodeID.MultiplayerClient && spectatorConfig.ForceSpectateMode)
-            {
-                if (PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))
-                {
-                    Log.Chat("Special case opening spectate selector for admins");
-                    SpectatorUISystem.ToggleSpectateJoinUI();
-                }
-                else
-                {
-                    Main.NewText("You cannot change your spectate state, only an admin can do that", Color.OrangeRed);
-                }
-                return;
-            }
-            SpectatorUISystem.ToggleSpectateJoinUI();
         }
 
         // Adventure mirror keybind

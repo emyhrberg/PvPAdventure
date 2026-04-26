@@ -543,7 +543,7 @@ Mods: {
 				}
 
 				spawnSelectorPosition: {
-					Label: spawn Selector Position
+					Label: Spawn Selector Position
 					Tooltip: ""
 				}
 			}
@@ -1844,16 +1844,21 @@ Mods: {
 				DisplayName: Spectator Config
 				Headers.Spectate: Spectate
 
-				AllowPlayersToChooseSpectateMode: {
-					Label: Allow Players To Choose Spectate Mode
-					Tooltip: Whether to show the choose your spectator mode UI when players enter the world
-				}
-
-				ForceSpectateMode: {
-					Label: Force Spectate Mode
+				AllowSpectating: {
+					Label: "[i:PvPAdventure/AllowSpectatingConfigItem] Allow Spectating"
 					Tooltip:
 						'''
-						All players will be forced to spectate when entering the world.
+						Whether to allow players to spectate at all with the /spectate command
+						Keep this off to disallow spectating entirely.
+						Admins can always use /spec to bypass this
+						'''
+				}
+
+				ForceSpectating: {
+					Label: "[i:PvPAdventure/ForceSpectatingConfigItem] Force Spectating"
+					Tooltip:
+						'''
+						Players automatically become spectators when entering the world.
 						This means an admin has to change their spectator status in DragonLens Player Manager to be able to play.
 						'''
 				}

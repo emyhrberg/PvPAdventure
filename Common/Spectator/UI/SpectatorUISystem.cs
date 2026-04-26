@@ -23,7 +23,7 @@ public class SpectatorUISystem : ModSystem
 
         // If config wants it to open, then open!
         var config = ModContent.GetInstance<SpectatorConfig>();
-        if (config.AllowPlayersToChooseSpectateMode && !config.ForceSpectateMode)
+        if (config.AllowSpectating && !config.ForceSpectating)
         {
             ToggleSpectateJoinUI();
         }

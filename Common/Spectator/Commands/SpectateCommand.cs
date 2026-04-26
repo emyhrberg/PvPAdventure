@@ -1,0 +1,92 @@
+﻿using DragonLens.Core.Systems;
+using Microsoft.Xna.Framework;
+using PvPAdventure.Core.Config;
+using Terraria;
+using Terraria.ModLoader;
+
+namespace PvPAdventure.Common.Spectator.Commands;
+
+// Make everyone spectate, or everyone players.
+internal class SpectateCommand : ModCommand
+{
+    public override string Command => "spectate";
+
+    public override CommandType Type => CommandType.Chat;
+    public override string Description => "Toggle spectate mode.";
+    public override string Name => "Toggle spectate mode.";
+
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
+        // Show spectate UI.
+        //SpectatorUISystem.ToggleSpectateJoinUI();
+
+        // If not allowed, just print a message to user saying its not allowed.
+        SpectatorConfig config = ModContent.GetInstance<SpectatorConfig>();
+        if (!config.AllowSpectating)
+        {
+            Main.NewText("Spectating is disabled on this server.", Color.OrangeRed);
+            return;
+        }
+
+        // Toggle spectate mode.
+        SpectatorSystem.RequestSetLocalMode(
+        SpectatorSystem.IsInSpectateMode(Main.LocalPlayer)
+            ? PlayerMode.Player
+            : PlayerMode.Spectator);
+    }
+}
+
+internal class SpecCommand : ModCommand
+{
+    public override string Command => "spec";
+
+    public override CommandType Type => CommandType.Chat;
+    public override string Description => "Toggle spectate mode (admins only).";
+    public override string Name => "Toggle spectate mode (admins only).";
+
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
+        // Show spectate UI.
+        //SpectatorUISystem.ToggleSpectateJoinUI();
+
+        // If not allowed, just print a message to user saying its not allowed.
+        //SpectatorConfig config = ModContent.GetInstance<SpectatorConfig>();
+        //if (!config.AllowSpectating)
+        //{
+        //    Main.NewText("Choosing spectator mode is disabled on this server.", Color.OrangeRed);
+        //    return;
+        //}
+
+        // If not admin, just print a message to user saying its not allowed.
+        if (!PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))
+        {
+            Main.NewText("You must be an admin to use this command.", Color.OrangeRed);
+            return;
+        }
+
+        // This is always allowed.
+
+        // Toggle spectate mode.
+        SpectatorSystem.RequestSetLocalMode(
+        SpectatorSystem.IsInSpectateMode(Main.LocalPlayer)
+            ? PlayerMode.Player
+            : PlayerMode.Spectator);
+    }
+}
+
+
+internal class GhostCommand : ModCommand
+{
+    public override string Command => "g";
+
+    public override CommandType Type => CommandType.Chat;
+
+    public override void Action(CommandCaller caller, string input, string[] args)
+    {
+        // Toggle ghost mode.
+        if (Main.LocalPlayer.ghost) 
+            Main.LocalPlayer.ghost = false;
+        else 
+            Main.LocalPlayer.ghost = true;
+    }
+}

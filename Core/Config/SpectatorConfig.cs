@@ -10,9 +10,9 @@ internal class SpectatorConfig : ModConfig
     [Header("Spectate")]
     [BackgroundColor(40, 40, 110)]
     [DefaultValue(true)]
-    public bool AllowPlayersToChooseSpectateMode = true;
+    public bool AllowSpectating = true;
 
     [BackgroundColor(40, 40, 110)]
     [DefaultValue(false)]
-    public bool ForceSpectateMode = false;
+    public bool ForceSpectating = false;
 }
