@@ -89,19 +89,6 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
         return $"Search {count} players...";
     }
 
-    private int CountPlayers()
-    {
-        int count = debugPlayers.Count;
-
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            if (ShouldShowPlayer(Main.player[i]))
-                count++;
-        }
-
-        return count;
-    }
-
     private void RefreshIfPlayerListChanged()
     {
         List<(int WhoAmI, string Name, int Team, bool Ghost)> current = [];
@@ -155,8 +142,12 @@ internal sealed class PlayerTab : UIElement, ISpectatorTab
         if (player?.active != true)
             return false;
 
+        //if (player.ghost)
+            //return false;
+
+        // Skip myself but not in debug builds for testing
 #if !DEBUG
-    if (player.whoAmI == Main.myPlayer || player.ghost)
+    if (player.whoAmI == Main.myPlayer)
         return false;
 #endif
 

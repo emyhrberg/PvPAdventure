@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.Drawers;
-using PvPAdventure.Core.Utilities;
 using System.Text;
 using Terraria;
 using Terraria.GameContent;
@@ -23,7 +22,7 @@ internal sealed class SpectatorNPCEntry : SpectatorEntityEntry
 
         float left = 0f;
         AddEntityButton(TextureAssets.Item[ItemID.TeleportationPotion], ref left, "Teleport", OnTeleportClicked);
-        AddEntityButton(Ass.Icon_Eye, ref left, "Placeholder");
+        //AddEntityButton(Ass.Icon_Eye, ref left, "Placeholder");
 
         FinishSetup();
     }

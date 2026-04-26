@@ -131,7 +131,9 @@ internal static class WorldInfoHelper
 
     public static string GetSeedText()
     {
-        return $"Seed: {Main.ActiveWorldFileData?.SeedText ?? "TBD"}";
+        //Log.Chat(Main.ActiveWorldFileData.GetFullSeedText());
+        string seed = Main.ActiveWorldFileData?.SeedText;
+        return $"Seed: {(string.IsNullOrWhiteSpace(seed) ? "-" : seed)}";
     }
 
     /// <summary>

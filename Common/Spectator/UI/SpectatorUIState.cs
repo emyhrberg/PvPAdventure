@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PvPAdventure.Common.Arenas.UI;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using ReLogic.Content;
@@ -59,6 +60,10 @@ internal sealed class SpectatorUIState : UIState
         {
             joinPanel?.Remove();
             joinPanel = new SpectatorJoinPanel();
+
+            if (ArenasUISystem.IsAnyArenasUIOpen())
+                joinPanel.Top.Set(150f, 0f);
+
             Append(joinPanel);
         }
         else

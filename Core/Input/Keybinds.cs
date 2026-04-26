@@ -91,6 +91,7 @@ internal class KeybindsPlayer : ModPlayer
 
         if (arenasConfig.IsArenasEnabled && keybinds.ArenasMenu.JustPressed)
         {
+            Log.Chat("Arenas menu keybind pressed");
             ArenasUISystem.Toggle();
         }
 
@@ -98,6 +99,8 @@ internal class KeybindsPlayer : ModPlayer
         var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
         if (keybinds.SpectateMenu.JustPressed)
         {
+            Log.Chat("Spectate menu keybind pressed");
+
             if (Main.netMode == NetmodeID.MultiplayerClient && spectatorConfig.ForceSpectateMode)
             {
                 if (PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))

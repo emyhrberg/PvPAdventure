@@ -55,8 +55,17 @@ internal sealed class SpectatorSystem : ModSystem
 
     public static void ClearTarget()
     {
-        if (target != -1)
-            Log.Chat($"clear {target}");
+        if (target == -1)
+            return;
+
+        Log.Chat($"clear {target}");
+
+        Player local = Main.LocalPlayer;
+        if (local?.active == true)
+        {
+            Vector2 screenPosition = local.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
+            SpectateCameraFade.SetScreenPosition(screenPosition);
+        }
 
         target = -1;
     }
@@ -227,6 +236,7 @@ internal sealed class SpectatorSystem : ModSystem
     {
         Modes.Clear();
         ClearTarget();
+        SpectateCameraFade.Reset();
     }
 
     #region Cycle targets

@@ -54,14 +54,40 @@ internal sealed class SpectatorPanel : UIDraggablePanel
         ShowTab(currentTab.Tab);
     }
 
+    //private void BuildTabButtons()
+    //{
+    //    tabButtons.Clear();
+
+    //    const float reservedRightWidth = 40f;
+    //    int count = tabs.Count;
+
+    //    for (int i = 0; i < count; i++)
+    //    {
+    //        ISpectatorTab capturedTab = tabs[i];
+
+    //        SpectatorTabButton button = new(
+    //            capturedTab.HeaderText,
+    //            capturedTab.TooltipText,
+    //            capturedTab.Icon,
+    //            () => currentTab == capturedTab,
+    //            () => ShowTab(capturedTab.Tab),
+    //            GetTabIconYOffset(capturedTab.Tab));
+
+    //        button.Left.Set(-reservedRightWidth * i / count, i / (float)count);
+    //        button.Width.Set(-reservedRightWidth / count, 1f / count);
+
+    //        TitlePanel.Append(button);
+    //        tabButtons.Add(button);
+    //    }
+    //}
+
     private void BuildTabButtons()
     {
         tabButtons.Clear();
 
-        const float reservedRightWidth = 40f;
-        int count = tabs.Count;
+        const float buttonWidth = 100f;
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < tabs.Count; i++)
         {
             ISpectatorTab capturedTab = tabs[i];
 
@@ -71,10 +97,11 @@ internal sealed class SpectatorPanel : UIDraggablePanel
                 capturedTab.Icon,
                 () => currentTab == capturedTab,
                 () => ShowTab(capturedTab.Tab),
-                GetTabIconYOffset(capturedTab.Tab));
+                GetTabIconYOffset(capturedTab.Tab),
+                GetLabelXOffset(capturedTab.Tab));
 
-            button.Left.Set(-reservedRightWidth * i / count, i / (float)count);
-            button.Width.Set(-reservedRightWidth / count, 1f / count);
+            button.Left.Set(i * buttonWidth, 0f);
+            button.Width.Set(buttonWidth, 0f);
 
             TitlePanel.Append(button);
             tabButtons.Add(button);
@@ -148,19 +175,12 @@ internal sealed class SpectatorPanel : UIDraggablePanel
 
     internal sealed class SpectatorTabButton : UIPanel
     {
-        private const float IconSize = 22f;
-        private const float Gap = 6f;
-
         private readonly Func<bool> isSelected;
         private readonly string hoverText;
-        private readonly UIImage image;
-        private readonly UIText label;
-        private readonly float iconYOffset;
 
-        public SpectatorTabButton(string headerText, string tooltipText, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick, float iconYOffset)
+        public SpectatorTabButton(string headerText, string tooltipText, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick, float iconYOffset, float labelXOffset = 0f)
         {
             this.isSelected = isSelected;
-            this.iconYOffset = iconYOffset;
             hoverText = tooltipText;
 
             Height.Set(0f, 1f);
@@ -169,30 +189,20 @@ internal sealed class SpectatorPanel : UIDraggablePanel
 
             OnLeftClick += (_, _) => onClick();
 
-            image = new UIImage(icon.Value);
-            image.Width.Set(IconSize, 0f);
-            image.Height.Set(IconSize, 0f);
-            image.VAlign = 0.5f;
-            Append(image);
+            Append(new UIImage(icon.Value)
+            {
+                Left = new StyleDimension(6f, 0f),
+                Top = new StyleDimension(iconYOffset, 0f),
+                VAlign = 0.5f,
+                Width = new StyleDimension(22f, 0f),
+                Height = new StyleDimension(22f, 0f)
+            });
 
-            label = new UIText(headerText, textScale: 1f);
-            label.VAlign = 0.5f;
-            Append(label);
-        }
-
-        public override void Recalculate()
-        {
-            base.Recalculate();
-
-            float labelWidth = FontAssets.MouseText.Value.MeasureString(label.Text).X;
-            float contentWidth = IconSize + Gap + labelWidth;
-            float startX = (GetDimensions().Width - contentWidth) * 0.5f;
-
-            image.Left.Set(startX, 0f);
-            image.Top.Set(iconYOffset, 0f);
-            label.Left.Set(startX + IconSize + Gap, 0f);
-
-            base.Recalculate();
+            Append(new UIText(headerText, textScale: 1f)
+            {
+                Left = new StyleDimension(31f + labelXOffset, 0f),
+                VAlign = 0.5f
+            });
         }
 
         public override void Update(GameTime gameTime)

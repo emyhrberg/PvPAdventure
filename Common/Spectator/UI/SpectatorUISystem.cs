@@ -14,6 +14,7 @@ public class SpectatorUISystem : ModSystem
 {
     private static UserInterface spectatorInterface;
     private static SpectatorUIState spectatorState;
+    public static bool IsJoinUIOpen() => spectatorState?.IsJoinPanelOpen() == true;
 
     public override void OnWorldLoad()
     {

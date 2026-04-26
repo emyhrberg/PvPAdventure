@@ -13,14 +13,27 @@ internal sealed class SpectateCameraFade : ModSystem
     private const float FadeDistanceTiles = 70f;
     private const int FadeTicks = 42;
     private static readonly float FadeDistancePixelsSq = FadeDistanceTiles * 16f * FadeDistanceTiles * 16f;
+
     private static int fadeTicksLeft;
+    private static bool hasLastPosition;
+    private static Vector2 lastPosition;
 
     public static void SetScreenPosition(Vector2 position)
     {
-        if (Vector2.DistanceSquared(Main.screenPosition, position) >= FadeDistancePixelsSq)
+        Vector2 comparePosition = hasLastPosition ? lastPosition : Main.screenPosition;
+
+        if (Vector2.DistanceSquared(comparePosition, position) >= FadeDistancePixelsSq)
             fadeTicksLeft = FadeTicks;
 
+        hasLastPosition = true;
+        lastPosition = position;
         Main.screenPosition = position;
+    }
+
+    public static void Reset()
+    {
+        fadeTicksLeft = 0;
+        hasLastPosition = false;
     }
 
     public override void UpdateUI(GameTime gameTime)

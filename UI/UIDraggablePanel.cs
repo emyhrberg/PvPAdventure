@@ -4,7 +4,9 @@ using PvPAdventure.Core.Utilities;
 using ReLogic.Content;
 using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
+using Terraria.ID;
 using Terraria.UI;
 
 namespace PvPAdventure.UI;
@@ -109,7 +111,11 @@ public abstract class UIDraggablePanel : UIElement
             HAlign = 1f,
             VAlign = 0.5f
         };
-        ClosePanel.OnLeftClick += (_, _) => OnClosePanelLeftClick();
+        ClosePanel.OnLeftClick += (_, _) =>
+        {
+            SoundEngine.PlaySound(SoundID.MenuClose);
+            OnClosePanelLeftClick();
+        };
         ClosePanel.OnMouseOver += (_, _) => ClosePanel.BorderColor = Color.Yellow;
         ClosePanel.OnMouseOut += (_, _) => ClosePanel.BorderColor = Color.Black;
 

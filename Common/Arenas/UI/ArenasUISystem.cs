@@ -18,6 +18,8 @@ public sealed class ArenasUISystem : ModSystem
     private static ArenasLoadoutUIState LoadoutUIState;
     private static ArenasJoinUIState JoinUIState;
 
+    public static bool IsAnyArenasUIOpen() => Interface?.CurrentState != null;
+
     // Enabled check
     public static bool IsEnabled
     {

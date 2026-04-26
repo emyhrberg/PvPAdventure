@@ -29,6 +29,15 @@ public class ArenasJoinUIState : UIState
     private UIDraggableElement Root;
     private UIPanel Container;
 
+    public void RefreshJoinPosition()
+    {
+        if (Root == null)
+            return;
+
+        Root.Top.Set(SpectatorUISystem.IsJoinUIOpen() ? 250f : 100f, 0f);
+        Root.Recalculate();
+    }
+
     public override void OnActivate()
     {
         RemoveAllChildren();
@@ -36,7 +45,7 @@ public class ArenasJoinUIState : UIState
         Root = new UIDraggableElement
         {
             Width = new StyleDimension(290f, 0f),
-            Top = new StyleDimension(100f, 0f),
+            Top = new StyleDimension(SpectatorUISystem.IsJoinUIOpen() ? 250f : 100f, 0f),
             Height = new StyleDimension(162f, 0f),
             HAlign = 0.5f
         };

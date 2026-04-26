@@ -166,6 +166,9 @@ internal class AdventureMirror : ModItem
 
     public override bool CanUseItem(Player player)
     {
+        if (player.ghost)
+            return false;
+
         if (ModContent.GetInstance<GameManager>().CurrentPhase != GameManager.Phase.Playing)
         {
             Warning(player, "Mods.PvPAdventure.AdventureMirror.GameNotStarted");
