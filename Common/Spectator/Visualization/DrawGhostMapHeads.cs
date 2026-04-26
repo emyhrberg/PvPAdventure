@@ -40,6 +40,9 @@ internal sealed class GhostMapHeadLayer : ModMapLayer
 {
     public override void Draw(ref MapOverlayDrawContext context, ref string text)
     {
+        if (!SpectatorSystem.IsInSpectateMode(Main.LocalPlayer))
+            return;
+
         Texture2D ghostRight = Ass.Ghost.Value;
         Texture2D ghostLeft = Ass.GhostLeft.Value;
 
@@ -57,8 +60,8 @@ internal sealed class GhostMapHeadLayer : ModMapLayer
                 player.Center / 16f,
                 Color.White,
                 new SpriteFrame(1, 1),
-                1.6f,
-                1.8f,
+                scaleIfNotSelected: 1.6f,
+                scaleIfSelected: 2.2f,
                 Alignment.Center);
 
             if (result.IsMouseOver)

@@ -21,7 +21,7 @@ public sealed class SpectatorUISystem : ModSystem
 
         // If config wants it to open, then open!
         var config = ModContent.GetInstance<SpectatorConfig>();
-        if (config.ShowSpectateOptionWhenJoining && !config.ForcePlayersToBeSpectatorsWhenJoining)
+        if (config.AllowPlayersToChooseSpectateMode && !config.ForceSpectateMode)
         {
             ToggleSpectateJoinUI();
         }

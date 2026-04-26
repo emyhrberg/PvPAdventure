@@ -1,159 +1,107 @@
 ﻿using Microsoft.Xna.Framework;
-using PvPAdventure.UI;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using ReLogic.Content;
+using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
-using Terraria.ModLoader.UI;
 using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator.UI;
 
 internal sealed class SpectatorControls : UIElement
 {
-    private readonly UIAutoScaleTextTextPanel<string> prevButton;
-    private readonly UIAutoScaleTextTextPanel<string> namePanel;
-    private readonly UIAutoScaleTextTextPanel<string> nextButton;
+    private const int Slot = 52;
+    private const int TextHeight = 26;
+    private const int BottomPadding = 18;
 
-    private readonly UIElement root;
-    private readonly UIPanel basePanel;
-    private readonly UIExpandablePanel showMorePanel;
-    private readonly UIElement expandedContent;
-    private readonly UIAutoScaleTextTextPanel<string> placeholderPanel;
-
-    private bool showMoreExpanded;
+    private int locked = -1;
+    private int hovered = -1;
+    private string shownTargets = "";
+    private UIText status;
 
     public SpectatorControls()
     {
-        Width.Set(240f, 0f);
-        Height.Set(80f, 0f);
+        Height.Set(Slot + TextHeight, 0f);
         HAlign = 0.5f;
         VAlign = 1f;
-        Top.Set(-100f, 0f);
-        SetPadding(0f);
+        Top.Set(-BottomPadding, 0f);
+        Rebuild();
+    }
 
-        root = new UIElement();
-        root.Width.Set(240f, 0f);
-        root.Height.Set(80f, 0f);
-        root.SetPadding(0f);
-        Append(root);
+    public void Rebuild()
+    {
+        RemoveAllChildren();
 
-        Color backgroundColor = new Color(63, 82, 151) * 0.88f;
-        Color borderColor = new(89, 116, 213);
+        List<int> targets = SpectatorSystem.GetTargets(Main.myPlayer);
+        shownTargets = string.Join(",", targets);
 
-        basePanel = new UIPanel();
-        basePanel.Width.Set(240f, 0f);
-        basePanel.Height.Set(50f, 0f);
-        basePanel.SetPadding(0f);
-        basePanel.BackgroundColor = backgroundColor;
-        basePanel.BorderColor = borderColor;
-        root.Append(basePanel);
+        if (!targets.Contains(locked))
+            locked = -1;
 
-        prevButton = new UIAutoScaleTextTextPanel<string>("<", 0.8f);
-        prevButton.Width.Set(36f, 0f);
-        prevButton.Height.Set(50f, 0f);
-        prevButton.Left.Set(0f, 0f);
-        prevButton.SetPadding(0f);
-        prevButton.UseInnerDimensions = true;
-        prevButton.BackgroundColor = backgroundColor;
-        prevButton.BorderColor = borderColor;
-        prevButton.TextColor = Color.White;
-        prevButton.OnLeftClick += (_, _) => SpectatorSystem.PreviousPlayerTarget();
-        root.Append(prevButton);
+        if (!targets.Contains(hovered))
+            hovered = -1;
 
-        namePanel = new UIAutoScaleTextTextPanel<string>("", 1f);
-        namePanel.Width.Set(168f, 0f);
-        namePanel.Height.Set(50f, 0f);
-        namePanel.Left.Set(36f, 0f);
-        namePanel.SetPadding(0f);
-        namePanel.UseInnerDimensions = true;
-        namePanel.BackgroundColor = backgroundColor;
-        namePanel.BorderColor = borderColor;
-        namePanel.TextColor = Color.White;
-        namePanel.OnLeftClick += (_, _) => SpectatorSystem.TogglePlayerTargetSelection();
-        root.Append(namePanel);
+        if (targets.Count == 0)
+        {
+            Width.Set(Slot * 4f, 0f);
+            locked = hovered = -1;
+            SpectatorSystem.ClearTarget();
 
-        nextButton = new UIAutoScaleTextTextPanel<string>(">", 0.8f);
-        nextButton.Width.Set(36f, 0f);
-        nextButton.Height.Set(50f, 0f);
-        nextButton.Left.Set(204f, 0f);
-        nextButton.SetPadding(0f);
-        nextButton.UseInnerDimensions = true;
-        nextButton.BackgroundColor = backgroundColor;
-        nextButton.BorderColor = borderColor;
-        nextButton.TextColor = Color.White;
-        nextButton.OnLeftClick += (_, _) => SpectatorSystem.NextPlayerTarget();
-        root.Append(nextButton);
+            status = new UIText(Status()) { HAlign = 0.5f, VAlign = 0.5f };
+            Append(status);
+            Recalculate();
+            return;
+        }
 
-        showMorePanel = new UIExpandablePanel();
-        showMorePanel.Width.Set(240f, 0f);
-        showMorePanel.Height.Set(30f, 0f);
-        showMorePanel.Top.Set(50f, 0f);
-        showMorePanel.SetPadding(0f);
-        showMorePanel.BackgroundColor = backgroundColor;
-        showMorePanel.BorderColor = borderColor;
-        showMorePanel.OnExpanded += () => showMoreExpanded = true;
-        showMorePanel.OnCollapsed += () => showMoreExpanded = false;
-        root.Append(showMorePanel);
+        Width.Set(targets.Count * Slot, 0f);
 
-        expandedContent = new UIElement();
-        expandedContent.Width.Set(240f, 0f);
-        expandedContent.Height.Set(70f, 0f);
-        expandedContent.Top.Set(30f, 0f);
-        expandedContent.SetPadding(0f);
-        showMorePanel.VisibleWhenExpanded.Add(expandedContent);
+        for (int i = 0; i < targets.Count; i++)
+            Append(new SlotElement(targets[i], i));
 
-        placeholderPanel = new UIAutoScaleTextTextPanel<string>("More spectator controls", 0.8f);
-        placeholderPanel.Width.Set(240f, 0f);
-        placeholderPanel.Height.Set(28f, 0f);
-        placeholderPanel.SetPadding(0f);
-        placeholderPanel.UseInnerDimensions = true;
-        placeholderPanel.BackgroundColor = backgroundColor;
-        placeholderPanel.BorderColor = borderColor;
-        placeholderPanel.TextColor = Color.White;
-        expandedContent.Append(placeholderPanel);
+        status = new UIText("") { HAlign = 0.5f, Top = StyleDimension.FromPixels(Slot + 6f) };
+        Append(status);
+        UpdateStatus();
+        Recalculate();
     }
 
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
 
-        float height = showMoreExpanded ? 150f : 80f;
-
-        Height.Set(height, 0f);
-        root.Height.Set(height, 0f);
-        expandedContent.IgnoresMouseInteraction = !showMoreExpanded;
-
-        string prevText = "Spectate prev player: -";
-        string nextText = "Spectate next player: -";
-
-        List<int> targets = SpectatorSystem.GetTargets(Main.myPlayer);
-        Player current = SpectatorSystem.GetPlayerTarget();
-
-        Color activeText = Color.White;
-        Color inactiveText = new(160, 160, 160);
-
-        prevButton.TextColor = targets.Count > 0 ? activeText : inactiveText;
-        namePanel.TextColor = targets.Count > 0 ? activeText : inactiveText;
-        nextButton.TextColor = targets.Count > 0 ? activeText : inactiveText;
-
-        if (targets.Count > 0)
+#if DEBUG
+        if (Pressed(Keys.NumPad1))
         {
-            int index = current is null ? -1 : targets.IndexOf(current.whoAmI);
-            int prev = index < 0 ? targets.Count - 1 : (index - 1 + targets.Count) % targets.Count;
-            int next = index < 0 ? 0 : (index + 1) % targets.Count;
-
-            prevText = $"Spectate prev player: {Main.player[targets[prev]].name}";
-            nextText = $"Spectate next player: {Main.player[targets[next]].name}";
+            AddDebugPlayer();
+            Rebuild();
         }
 
-        if (prevButton.IsMouseHovering)
-            Main.instance.MouseText(prevText);
+        if (Pressed(Keys.NumPad2))
+        {
+            RemoveDebugPlayer();
+            Rebuild();
+        }
+#endif
 
-        if (nextButton.IsMouseHovering)
-            Main.instance.MouseText(nextText);
+        List<int> targets = SpectatorSystem.GetTargets(Main.myPlayer);
 
-        if (namePanel.IsMouseHovering)
-            Main.instance.MouseText(SpectatorSystem.GetTargetPanelTooltip());
+        if (string.Join(",", targets) != shownTargets)
+            Rebuild();
+
+        int nextHover = GetHoveredSlot();
+
+        if (nextHover != hovered)
+        {
+            if (hovered >= 0)
+                EndHover();
+
+            if (nextHover >= 0)
+                BeginHover(nextHover);
+        }
+
+        UpdateStatus();
 
         if (IsMouseHovering)
             Main.LocalPlayer.mouseInterface = true;
@@ -161,6 +109,253 @@ internal sealed class SpectatorControls : UIElement
 
     public void UpdateTarget()
     {
-        namePanel.SetText(SpectatorSystem.GetCurrentTargetText(), 1, false);
+        if (hovered >= 0)
+            return;
+
+        Player target = SpectatorSystem.GetPlayerTarget();
+        locked = target?.active == true ? target.whoAmI : -1;
+        Rebuild();
     }
+
+    private int GetHoveredSlot()
+    {
+        if (!ContainsPoint(Main.MouseScreen))
+            return -1;
+
+        for (int i = 0; i < Elements.Count; i++)
+            if (Elements[i] is SlotElement slot && slot.ContainsPoint(Main.MouseScreen))
+                return slot.PlayerIndex;
+
+        return -1;
+    }
+
+    private void BeginHover(int playerIndex)
+    {
+        if (!CanUse(playerIndex))
+            return;
+
+        hovered = playerIndex;
+        SpectatorSystem.SetPlayerTarget(playerIndex);
+    }
+
+    private void EndHover()
+    {
+        hovered = -1;
+
+        if (CanUse(locked))
+            SpectatorSystem.SetPlayerTarget(locked);
+        else
+        {
+            locked = -1;
+            SpectatorSystem.ClearTarget();
+        }
+    }
+
+    private void ToggleLock(int playerIndex)
+    {
+        if (!CanUse(playerIndex))
+            return;
+
+        if (locked == playerIndex)
+        {
+            locked = -1;
+            hovered = -1;
+            SpectatorSystem.ClearTarget();
+            Rebuild();
+            return;
+        }
+
+        locked = playerIndex;
+        SpectatorSystem.SetPlayerTarget(playerIndex);
+        Rebuild();
+    }
+
+    private string Status()
+    {
+        if (hovered >= 0 && Main.player[hovered]?.active == true)
+            return $"Previewing: {Main.player[hovered].name}";
+
+        if (locked >= 0 && Main.player[locked]?.active == true)
+            return $"Spectating: {Main.player[locked].name}";
+
+        return "Hover to preview, click to spectate";
+    }
+
+    private void UpdateStatus()
+    {
+        status?.SetText(Status());
+    }
+
+    private static bool CanUse(int playerIndex)
+    {
+        return playerIndex >= 0 && SpectatorSystem.GetTargets(Main.myPlayer).Contains(playerIndex);
+    }
+
+    #region Debug players used for UI testing
+#if DEBUG
+    private static readonly List<int> debugSlots = [];
+    private static bool Pressed(Keys key) => Main.keyState.IsKeyDown(key) && !Main.oldKeyState.IsKeyDown(key);
+    private static void AddDebugPlayer()
+    {
+        int slot = -1;
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            if (i != Main.myPlayer && Main.player[i]?.active != true)
+            {
+                slot = i;
+                break;
+            }
+        }
+
+        if (slot < 0)
+        {
+            Log.Chat("No free player slots for debug spectate player.");
+            return;
+        }
+
+        Player player = Main.LocalPlayer.SerializedClone();
+        int number = Main.rand.NextBool() ? Main.rand.Next(1, 11) : Main.rand.Next(99999991, 100000000);
+
+        player.whoAmI = slot;
+        player.name = number.ToString();
+        player.active = true;
+        player.dead = false;
+        player.ghost = false;
+        player.team = Main.LocalPlayer.team;
+        player.statLife = Math.Max(1, player.statLife);
+        player.Center = new Vector2(Main.rand.Next(100, Math.Max(101, Main.maxTilesX - 100)), Main.rand.Next(100, Math.Max(101, Main.maxTilesY - 100))) * 16f;
+
+        Main.player[slot] = player;
+        SpectatorSystem.Modes[slot] = PlayerMode.Player;
+        debugSlots.Add(slot);
+
+        Log.Chat($"Added debug spectate player {player.name} at slot {slot}.");
+    }
+
+    private void RemoveDebugPlayer()
+    {
+        if (debugSlots.Count == 0)
+            return;
+
+        int slot = debugSlots[^1];
+        debugSlots.RemoveAt(debugSlots.Count - 1);
+
+        if (hovered == slot)
+            hovered = -1;
+
+        if (locked == slot)
+            locked = -1;
+
+        Main.player[slot] = new Player { whoAmI = slot };
+        SpectatorSystem.Modes.Remove(slot);
+
+        if (CanUse(locked))
+            SpectatorSystem.SetPlayerTarget(locked);
+        else
+            SpectatorSystem.ClearTarget();
+
+        Log.Chat($"Removed debug spectate player from slot {slot}.");
+    }
+#endif
+    #endregion
+
+    #region Custom UI Elements
+    private sealed class SlotElement : UIElement
+    {
+        private readonly int playerIndex;
+        private readonly Bg bg = new();
+
+        public int PlayerIndex => playerIndex;
+
+        public SlotElement(int playerIndex, int order)
+        {
+            this.playerIndex = playerIndex;
+
+            Width.Set(Slot, 0f);
+            Height.Set(Slot, 0f);
+            Left.Set(order * Slot, 0f);
+
+            Append(bg);
+            Append(new Head(playerIndex));
+            OnLeftClick += Click;
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+            if (Parent is not SpectatorControls controls)
+                return;
+
+            Player player = Main.player[playerIndex];
+            bool selected = controls.locked == playerIndex || controls.hovered == playerIndex;
+
+            bg.Set(selected ? TextureAssets.InventoryBack15 : TextureAssets.InventoryBack7, selected ? 1f : 0.75f);
+
+            if (IsMouseHovering && player?.active == true)
+                Main.instance.MouseText(controls.locked == playerIndex ? $"{player.name} (currently spectating)" : $"Preview {player.name}");
+        }
+
+        private void Click(UIMouseEvent evt, UIElement element)
+        {
+            if (Parent is SpectatorControls controls)
+                controls.ToggleLock(playerIndex);
+        }
+
+        private sealed class Bg : UIElement
+        {
+            private Asset<Texture2D> texture = TextureAssets.InventoryBack7;
+            private float scale = 0.75f;
+
+            public Bg()
+            {
+                Width.Set(0f, 1f);
+                Height.Set(0f, 1f);
+                IgnoresMouseInteraction = true;
+            }
+
+            public void Set(Asset<Texture2D> texture, float scale)
+            {
+                this.texture = texture;
+                this.scale = scale;
+            }
+
+            protected override void DrawSelf(SpriteBatch spriteBatch)
+            {
+                Texture2D value = texture.Value;
+                spriteBatch.Draw(value, GetDimensions().Center(), null, Color.White, 0f, value.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            }
+        }
+
+        private sealed class Head : UIElement
+        {
+            private readonly int playerIndex;
+
+            public Head(int playerIndex)
+            {
+                this.playerIndex = playerIndex;
+                Width.Set(40f, 0f);
+                Height.Set(40f, 0f);
+                HAlign = 0.5f;
+                VAlign = 0.5f;
+                IgnoresMouseInteraction = true;
+            }
+
+            protected override void DrawSelf(SpriteBatch spriteBatch)
+            {
+                Player player = Main.player[playerIndex];
+
+                if (player?.active != true)
+                    return;
+
+                bool hovered = Parent?.Parent is SpectatorControls controls && controls.hovered == playerIndex;
+                float scale = hovered ? 1f : 0.75f;
+
+                Main.MapPlayerRenderer.DrawPlayerHead(Main.Camera, player, GetDimensions().Center() + new Vector2(-3f, -2f), scale, scale, Color.White);
+            }
+        }
+    }
+
+    #endregion
 }

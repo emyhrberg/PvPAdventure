@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.Visualization;
+using PvPAdventure.Common.Visualization;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -100,6 +101,7 @@ public static class EntityDrawer
         sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, ClippedCullNone, null, Main.UIScaleMatrix);
 
         FullBrightPlayerDrawer.ForceFullBrightOnce = true;
+        PlayerOutlines.ForcePreviewOutline = true;
 
         try
         {
@@ -111,6 +113,7 @@ public static class EntityDrawer
         finally
         {
             FullBrightPlayerDrawer.ForceFullBrightOnce = false;
+            PlayerOutlines.ForcePreviewOutline = false;
         }
 
         sb.End();

@@ -541,6 +541,11 @@ Mods: {
 					Label: Show Chat Channel Prefixes
 					Tooltip: Shows (TEAM) or (ALL) chat channel indicators before chat messages
 				}
+
+				DrawSpectators: {
+					Label: Draw Spectators
+					Tooltip: ""
+				}
 			}
 
 			OutlinesConfig: {
@@ -1875,6 +1880,16 @@ Mods: {
 				DrawAllPlayerNamesWhileSpectating: {
 					Label: Show Nameplates
 					Tooltip: Show all player nameplates while spectating
+				}
+
+				AllowPlayersToChooseSpectateMode: {
+					Label: Allow Players To Choose Spectate Mode
+					Tooltip: ""
+				}
+
+				ForceSpectateMode: {
+					Label: Force Spectate Mode
+					Tooltip: ""
 				}
 			}
 

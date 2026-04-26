@@ -21,6 +21,7 @@ public class SpawnHooks : ModSystem
     {
         On_Player.HasUnityPotion += ForceUnityPotion;
         On_Player.Spawn_SetPosition += ApplySelectedSpawn;
+        On_Player.Teleport += TPOverride;
         On_Main.DrawInterface_35_YouDied += DrawDeathText;
         On_Main.TriggerPing += SkipPingWhileHoveringSelector;
     }
@@ -28,6 +29,7 @@ public class SpawnHooks : ModSystem
     public override void Unload()
     {
         On_Player.HasUnityPotion -= ForceUnityPotion;
+        On_Player.Teleport -= TPOverride;
         On_Player.Spawn_SetPosition -= ApplySelectedSpawn;
         On_Main.DrawInterface_35_YouDied -= DrawDeathText;
         On_Main.TriggerPing -= SkipPingWhileHoveringSelector;
@@ -45,6 +47,11 @@ public class SpawnHooks : ModSystem
 
         return false;
         //return orig(self);
+    }
+
+    private void TPOverride(On_Player.orig_Teleport orig, Player self, Vector2 newPos, int Style = 0, int extraInfo = 0)
+    {
+        orig(self, newPos, Style, extraInfo);
     }
 
     private static void TeleportAndSync(Player p, Vector2 pos)

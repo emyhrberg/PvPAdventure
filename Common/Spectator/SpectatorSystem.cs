@@ -24,7 +24,7 @@ internal sealed class SpectatorSystem : ModSystem
 
     public static bool IsInPlayerMode(Player player) => player?.active == true && GetMode(player.whoAmI) == PlayerMode.Player;
 
-    internal static PlayerMode GetJoinDefaultMode() => ModContent.GetInstance<SpectatorConfig>().ForcePlayersToBeSpectatorsWhenJoining ? PlayerMode.Spectator : PlayerMode.Player;
+    internal static PlayerMode GetJoinDefaultMode() => ModContent.GetInstance<SpectatorConfig>().ForceSpectateMode ? PlayerMode.Spectator : PlayerMode.Player;
 
     public static void RequestFullSync()
     {
@@ -255,7 +255,7 @@ public class SpectatorPlayer : ModPlayer
             return;
 
         var spectatorConfig = ModContent.GetInstance<SpectatorConfig>();
-        if (spectatorConfig.ForcePlayersToBeSpectatorsWhenJoining)
+        if (spectatorConfig.ForceSpectateMode)
             forceSpectatorDelayTicks = 30;
     }
 

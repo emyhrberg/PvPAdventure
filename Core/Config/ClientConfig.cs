@@ -22,15 +22,22 @@ public class ClientConfig : ModConfig
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(true)] 
     public bool PlayerOutlines = true;
+
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(true)] 
     public bool BedOutlines = true;
+
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(true)] 
     public bool LootOutlines = true;
+
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(false)] 
     public bool ShowVanityVisuals = false;
+
+    [BackgroundColor(50, 70, 120)]
+    [DefaultValue(true)]
+    public bool DrawSpectators = true;
 
     [Header("Movement")]
     [BackgroundColor(50, 70, 120)]

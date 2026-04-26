@@ -7,7 +7,7 @@ namespace PvPAdventure.Common.Spectator.Map;
 
 internal static class MapRevealHelper
 {
-    public static bool Enabled => ModContent.GetInstance<SpectatorConfig>().RevealFullMap;
+    public static bool Enabled => true;
 
     public static void RevealLocalMap()
     {

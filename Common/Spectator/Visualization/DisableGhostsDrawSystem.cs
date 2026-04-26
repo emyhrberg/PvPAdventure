@@ -42,7 +42,7 @@ internal sealed class DisableGhostsDrawSystem : ModSystem
         if (local?.active == true && local.ghost)
             return true;
 
-        return ModContent.GetInstance<SpectatorConfig>().DrawGhostsForOthers;
+        return ModContent.GetInstance<ClientConfig>().DrawSpectators;
     }
 }
 
