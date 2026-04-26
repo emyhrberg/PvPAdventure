@@ -187,7 +187,7 @@ public static class EntityDrawer
         drawPlayer.wings = player.wings;
         drawPlayer.gfxOffY = player.gfxOffY;
         drawPlayer.dead = false;
-        drawPlayer.ghost = (player.ghost || player.dead) && DisableGhostsDrawSystem.ShouldDrawGhost(player);
+        drawPlayer.ghost = (player.ghost || player.dead) && DisableGhostDrawSystem.ShouldDrawGhost(player);
 
         if (drawPlayer.ghost)
         {
@@ -205,7 +205,7 @@ public static class EntityDrawer
     {
         Player headPlayer = player.SerializedClone();
         headPlayer.dead = false;
-        headPlayer.ghost = (player.ghost || player.dead) && DisableGhostsDrawSystem.ShouldDrawGhost(player);
+        headPlayer.ghost = (player.ghost || player.dead) && DisableGhostDrawSystem.ShouldDrawGhost(player);
 
         if (headPlayer.ghost)
         {

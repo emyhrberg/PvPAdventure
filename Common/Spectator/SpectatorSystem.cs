@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using PvPAdventure.Common.Spectator.Map;
 using PvPAdventure.Common.Spectator.Net;
+using PvPAdventure.Common.Spectator.UI;
 using PvPAdventure.Core.Config;
 using System.Collections.Generic;
 using Terraria;
@@ -39,8 +40,7 @@ internal sealed class SpectatorSystem : ModSystem
             slot < Main.maxPlayers &&
             slot != Main.myPlayer &&
             Main.player[slot].active &&
-            IsInPlayerMode(Main.player[slot]) &&
-            !Main.player[slot].ghost;
+            (IsInPlayerMode(Main.player[slot]) || IsInSpectateMode(Main.player[slot]) || Main.player[slot].ghost);
     }
 
     public static void SetPlayerTarget(int slot)
@@ -48,7 +48,7 @@ internal sealed class SpectatorSystem : ModSystem
         int next = CanTarget(slot) ? slot : -1;
 
         if (target != next)
-            Log.Chat($"[Spectate] target {target}->{next}");
+            Log.Chat($"target {target}->{next}");
 
         target = next;
     }
@@ -56,7 +56,7 @@ internal sealed class SpectatorSystem : ModSystem
     public static void ClearTarget()
     {
         if (target != -1)
-            Log.Chat($"[Spectate] clear {target}");
+            Log.Chat($"clear {target}");
 
         target = -1;
     }
@@ -68,10 +68,13 @@ internal sealed class SpectatorSystem : ModSystem
         if (Main.myPlayer < 0 || Main.myPlayer >= Main.maxPlayers)
             return;
 
-        SetModeLocal(Main.myPlayer, mode);
-
         if (Main.netMode == NetmodeID.MultiplayerClient)
+        {
             SpectatorNetHandler.SendRequestSetMode(Main.myPlayer, mode);
+            return;
+        }
+
+        SetModeLocal(Main.myPlayer, mode);
     }
 
     public static void RequestSetMode(int slot, PlayerMode mode)
@@ -95,7 +98,7 @@ internal sealed class SpectatorSystem : ModSystem
 
     public static void SetModeServer(int slot, PlayerMode mode)
     {
-        if (Main.netMode != NetmodeID.Server || slot < 0 || slot >= Main.maxPlayers || !Main.player[slot].active || GetMode(slot) == mode)
+        if (Main.netMode != NetmodeID.Server || slot < 0 || slot >= Main.maxPlayers || !Main.player[slot].active)
             return;
 
         Modes[slot] = mode;
@@ -122,9 +125,10 @@ internal sealed class SpectatorSystem : ModSystem
         if (slot != Main.myPlayer || Main.netMode == NetmodeID.Server)
             return;
 
-//#if !DEBUG
         Main.LocalPlayer.ghost = mode == PlayerMode.Spectator;
-//#endif
+
+        if (slot == Main.myPlayer && oldMode != mode && Main.netMode != NetmodeID.Server)
+            SpectatorUISystem.OnLocalModeAccepted(mode);
 
         if (mode == PlayerMode.Spectator)
             Main.playerInventory = false;
@@ -138,8 +142,14 @@ internal sealed class SpectatorSystem : ModSystem
             return;
 
         for (int i = 0; i < Main.maxPlayers; i++)
-            if (Main.player[i].active && !Modes.ContainsKey(i))
-                Modes[i] = GetJoinDefaultMode();
+        {
+            if (!Main.player[i].active || Modes.ContainsKey(i))
+                continue;
+
+            PlayerMode mode = GetJoinDefaultMode();
+            Modes[i] = mode;
+            SpectatorNetHandler.SendMode(i, mode);
+        }
     }
 
     public static List<int> GetTargets(int exclude = -1)
@@ -147,19 +157,19 @@ internal sealed class SpectatorSystem : ModSystem
         List<int> targets = [];
 
         for (int i = 0; i < Main.maxPlayers; i++)
-            if (Main.player[i].active && i != exclude && IsInPlayerMode(Main.player[i]) && !Main.player[i].ghost)
+            if (CanTarget(i) && i != exclude)
                 targets.Add(i);
 
         return targets;
     }
+
     public static bool IsTargeting(Player player) => player?.active == true && GetPlayerTarget()?.whoAmI == player.whoAmI;
     public static Player GetPlayerTarget()
     {
-        if (!IsInSpectateMode(Main.LocalPlayer) || target < 0 || target >= Main.maxPlayers)
+        if (!IsInSpectateMode(Main.LocalPlayer) || !CanTarget(target))
             return null;
 
-        Player player = Main.player[target];
-        return player.active && IsInPlayerMode(player) && !player.ghost ? player : null;
+        return Main.player[target];
     }
 
     public static string GetCurrentTargetText()
@@ -202,10 +212,8 @@ internal sealed class SpectatorSystem : ModSystem
 
         Player local = Main.LocalPlayer;
 
-//#if !DEBUG
         if (local?.active == true && GetMode(local.whoAmI) == PlayerMode.Spectator && !local.ghost)
             SetModeLocal(local.whoAmI, PlayerMode.Player);
-//#endif
 
         if (!Main.gameMenu && GetPlayerTarget() is null)
             ClearTarget();

@@ -44,13 +44,13 @@ public sealed class PortalSystem : ModSystem
                 player,
                 GetPortalMessage(player, biome, distance),
                 Main.OurFavoriteColor,
-                GetOwnPortalMessage(player, biome));
+                GetOwnPortalMessage(player, biome, distance));
         }
     }
 
-    internal static string GetOwnPortalMessage(Player player, string biome)
+    internal static string GetOwnPortalMessage(Player player, string biome, int distance)
     {
-        return $"You opened a portal in {biome}";
+        return $"{player.name} opened a portal in {biome} ({distance} tiles away)";
     }
 
     internal static string GetPortalMessage(Player player, string biome, int distance)

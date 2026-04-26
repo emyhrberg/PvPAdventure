@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -13,7 +9,7 @@ namespace PvPAdventure.Common.Spectator.Visualization;
 /// Vanilla: Resource Bars 	Draws health, mana, and breath bars, as well as buff icons.
 /// https://github.com/tModLoader/tModLoader/wiki/Vanilla-Interface-layers-values
 /// </summary>
-internal class DisableResourceBarsForGhosts : ModSystem
+internal class DisableGhostResourceBarsSystem : ModSystem
 {
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {

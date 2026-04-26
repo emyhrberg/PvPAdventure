@@ -399,6 +399,11 @@ Mods: {
 				DisplayName: Sticky Power Bomb
 				Tooltip: ""
 			}
+
+			GhostConfigItem: {
+				DisplayName: Ghost Config Item
+				Tooltip: ""
+			}
 		}
 
 		NPCs: {
@@ -522,16 +527,6 @@ Mods: {
 					Tooltip: Shows the toolltip that allows you to press [Tab] to switch between (ALL) and (TEAM) chat
 				}
 
-				spawnSelectorPosition: {
-					Label: Position
-					Tooltip: ""
-				}
-
-				DrawGhostsForOthers: {
-					Label: Draw Ghosts For Others
-					Tooltip: ""
-				}
-
 				ShowTeleportPlayerMessages: {
 					Label: Show Teleport Messages
 					Tooltip: Sends a team message when players use the spawn selector to teleport
@@ -543,7 +538,12 @@ Mods: {
 				}
 
 				DrawSpectators: {
-					Label: Draw Spectators
+					Label: "[i:PvPAdventure/GhostConfigItem] Draw Spectators"
+					Tooltip: Set visibility of spectators (ghosts)
+				}
+
+				spawnSelectorPosition: {
+					Label: spawn Selector Position
 					Tooltip: ""
 				}
 			}
@@ -1844,52 +1844,18 @@ Mods: {
 				DisplayName: Spectator Config
 				Headers.Spectate: Spectate
 
-				ShowSpectateOptionWhenJoining: {
-					Label: Join Prompt
+				AllowPlayersToChooseSpectateMode: {
+					Label: Allow Players To Choose Spectate Mode
 					Tooltip: Whether to show the choose your spectator mode UI when players enter the world
 				}
 
-				ForcePlayersToBeSpectatorsWhenJoining: {
-					Label: Force Spectate On Join
+				ForceSpectateMode: {
+					Label: Force Spectate Mode
 					Tooltip:
 						'''
 						All players will be forced to spectate when entering the world.
 						This means an admin has to change their spectator status in DragonLens Player Manager to be able to play.
 						'''
-				}
-
-				DrawGhostsForOthers: {
-					Label: Draw Ghosts
-					Tooltip: Show spectator ghosts to other players. Disable this if spectators should be fully invisible.
-				}
-
-				RevealFullMap: {
-					Label: Reveal Map
-					Tooltip:
-						'''
-						Reveals the full map when entering spectator mode.
-						WARNING! When leaving spectator mode, the map fully is cleared.
-						'''
-				}
-
-				DrawAllPlayerHeadsOnMapWhileSpectating: {
-					Label: Show Map Heads
-					Tooltip: Show all player head icons on the map while spectating
-				}
-
-				DrawAllPlayerNamesWhileSpectating: {
-					Label: Show Nameplates
-					Tooltip: Show all player nameplates while spectating
-				}
-
-				AllowPlayersToChooseSpectateMode: {
-					Label: Allow Players To Choose Spectate Mode
-					Tooltip: ""
-				}
-
-				ForceSpectateMode: {
-					Label: Force Spectate Mode
-					Tooltip: ""
 				}
 			}
 

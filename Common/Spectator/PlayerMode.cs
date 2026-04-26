@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PvPAdventure.Common.Spectator;
 
-internal enum PlayerMode : byte
+public enum PlayerMode : byte
 {
     Player,
     Spectator

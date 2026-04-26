@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 
@@ -57,28 +58,26 @@ internal sealed class SpectatorPanel : UIDraggablePanel
     {
         tabButtons.Clear();
 
-        float left = 0f;
+        const float reservedRightWidth = 40f;
+        int count = tabs.Count;
 
-        foreach (ISpectatorTab tab in tabs)
+        for (int i = 0; i < count; i++)
         {
-            ISpectatorTab capturedTab = tab;
+            ISpectatorTab capturedTab = tabs[i];
 
             SpectatorTabButton button = new(
-            capturedTab.HeaderText,
-            capturedTab.TooltipText,
-            capturedTab.Icon,
-            () => currentTab == capturedTab,
-            () => ShowTab(capturedTab.Tab),
-            GetTabIconYOffset(capturedTab.Tab),
-            GetLabelXOffset(capturedTab.Tab)
-            );
+                capturedTab.HeaderText,
+                capturedTab.TooltipText,
+                capturedTab.Icon,
+                () => currentTab == capturedTab,
+                () => ShowTab(capturedTab.Tab),
+                GetTabIconYOffset(capturedTab.Tab));
 
-            button.Left.Set(left, 0f);
+            button.Left.Set(-reservedRightWidth * i / count, i / (float)count);
+            button.Width.Set(-reservedRightWidth / count, 1f / count);
 
             TitlePanel.Append(button);
             tabButtons.Add(button);
-
-            left += 100;
         }
     }
 
@@ -149,39 +148,53 @@ internal sealed class SpectatorPanel : UIDraggablePanel
 
     internal sealed class SpectatorTabButton : UIPanel
     {
+        private const float IconSize = 22f;
+        private const float Gap = 6f;
+
         private readonly Func<bool> isSelected;
         private readonly string hoverText;
+        private readonly UIImage image;
+        private readonly UIText label;
+        private readonly float iconYOffset;
 
-        public SpectatorTabButton(string headerText, string tooltipText, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick, float iconYOffset, float labelXOffset=0)
+        public SpectatorTabButton(string headerText, string tooltipText, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick, float iconYOffset)
         {
             this.isSelected = isSelected;
+            this.iconYOffset = iconYOffset;
             hoverText = tooltipText;
 
-            Width.Set(100, 0f);
             Height.Set(0f, 1f);
             VAlign = 0.5f;
             SetPadding(0f);
 
             OnLeftClick += (_, _) => onClick();
 
-            UIImage image = new(icon.Value)
-            {
-                Left = new StyleDimension(6f, 0f),
-                Top = new StyleDimension(iconYOffset, 0f),
-                VAlign = 0.5f,
-                Width = new StyleDimension(22f, 0f),
-                Height = new StyleDimension(22f, 0f)
-            };
-
-            UIText label = new(headerText, textScale: 1.0f)
-            {
-                Left = new StyleDimension(31f+labelXOffset, 0f),
-                VAlign = 0.5f
-            };
-
+            image = new UIImage(icon.Value);
+            image.Width.Set(IconSize, 0f);
+            image.Height.Set(IconSize, 0f);
+            image.VAlign = 0.5f;
             Append(image);
+
+            label = new UIText(headerText, textScale: 1f);
+            label.VAlign = 0.5f;
             Append(label);
         }
+
+        public override void Recalculate()
+        {
+            base.Recalculate();
+
+            float labelWidth = FontAssets.MouseText.Value.MeasureString(label.Text).X;
+            float contentWidth = IconSize + Gap + labelWidth;
+            float startX = (GetDimensions().Width - contentWidth) * 0.5f;
+
+            image.Left.Set(startX, 0f);
+            image.Top.Set(iconYOffset, 0f);
+            label.Left.Set(startX + IconSize + Gap, 0f);
+
+            base.Recalculate();
+        }
+
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);

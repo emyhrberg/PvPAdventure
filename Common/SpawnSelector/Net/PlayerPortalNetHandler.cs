@@ -67,6 +67,6 @@ public static class PlayerPortalNetHandler
             player,
             PortalSystem.GetPortalMessage(player, biome, distance),
             Main.teamColor[Math.Clamp(player.team, 0, Main.teamColor.Length - 1)],
-            PortalSystem.GetOwnPortalMessage(player, biome));
+            PortalSystem.GetOwnPortalMessage(player, biome, distance));
     }
 }

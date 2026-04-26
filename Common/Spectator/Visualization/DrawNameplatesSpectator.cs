@@ -19,7 +19,7 @@ namespace PvPAdventure.Common.Spectator.Visualization;
 /// (which are only drawn when they are on same team, which usually never happens, but whatever).
 /// </summary>
 [Autoload(Side = ModSide.Client)]
-internal sealed class DrawAllPlayerNamesAsSpectator : ModSystem
+internal sealed class DrawNameplatesSpectator : ModSystem
 {
     public override void Load()
     {
@@ -33,7 +33,7 @@ internal sealed class DrawAllPlayerNamesAsSpectator : ModSystem
 
     private static void DrawNamesAfterNewOverlay(On_NewMultiplayerClosePlayersOverlay.orig_Draw orig, NewMultiplayerClosePlayersOverlay self)
     {
-        ModContent.GetInstance<DrawAllPlayerNamesAsSpectator>().VanillaDraw();
+        ModContent.GetInstance<DrawNameplatesSpectator>().VanillaDraw();
     }
 
     private struct PlayerOnScreenCache

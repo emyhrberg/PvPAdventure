@@ -25,6 +25,20 @@ internal sealed class SpectatorUIState : UIState
         UpdateJoinPanel();
     }
 
+    internal bool IsSpectatePanelOpen() => spectatePanel?.Parent != null;
+
+    internal void ToggleSpectatePanel()
+    {
+        if (IsSpectatePanelOpen())
+        {
+            spectatePanel.Remove();
+            return;
+        }
+
+        spectatePanel ??= new SpectatorPanel();
+        Append(spectatePanel);
+    }
+
     internal void ToggleJoinPanel()
     {
         showJoinPanel = !showJoinPanel;
@@ -66,16 +80,6 @@ internal sealed class SpectatorUIState : UIState
     internal void ToggleSpectatorControlsElement()
     {
         EnsurePlayerSpectatorControlsOpen();
-    }
-
-    internal void ToggleSpectatePanel()
-    {
-        if (spectatePanel?.Parent is null)
-        {
-            spectatePanel ??= new SpectatorPanel();
-            Append(spectatePanel);
-        }
-        else spectatePanel.Remove();
     }
 
     public override void Update(GameTime gameTime)

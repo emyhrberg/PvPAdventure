@@ -34,6 +34,6 @@ internal static class MapRevealHelper
         Main.Map.Clear();
         Main.refreshMap = true;
         Main.mapFullscreen = false;
-        Main.mapStyle = 0;
+        //Main.mapStyle = 0;
     }
 }

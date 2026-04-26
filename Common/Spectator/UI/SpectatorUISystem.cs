@@ -2,6 +2,7 @@
 using PvPAdventure.Core.Config;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -9,7 +10,7 @@ using Terraria.UI;
 namespace PvPAdventure.Common.Spectator.UI;
 
 [Autoload(Side = ModSide.Client)]
-public sealed class SpectatorUISystem : ModSystem
+public class SpectatorUISystem : ModSystem
 {
     private static UserInterface spectatorInterface;
     private static SpectatorUIState spectatorState;
@@ -27,25 +28,41 @@ public sealed class SpectatorUISystem : ModSystem
         }
     }
 
-    public static void EnterPlayerMode()
+    public static void TryEnterPlayerMode() => SpectatorSystem.RequestSetLocalMode(PlayerMode.Player);
+    public static void TryEnterSpectateMode() => SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
+
+    public static void ToggleSpectatePanel()
     {
-        SpectatorSystem.RequestSetLocalMode(PlayerMode.Player);
+        EnsureInitialized();
+
+        bool wasOpen = spectatorState?.IsSpectatePanelOpen() == true;
+        spectatorState?.ToggleSpectatePanel();
+        bool isOpen = spectatorState?.IsSpectatePanelOpen() == true;
+
+        PlayToggleSound(wasOpen, isOpen);
+    }
+
+    public static void OnLocalModeAccepted(PlayerMode mode)
+    {
+        if (mode == PlayerMode.Spectator)
+        {
+            CloseJoinUI();
+            Main.playerInventory = false;
+            Main.NewText("You are now a spectator. Use free camera or select a player to spectate.", Color.Yellow);
+            EnsurePlayerSpectatorControlsOpen();
+            return;
+        }
+
         CloseJoinUI();
         Main.NewText("You are now a player.", Color.Yellow);
     }
 
-    public static void EnterSpectateMode()
+    private static void PlayToggleSound(bool wasOpen, bool isOpen)
     {
-        SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
-        CloseJoinUI();
-        Main.playerInventory = false; // spectators should never see their inventory, so close it if they have it open.
-        Main.NewText("You are now a spectator. Use free camera or select a player to spectate.", Color.Yellow);
-        EnsurePlayerSpectatorControlsOpen();
-    }
+        if (wasOpen == isOpen)
+            return;
 
-    public static void ToggleSpectatePanel()
-    {
-        spectatorState?.ToggleSpectatePanel();
+        SoundEngine.PlaySound(isOpen ? SoundID.MenuOpen : SoundID.MenuClose);
     }
 
     public static void ToggleSpectateJoinUI()

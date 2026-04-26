@@ -42,12 +42,12 @@ public class SpectatorJoinPanel : UIElement
         container.Height.Set(-titleHeight, 1f);
         root.Append(container);
 
-        UITextActionPanel playerRow = new("Player", SpectatorUISystem.EnterPlayerMode, titleHeight, 0.5f, true, Ass.Icon_Player.Value);
+        UITextActionPanel playerRow = new("Player", SpectatorUISystem.TryEnterPlayerMode, titleHeight, 0.5f, true, Ass.Icon_Player.Value);
         playerRow.Left.Set(8f, 0f);
         playerRow.Top.Set(8f, 0f);
         playerRow.Width.Set(-16f, 1f);
 
-        UITextActionPanel spectateRow = new("Spectator", SpectatorUISystem.EnterSpectateMode, titleHeight, 0.5f, true, Ass.Icon_Eye.Value);
+        UITextActionPanel spectateRow = new("Spectator", SpectatorUISystem.TryEnterSpectateMode, titleHeight, 0.5f, true, Ass.Icon_Eye.Value);
         spectateRow.Left.Set(8f, 0f);
         spectateRow.Top.Set(8f + titleHeight + 8f, 0f);
         spectateRow.Width.Set(-16f, 1f);

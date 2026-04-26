@@ -9,7 +9,7 @@ using Terraria.ModLoader;
 namespace PvPAdventure.Common.Spectator.Visualization;
 
 [Autoload(Side = ModSide.Client)]
-internal sealed class DisableGhostsDrawSystem : ModSystem
+internal sealed class DisableGhostDrawSystem : ModSystem
 {
     public override void Load()
     {

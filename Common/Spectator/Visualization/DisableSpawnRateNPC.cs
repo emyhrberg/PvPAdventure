@@ -3,7 +3,10 @@ using Terraria.ModLoader;
 
 namespace PvPAdventure.Common.Spectator.Visualization;
 
-internal class DisableSpectatorSpawnRateNPC : GlobalNPC
+/// <summary>
+/// Disables spawn rate for players who are spectators
+/// </summary>
+internal class DisableSpawnRateNPC : GlobalNPC
 {
     public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
     {

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using PvPAdventure.Core.Utilities;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
@@ -321,10 +322,10 @@ internal sealed class SpectatorControls : UIElement
                 this.scale = scale;
             }
 
-            protected override void DrawSelf(SpriteBatch spriteBatch)
+            protected override void DrawSelf(SpriteBatch sb)
             {
                 Texture2D value = texture.Value;
-                spriteBatch.Draw(value, GetDimensions().Center(), null, Color.White, 0f, value.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+                sb.Draw(value, GetDimensions().Center(), null, Color.White, 0f, value.Size() * 0.5f, scale, SpriteEffects.None, 0f);
             }
         }
 
@@ -342,17 +343,24 @@ internal sealed class SpectatorControls : UIElement
                 IgnoresMouseInteraction = true;
             }
 
-            protected override void DrawSelf(SpriteBatch spriteBatch)
+            protected override void DrawSelf(SpriteBatch sb)
             {
                 Player player = Main.player[playerIndex];
 
                 if (player?.active != true)
                     return;
 
-                bool hovered = Parent?.Parent is SpectatorControls controls && controls.hovered == playerIndex;
-                float scale = hovered ? 1f : 0.75f;
+                float scale = SpectatorSystem.GetPlayerTarget()?.whoAmI == playerIndex ? 1f : 0.75f;
+                Vector2 position = GetDimensions().Center() + new Vector2(-3f, -2f);
 
-                Main.MapPlayerRenderer.DrawPlayerHead(Main.Camera, player, GetDimensions().Center() + new Vector2(-3f, -2f), scale, scale, Color.White);
+                if (player.ghost || SpectatorSystem.IsInSpectateMode(player))
+                {
+                    Texture2D texture = player.direction == -1 ? Ass.GhostLeft.Value : Ass.Ghost.Value;
+                    sb.Draw(texture, position, null, Color.White, 0f, texture.Size() * 0.5f, scale * 1.15f, SpriteEffects.None, 0f);
+                    return;
+                }
+
+                Main.MapPlayerRenderer.DrawPlayerHead(Main.Camera, player, position, scale, scale, Color.White);
             }
         }
     }

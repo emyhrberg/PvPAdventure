@@ -24,6 +24,14 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
         if (Main.drawingPlayerChat || Main.editSign || Main.editChest || Main.blockInput)
             return;
 
+        // Close map when pressing escape
+        if (Main.mapFullscreen && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
+        {
+            Main.mapFullscreen = false;
+            Main.mapStyle = 0;
+            return;
+        }
+
         bool mapDown = PlayerInput.Triggers.Current.MapFull;
 
         if (mapDown)
@@ -41,7 +49,7 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
         if (Main.mapFullscreen)
             UpdateFullscreenMapZoom();
 
-        if (PlayerInput.Triggers.Current.MapStyle && !PlayerInput.Triggers.Old.MapStyle)
+        if (SpectatorSystem.IsInSpectateMode(Main.LocalPlayer) && PlayerInput.Triggers.Current.MapStyle && !PlayerInput.Triggers.Old.MapStyle)
             CycleMapStyle();
     }
 
@@ -73,6 +81,7 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
 
     private static void CycleMapStyle()
     {
+
         if (Main.mapFullscreen)
         {
             Main.mapFullscreen = false;

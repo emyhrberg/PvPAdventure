@@ -54,6 +54,8 @@ internal static class SpectatorNetHandler
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 
+        Log.Chat($"MP client with player index: {slot} sending request to become {mode}");
+
         ModPacket packet = Packet(SpectatorOperation.RequestSetMode);
         packet.Write(slot);
         packet.Write((byte)mode);

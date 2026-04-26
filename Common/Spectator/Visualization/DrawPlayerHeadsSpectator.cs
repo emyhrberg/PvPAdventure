@@ -18,7 +18,7 @@ internal sealed class DrawAllPlayerHeadsOnMapSystem : ModSystem
     }
 
     /// <summary>
-    /// Thanks PvPFrameworkMini
+    /// Thanks PvPFrameworkMini and EJ
     /// </summary>
     private static void DrawMapOverride(On_Main.orig_DrawMap orig, Main self, GameTime gameTime)
     {
