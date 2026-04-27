@@ -15,16 +15,13 @@ public class PlaytimeCommand : ModCommand
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        var fileData = Main.ActivePlayerFileData;
-
-        if (fileData == null)
+        if (caller.Player == null || !caller.Player.active)
         {
-            Main.NewText("No active player data.", Color.Red);
+            Main.NewText("Error: Player not found. Could not display playtime.", Color.Red);
             return;
         }
 
-        var playTime = fileData.GetPlayTime();
-        Main.NewText($"{Main.LocalPlayer.name} - Playtime: {SSC.FormatPlayTime(playTime)}", Color.MediumPurple);
+        PlayerPositionSystem.PrintWelcomeMessage(caller.Player);
     }
 }
 

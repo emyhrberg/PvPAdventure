@@ -25,9 +25,5 @@ public class SaveCommand : ModCommand
 
         // Send save request to server
         ModContent.GetInstance<SSCSaveSystem>().SendPacketToSavePlayerFile();
-
-        // Notify player
-        string time = DateTime.Now.ToString("HH:mm:ss");
-        Main.NewText($"{Main.LocalPlayer.name} saved manually at {time}", Color.MediumPurple);
     }
 }
