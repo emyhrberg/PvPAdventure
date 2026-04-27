@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.Drawers;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Graphics;
 using System;
@@ -57,7 +58,7 @@ internal sealed class SpectatorPlayerEntry : SpectatorEntityEntry
 
     private bool IsSpectating()
     {
-        return SpectatorSystem.IsTargeting(player);
+        return SpectatorTargetSystem.IsTargeting(player);
     }
 
     private void OnInventoryClicked(UIMouseEvent evt, UIElement listeningElement)
@@ -130,15 +131,12 @@ internal sealed class SpectatorPlayerEntry : SpectatorEntityEntry
 
         if (IsSpectating())
         {
-            SpectatorSystem.ClearTarget();
+            SpectatorTargetSystem.ClearTarget();
             Log.Chat("Stopped spectating " + player.name);
             return;
         }
 
-        if (!SpectatorSystem.IsInSpectateMode(local))
-            SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
-
-        SpectatorSystem.SetPlayerTarget(player.whoAmI);
+        SpectatorTargetSystem.SetPlayerTarget(player.whoAmI);
         SpectatorUISystem.EnsurePlayerSpectatorControlsOpen();
 
         Log.Chat($"Now spectating {player.name}");

@@ -29,15 +29,6 @@ public class ArenasJoinUIState : UIState
     private UIDraggableElement Root;
     private UIPanel Container;
 
-    public void RefreshJoinPosition()
-    {
-        if (Root == null)
-            return;
-
-        Root.Top.Set(SpectatorUISystem.IsJoinUIOpen() ? 250f : 100f, 0f);
-        Root.Recalculate();
-    }
-
     public override void OnActivate()
     {
         RemoveAllChildren();
@@ -45,7 +36,6 @@ public class ArenasJoinUIState : UIState
         Root = new UIDraggableElement
         {
             Width = new StyleDimension(290f, 0f),
-            Top = new StyleDimension(SpectatorUISystem.IsJoinUIOpen() ? 250f : 100f, 0f),
             Height = new StyleDimension(162f, 0f),
             HAlign = 0.5f
         };
@@ -104,20 +94,6 @@ public class ArenasJoinUIState : UIState
     {
         ArenasUISystem.Close();
         SSCDelayJoinSystem.SendJoinRequest();
-    }
-
-    public static UITextPanel<string> CreateButton(string text, Action onClick)
-    {
-        var button = new UITextPanel<string>(text, 0.6f, large: true);
-        button.HAlign = 0.5f;
-        button.SetPadding(0f);
-        button.Width.Set(0f, 1f);
-
-        button.OnLeftClick += (_, _) => onClick();
-        button.OnMouseOver += (_, _) => button.BorderColor = Color.Yellow;
-        button.OnMouseOut += (_, _) => button.BorderColor = Color.Black;
-
-        return button;
     }
 
     public override void Update(GameTime gameTime)

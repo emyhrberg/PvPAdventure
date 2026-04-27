@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using PvPAdventure.Common.Spectator;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config.UI;
@@ -111,7 +112,7 @@ public class SpectateSystem : ModSystem
         if (local == null || !local.active)
             return;
 
-        if (SpectatorSystem.IsInSpectateMode(local))
+        if (SpectatorModeSystem.IsInSpectateMode(local))
         {
             Restore();
             return;

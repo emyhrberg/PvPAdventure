@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Content;
 using System;
@@ -36,7 +37,7 @@ internal sealed class SpectatorControls : UIElement
     {
         RemoveAllChildren();
 
-        List<int> targets = SpectatorSystem.GetTargets(Main.myPlayer);
+        List<int> targets = SpectatorTargetSystem.GetTargets(Main.myPlayer);
         shownTargets = string.Join(",", targets);
 
         if (!targets.Contains(locked))
@@ -49,7 +50,7 @@ internal sealed class SpectatorControls : UIElement
         {
             Width.Set(Slot * 4f, 0f);
             locked = hovered = -1;
-            SpectatorSystem.ClearTarget();
+            SpectatorTargetSystem.ClearTarget();
 
             status = new UIText(Status()) { HAlign = 0.5f, VAlign = 0.5f };
             Append(status);
@@ -86,7 +87,7 @@ internal sealed class SpectatorControls : UIElement
         }
 #endif
 
-        List<int> targets = SpectatorSystem.GetTargets(Main.myPlayer);
+        List<int> targets = SpectatorTargetSystem.GetTargets(Main.myPlayer);
 
         if (string.Join(",", targets) != shownTargets)
             Rebuild();
@@ -113,7 +114,7 @@ internal sealed class SpectatorControls : UIElement
         if (hovered >= 0)
             return;
 
-        Player target = SpectatorSystem.GetPlayerTarget();
+        Player target = SpectatorTargetSystem.GetPlayerTarget();
         locked = target?.active == true ? target.whoAmI : -1;
         Rebuild();
     }
@@ -136,7 +137,7 @@ internal sealed class SpectatorControls : UIElement
             return;
 
         hovered = playerIndex;
-        SpectatorSystem.SetPlayerTarget(playerIndex);
+        SpectatorTargetSystem.SetPlayerTarget(playerIndex);
     }
 
     private void EndHover()
@@ -144,11 +145,11 @@ internal sealed class SpectatorControls : UIElement
         hovered = -1;
 
         if (CanUse(locked))
-            SpectatorSystem.SetPlayerTarget(locked);
+            SpectatorTargetSystem.SetPlayerTarget(locked);
         else
         {
             locked = -1;
-            SpectatorSystem.ClearTarget();
+            SpectatorTargetSystem.ClearTarget();
         }
     }
 
@@ -161,13 +162,13 @@ internal sealed class SpectatorControls : UIElement
         {
             locked = -1;
             hovered = -1;
-            SpectatorSystem.ClearTarget();
+            SpectatorTargetSystem.ClearTarget();
             Rebuild();
             return;
         }
 
         locked = playerIndex;
-        SpectatorSystem.SetPlayerTarget(playerIndex);
+        SpectatorTargetSystem.SetPlayerTarget(playerIndex);
         Rebuild();
     }
 
@@ -189,7 +190,7 @@ internal sealed class SpectatorControls : UIElement
 
     private static bool CanUse(int playerIndex)
     {
-        return playerIndex >= 0 && SpectatorSystem.GetTargets(Main.myPlayer).Contains(playerIndex);
+        return playerIndex >= 0 && SpectatorTargetSystem.GetTargets(Main.myPlayer).Contains(playerIndex);
     }
 
     #region Debug players used for UI testing
@@ -228,7 +229,7 @@ internal sealed class SpectatorControls : UIElement
         player.Center = new Vector2(Main.rand.Next(100, Math.Max(101, Main.maxTilesX - 100)), Main.rand.Next(100, Math.Max(101, Main.maxTilesY - 100))) * 16f;
 
         Main.player[slot] = player;
-        SpectatorSystem.Modes[slot] = PlayerMode.Player;
+        SpectatorModeSystem.Modes[slot] = PlayerMode.Player;
         debugSlots.Add(slot);
 
         Log.Chat($"Added debug spectate player {player.name} at slot {slot}.");
@@ -249,12 +250,12 @@ internal sealed class SpectatorControls : UIElement
             locked = -1;
 
         Main.player[slot] = new Player { whoAmI = slot };
-        SpectatorSystem.Modes.Remove(slot);
+        SpectatorModeSystem.Modes.Remove(slot);
 
         if (CanUse(locked))
-            SpectatorSystem.SetPlayerTarget(locked);
+            SpectatorTargetSystem.SetPlayerTarget(locked);
         else
-            SpectatorSystem.ClearTarget();
+            SpectatorTargetSystem.ClearTarget();
 
         Log.Chat($"Removed debug spectate player from slot {slot}.");
     }
@@ -350,10 +351,10 @@ internal sealed class SpectatorControls : UIElement
                 if (player?.active != true)
                     return;
 
-                float scale = SpectatorSystem.GetPlayerTarget()?.whoAmI == playerIndex ? 1f : 0.75f;
+                float scale = SpectatorTargetSystem.GetPlayerTarget()?.whoAmI == playerIndex ? 1f : 0.75f;
                 Vector2 position = GetDimensions().Center() + new Vector2(-3f, -2f);
 
-                if (player.ghost || SpectatorSystem.IsInSpectateMode(player))
+                if (player.ghost || SpectatorModeSystem.IsInSpectateMode(player))
                 {
                     Texture2D texture = player.direction == -1 ? Ass.GhostLeft.Value : Ass.Ghost.Value;
                     sb.Draw(texture, position, null, Color.White, 0f, texture.Size() * 0.5f, scale * 1.15f, SpriteEffects.None, 0f);

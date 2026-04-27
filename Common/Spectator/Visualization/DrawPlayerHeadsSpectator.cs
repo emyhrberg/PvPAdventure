@@ -1,8 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Map;
+namespace PvPAdventure.Common.Spectator.Visualization;
 
 [Autoload(Side = ModSide.Client)]
 internal sealed class DrawAllPlayerHeadsOnMapSystem : ModSystem
@@ -22,7 +23,7 @@ internal sealed class DrawAllPlayerHeadsOnMapSystem : ModSystem
     /// </summary>
     private static void DrawMapOverride(On_Main.orig_DrawMap orig, Main self, GameTime gameTime)
     {
-        if (!SpectatorSystem.IsInSpectateMode(Main.LocalPlayer))
+        if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer))
         {
             orig(self, gameTime);
             return;

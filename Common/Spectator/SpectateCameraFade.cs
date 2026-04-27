@@ -7,11 +7,14 @@ using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator;
 
+/// <summary>
+/// Visual fade-in effect when the camera is moved a large distance in spectate mode. This is to prevent motion sickness/lag from sudden camera jumps.
+/// </summary>
 [Autoload(Side = ModSide.Client)]
 internal sealed class SpectateCameraFade : ModSystem
 {
-    private const float FadeDistanceTiles = 70f;
-    private const int FadeTicks = 42;
+    private const float FadeDistanceTiles = 70f; // the distance where fades will actually be executed
+    private const int FadeTicks = 42; // the number of ticks the fade will last for, 42 is 0.7 seconds at 60 fps
     private static readonly float FadeDistancePixelsSq = FadeDistanceTiles * 16f * FadeDistanceTiles * 16f;
 
     private static int fadeTicksLeft;

@@ -49,6 +49,11 @@ internal static class SessionTrackerNetHandler
 
     public static void SendFullSync(int toClient = -1)
     {
+        if (!_TrackerStatus.IsEnabled)
+        {
+            return;
+        }
+
         if (Main.netMode != NetmodeID.Server)
             return;
 
@@ -68,6 +73,11 @@ internal static class SessionTrackerNetHandler
 
     private static void ReceiveFullSync(BinaryReader reader)
     {
+        if (!_TrackerStatus.IsEnabled)
+        {
+            return;
+        }
+
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 

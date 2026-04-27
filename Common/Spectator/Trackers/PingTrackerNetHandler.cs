@@ -61,6 +61,9 @@ internal static class PingTrackerNetHandler
 
     private static void ReceivePingRequest(BinaryReader reader, int sender)
     {
+        if (!_TrackerStatus.IsEnabled)
+            return;
+
         if (Main.netMode != NetmodeID.Server)
             return;
 
@@ -75,6 +78,9 @@ internal static class PingTrackerNetHandler
 
     private static void ReceivePingResponse(BinaryReader reader)
     {
+        if (!_TrackerStatus.IsEnabled)
+            return;
+
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 
@@ -85,6 +91,9 @@ internal static class PingTrackerNetHandler
 
     public static void SendPingValue(int playerIndex, int pingMs)
     {
+        if (!_TrackerStatus.IsEnabled)
+            return;
+
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 
@@ -96,6 +105,9 @@ internal static class PingTrackerNetHandler
 
     private static void ReceivePingValue(BinaryReader reader, int sender)
     {
+        if (!_TrackerStatus.IsEnabled)
+            return;
+
         if (Main.netMode != NetmodeID.Server)
             return;
 
@@ -108,6 +120,9 @@ internal static class PingTrackerNetHandler
 
     public static void SendFullSync(int toClient = -1)
     {
+        if (!_TrackerStatus.IsEnabled)
+            return;
+
         if (Main.netMode != NetmodeID.Server)
             return;
 
@@ -125,6 +140,9 @@ internal static class PingTrackerNetHandler
 
     private static void ReceiveFullSync(BinaryReader reader)
     {
+        if (!_TrackerStatus.IsEnabled)
+            return;
+
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 

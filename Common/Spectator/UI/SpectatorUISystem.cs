@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Config;
 using System.Collections.Generic;
 using Terraria;
@@ -14,23 +15,18 @@ public class SpectatorUISystem : ModSystem
 {
     private static UserInterface spectatorInterface;
     private static SpectatorUIState spectatorState;
-    public static bool IsJoinUIOpen() => spectatorState?.IsJoinPanelOpen() == true;
 
     public override void OnWorldLoad()
     {
         spectatorInterface = new();
         spectatorState = new();
-
-        // If config wants it to open, then open!
-        var config = ModContent.GetInstance<SpectatorConfig>();
-        if (config.AllowSpectating && !config.ForceSpectating)
-        {
-            ToggleSpectateJoinUI();
-        }
     }
 
-    public static void TryEnterPlayerMode() => SpectatorSystem.RequestSetLocalMode(PlayerMode.Player);
-    public static void TryEnterSpectateMode() => SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
+    private static void EnsureInitialized()
+    {
+        spectatorInterface ??= new();
+        spectatorState ??= new();
+    }
 
     public static void ToggleSpectatePanel()
     {
@@ -47,14 +43,12 @@ public class SpectatorUISystem : ModSystem
     {
         if (mode == PlayerMode.Spectator)
         {
-            CloseJoinUI();
             Main.playerInventory = false;
             Main.NewText("You are now a spectator. Use free camera or select a player to spectate.", Color.Yellow);
             EnsurePlayerSpectatorControlsOpen();
             return;
         }
 
-        CloseJoinUI();
         Main.NewText("You are now a player.", Color.Yellow);
     }
 
@@ -66,27 +60,12 @@ public class SpectatorUISystem : ModSystem
         SoundEngine.PlaySound(isOpen ? SoundID.MenuOpen : SoundID.MenuClose);
     }
 
-    public static void ToggleSpectateJoinUI()
-    {
-        EnsureInitialized();
-        spectatorState?.ToggleJoinPanel();
-    }
-
-    public static void CloseJoinUI()
-    {
-        spectatorState?.CloseJoinPanel();
-    }
-
     public static void EnsurePlayerSpectatorControlsOpen()
     {
         spectatorState?.EnsurePlayerSpectatorControlsOpen();
     }
 
-    private static void EnsureInitialized()
-    {
-        spectatorInterface ??= new();
-        spectatorState ??= new();
-    }
+    
 
     public override void UpdateUI(GameTime gameTime)
     {
@@ -129,18 +108,15 @@ public class SpectatorUISystem : ModSystem
             return false;
 
         // Always Show the UI in debug mode for testing purposes.
-#if !DEBUG
-        if (Main.netMode == NetmodeID.SinglePlayer)
-            return false;
-#endif
+//#if !DEBUG
+//        if (Main.netMode == NetmodeID.SinglePlayer)
+//            return false;
+//#endif
 
         Player local = Main.LocalPlayer;
         if (local is null || !local.active)
             return false;
 
-        if (spectatorState?.IsJoinPanelOpen() == true)
-            return true;
-
-        return SpectatorSystem.IsInSpectateMode(local);
+        return SpectatorModeSystem.IsInSpectateMode(local);
     }
 }

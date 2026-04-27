@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using PvPAdventure.Core.Config;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.Graphics;
 using Terraria.Graphics.Renderers;
 using Terraria.ModLoader;

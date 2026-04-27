@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using PvPAdventure.Common.Spectator;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Common.Spectator.UI;
 using Terraria;
 using Terraria.GameInput;
@@ -27,7 +27,7 @@ internal class InventoryWhileDeadSystem : ModSystem
 
     private void ModifyIngameOptionsInput(On_Player.orig_TryOpeningInGameOptionsBasedOnInput orig, Player self)
     {
-        if (SpectatorSystem.IsInSpectateMode(Main.LocalPlayer) || self.ghost)
+        if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) || self.ghost)
         {
             //if (Main.playerInventory)
                 //Main.playerInventory = false;
@@ -79,7 +79,7 @@ internal class InventoryWhileDeadSystem : ModSystem
 
     private void ModifyInterfaceLogic(On_Main.orig_DrawInterface_26_InterfaceLogic3 orig)
     {
-        if (SpectatorSystem.IsInSpectateMode(Main.LocalPlayer) && !Main.ingameOptionsWindow && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
+        if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) && !Main.ingameOptionsWindow && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
         {
             SpectatorUISystem.EnsurePlayerSpectatorControlsOpen();
             SpectatorUISystem.ToggleSpectatePanel();

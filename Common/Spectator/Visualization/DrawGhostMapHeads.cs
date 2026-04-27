@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Utilities;
 using Terraria;
 using Terraria.DataStructures;
@@ -40,7 +41,7 @@ internal sealed class GhostMapHeadLayer : ModMapLayer
 {
     public override void Draw(ref MapOverlayDrawContext context, ref string text)
     {
-        if (!SpectatorSystem.IsInSpectateMode(Main.LocalPlayer))
+        if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer))
             return;
 
         Texture2D ghostRight = Ass.Ghost.Value;

@@ -4,14 +4,12 @@ using PvPAdventure.Common.Spectator.UI.Tabs;
 using PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
 using PvPAdventure.Common.Spectator.UI.Tabs.Players;
 using PvPAdventure.Common.Spectator.UI.Tabs.World;
-using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 

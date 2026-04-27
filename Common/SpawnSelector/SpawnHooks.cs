@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Chat;
-using PvPAdventure.Common.Spectator;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
@@ -38,7 +38,7 @@ public class SpawnHooks : ModSystem
     private static bool ForceUnityPotion(On_Player.orig_HasUnityPotion orig, Player self)
     {
         // Spectators/ghosts can always teleport
-        if (self.whoAmI == Main.myPlayer && SpectatorSystem.IsInSpectateMode(self))
+        if (self.whoAmI == Main.myPlayer && SpectatorModeSystem.IsInSpectateMode(self))
             return true;
 
         // Spawn selector UI is open and player can teleport, allow teleportation

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using Terraria;
 using Terraria.Graphics.Light;
 using Terraria.ModLoader;
@@ -18,7 +19,7 @@ internal class FloodlightSpectatorSystem : ModSystem
     {
         orig(self, x, y, out outputColor);
 
-        if (!SpectatorSystem.IsInSpectateMode(Main.LocalPlayer))
+        if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer))
             return;
 
         //if (strength > 0)

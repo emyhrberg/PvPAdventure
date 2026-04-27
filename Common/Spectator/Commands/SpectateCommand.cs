@@ -1,5 +1,7 @@
 ﻿using DragonLens.Core.Systems;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Config;
 using Terraria;
 using Terraria.ModLoader;
@@ -17,9 +19,6 @@ internal class SpectateCommand : ModCommand
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        // Show spectate UI.
-        //SpectatorUISystem.ToggleSpectateJoinUI();
-
         // If not allowed, just print a message to user saying its not allowed.
         SpectatorConfig config = ModContent.GetInstance<SpectatorConfig>();
         if (!config.AllowSpectating)
@@ -28,11 +27,14 @@ internal class SpectateCommand : ModCommand
             return;
         }
 
+        if (config.ForceSpectating)
+        {
+            Main.NewText("You cannot change your spectate status.", Color.OrangeRed);
+            return;
+        }
+
         // Toggle spectate mode.
-        SpectatorSystem.RequestSetLocalMode(
-        SpectatorSystem.IsInSpectateMode(Main.LocalPlayer)
-            ? PlayerMode.Player
-            : PlayerMode.Spectator);
+        SpectateCommandHelper.ToggleSpectateMode(Main.LocalPlayer);
     }
 }
 
@@ -46,17 +48,6 @@ internal class SpecCommand : ModCommand
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        // Show spectate UI.
-        //SpectatorUISystem.ToggleSpectateJoinUI();
-
-        // If not allowed, just print a message to user saying its not allowed.
-        //SpectatorConfig config = ModContent.GetInstance<SpectatorConfig>();
-        //if (!config.AllowSpectating)
-        //{
-        //    Main.NewText("Choosing spectator mode is disabled on this server.", Color.OrangeRed);
-        //    return;
-        //}
-
         // If not admin, just print a message to user saying its not allowed.
         if (!PermissionHandler.LooksLikeAdmin(Main.LocalPlayer))
         {
@@ -64,20 +55,46 @@ internal class SpecCommand : ModCommand
             return;
         }
 
-        // This is always allowed.
-
         // Toggle spectate mode.
-        SpectatorSystem.RequestSetLocalMode(
-        SpectatorSystem.IsInSpectateMode(Main.LocalPlayer)
-            ? PlayerMode.Player
-            : PlayerMode.Spectator);
+        SpectateCommandHelper.ToggleSpectateMode(Main.LocalPlayer);
     }
 }
+
+
+public static class SpectateCommandHelper
+{
+    public static void ToggleSpectateMode(Player player)
+    {
+        if (SpectatorModeSystem.IsInSpectateMode(player))
+        {
+            SpectatorModeSystem.RequestSetLocalMode(PlayerMode.Player);
+        }
+        else
+        {
+            SpectatorModeSystem.RequestSetLocalMode(PlayerMode.Spectator);
+        }
+    }
+}
+
+#if DEBUG
+public class SpectateDebugHelper : ModSystem
+{
+    public override void PostUpdateEverything()
+    {
+        if (Main.keyState.IsKeyDown(Keys.NumPad6) && Main.oldKeyState.IsKeyDown(Keys.NumPad6))
+        {
+            SpectateCommandHelper.ToggleSpectateMode(Main.LocalPlayer);
+        }
+    }
+}
+#endif
 
 
 internal class GhostCommand : ModCommand
 {
     public override string Command => "g";
+    public override string Name => "Toggle ghost mode.";
+    public override string Description => "Toggle ghost mode.";
 
     public override CommandType Type => CommandType.Chat;
 

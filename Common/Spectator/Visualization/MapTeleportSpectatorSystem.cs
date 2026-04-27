@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Config;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
-using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace PvPAdventure.Common.Spectator.Visualization;
 public class TeleportMapSystem : ModSystem
@@ -70,6 +70,6 @@ public class TeleportMapSystem : ModSystem
     {
         return Main.mapFullscreen &&
             Main.LocalPlayer?.active == true &&
-            SpectatorSystem.IsInSpectateMode(Main.LocalPlayer);
+            SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer);
     }
 }

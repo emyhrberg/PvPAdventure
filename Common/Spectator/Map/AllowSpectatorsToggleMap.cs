@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using Terraria;
 using Terraria.GameInput;
 using Terraria.ModLoader;
@@ -18,7 +19,7 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
         if (Main.dedServ || Main.LocalPlayer?.active != true)
             return;
 
-        if (!SpectatorSystem.IsInSpectateMode(Main.LocalPlayer) && !Main.LocalPlayer.dead && !Main.LocalPlayer.ghost)
+        if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) && !Main.LocalPlayer.dead && !Main.LocalPlayer.ghost)
             return;
 
         if (Main.drawingPlayerChat || Main.editSign || Main.editChest || Main.blockInput)
@@ -49,7 +50,7 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
         if (Main.mapFullscreen)
             UpdateFullscreenMapZoom();
 
-        if (SpectatorSystem.IsInSpectateMode(Main.LocalPlayer) && PlayerInput.Triggers.Current.MapStyle && !PlayerInput.Triggers.Old.MapStyle)
+        if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) && PlayerInput.Triggers.Current.MapStyle && !PlayerInput.Triggers.Old.MapStyle)
             CycleMapStyle();
     }
 

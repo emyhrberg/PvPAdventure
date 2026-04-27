@@ -25,7 +25,13 @@ internal class SessionTracker : ModSystem
 
 	public override void PostUpdatePlayers()
 	{
-		if (Main.netMode == NetmodeID.SinglePlayer)
+        if (!_TrackerStatus.IsEnabled)
+		{
+			base.PostUpdatePlayers();
+            return;
+        }
+
+        if (Main.netMode == NetmodeID.SinglePlayer)
 		{
 			Player player = Main.LocalPlayer;
 
@@ -70,7 +76,12 @@ internal class SessionTracker : ModSystem
 
 	public static string GetSessionDuration(int playerIndex)
 	{
-		if (!Sessions.TryGetValue(playerIndex, out DateTime start))
+        if (!_TrackerStatus.IsEnabled)
+        {
+            return "SpectatorConfig.AllowSpectating is disabled!";
+        }
+
+        if (!Sessions.TryGetValue(playerIndex, out DateTime start))
 			return "-";
 
 		TimeSpan span = DateTime.UtcNow - start;

@@ -404,6 +404,16 @@ Mods: {
 				DisplayName: Ghost Config Item
 				Tooltip: ""
 			}
+
+			AllowSpectatingConfigItem: {
+				DisplayName: Allow Spectating Config Item
+				Tooltip: ""
+			}
+
+			ForceSpectatingConfigItem: {
+				DisplayName: Force Spectating Config Item
+				Tooltip: ""
+			}
 		}
 
 		NPCs: {

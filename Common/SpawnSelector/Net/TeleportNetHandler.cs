@@ -10,11 +10,12 @@ public static class TeleportNetHandler
 {
     public static void HandlePacket(BinaryReader reader, int whoAmI)
     {
-        if (Main.netMode != NetmodeID.Server)
-            return;
-
         int requesterId = reader.ReadByte();
         SpawnType type = (SpawnType)reader.ReadByte();
+        short packetTargetIdx = reader.ReadInt16();
+
+        if (Main.netMode != NetmodeID.Server)
+            return;
 
         if (requesterId != whoAmI || requesterId < 0 || requesterId >= Main.maxPlayers)
             return;
@@ -45,41 +46,36 @@ public static class TeleportNetHandler
                 break;
 
             case SpawnType.TeammatePortal:
-                {
-                    short idx = reader.ReadInt16();
-                    if (!SpawnPlayer.IsValidTeammatePortalIndex(requester, idx))
-                        return;
+                if (!SpawnPlayer.IsValidTeammatePortalIndex(requester, packetTargetIdx))
+                    return;
 
-                    targetIdx = idx;
+                targetIdx = packetTargetIdx;
 
-                    if (!TryGetPortalTeleportPos(requester, Main.player[idx], out teleportPos))
-                        return;
+                if (!TryGetPortalTeleportPos(requester, Main.player[packetTargetIdx], out teleportPos))
+                    return;
 
-                    break;
-                }
+                break;
 
             case SpawnType.TeammateBed:
-                {
-                    targetIdx = reader.ReadInt16();
-                    if (!TryGetBedTeleportPos(requester, targetIdx, out teleportPos))
-                        return;
+                targetIdx = packetTargetIdx;
 
-                    break;
-                }
-            case SpawnType.MyBed:
-                {
-                    if (!TryGetBedTeleportPos(requester, requester.whoAmI, out teleportPos))
-                        return;
-                    break;
-                }
-            case SpawnType.Random:
-                {
-                    requester.TeleportationPotion();
-                    SyncTeleport(requester, requester.position);
-                    SpawnSelectorChat.Announce(requester, type);
-                    spawnPlayer.StartTeleportCooldown();
+                if (!TryGetBedTeleportPos(requester, targetIdx, out teleportPos))
                     return;
-                }
+
+                break;
+
+            case SpawnType.MyBed:
+                if (!TryGetBedTeleportPos(requester, requester.whoAmI, out teleportPos))
+                    return;
+
+                break;
+
+            case SpawnType.Random:
+                requester.TeleportationPotion();
+                SyncTeleport(requester, requester.position);
+                SpawnSelectorChat.Announce(requester, type);
+                spawnPlayer.StartTeleportCooldown();
+                return;
 
             default:
                 return;

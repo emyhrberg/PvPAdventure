@@ -86,10 +86,10 @@ internal static class PlayerStats
         player => $"{CountInventoryItems(player)} items");
 
     public static readonly PlayerStatDefinition CoinCount = new(
-    "CoinCount",
-    "Coins",
-    GetHighestCoinIcon,
-    player => FormatTotalCoins(CountTotalCoins(player), out _));
+        "CoinCount",
+        "Coins",
+        GetHighestCoinIcon,
+        player => FormatTotalCoins(CountTotalCoins(player), out _));
 
     public static readonly PlayerStatDefinition AmmoCount = new(
         "AmmoCount",
@@ -98,38 +98,38 @@ internal static class PlayerStats
         GetMostStackedAmmoText,
         getIconFrame: GetMostStackedAmmoFrame);
 
-    public static readonly PlayerStatDefinition NearbyEnemies = new(
-        "NearbyEnemies",
-        "Nearby Enemies",
-        GetNearestHostileNPCIcon,
-        GetNearestHostileNPCText,
-        getIconFrame: GetNearestHostileNPCFrame);
+    //public static readonly PlayerStatDefinition NearbyEnemies = new(
+    //    "NearbyEnemies",
+    //    "Nearby Enemies",
+    //    GetNearestHostileNPCIcon,
+    //    GetNearestHostileNPCText,
+    //    getIconFrame: GetNearestHostileNPCFrame);
 
-    public static readonly PlayerStatDefinition LastEnemyHit = new(
-        "LastEnemyHit",
-        "Last Enemy Hit",
-        GetLastEnemyHitIcon,
-        GetLastEnemyHitText,
-        getIconFrame: GetLastEnemyHitFrame);
+    //public static readonly PlayerStatDefinition LastEnemyHit = new(
+    //    "LastEnemyHit",
+    //    "Last Enemy Hit",
+    //    GetLastEnemyHitIcon,
+    //    GetLastEnemyHitText,
+    //    getIconFrame: GetLastEnemyHitFrame);
 
-    public static readonly PlayerStatDefinition LastPlayerHit = new(
-        "LastPlayerHit",
-        "Last Player Hit",
-        Ass.PvP,
-        GetLastPlayerHitText);
+    //public static readonly PlayerStatDefinition LastPlayerHit = new(
+    //    "LastPlayerHit",
+    //    "Last Player Hit",
+    //    Ass.PvP,
+    //    GetLastPlayerHitText);
 
-    public static readonly PlayerStatDefinition MinionCount = new(
-    "MinionCount",
-    "Minions",
-    GetLatestSummonStaffIcon,
-    player => $"{CountPlayerMinions(player)}/{player.maxMinions} minions",
-    getIconFrame: GetLatestSummonStaffFrame);
+    //public static readonly PlayerStatDefinition MinionCount = new(
+    //    "MinionCount",
+    //    "Minions",
+    //    GetLatestSummonStaffIcon,
+    //    player => $"{CountPlayerMinions(player)}/{player.maxMinions} minions",
+    //    getIconFrame: GetLatestSummonStaffFrame);
 
-    public static readonly PlayerStatDefinition BossDamage = new(
-        "BossDamage",
-        "Boss Damage",
-        Ass.BossDamage,
-        GetBossDamageText);
+    //public static readonly PlayerStatDefinition BossDamage = new(
+    //    "BossDamage",
+    //    "Boss Damage",
+    //    Ass.BossDamage,
+    //    GetBossDamageText);
 
     /// <summary>
     /// A list of all player stats to include.
@@ -151,12 +151,12 @@ internal static class PlayerStats
         InventoryItemCount,
         //CoinCount,
         //AmmoCount,
-        MinionCount,
-        NearbyEnemies,
-        LastEnemyHit,
-        LastPlayerHit,
+        //MinionCount,
+        //NearbyEnemies,
+        //LastEnemyHit,
+        //LastPlayerHit,
         //DeathCount,
-        BossDamage
+        //BossDamage
     ];
 
     private static Asset<Texture2D> GetBiomeIcon(Player player)
@@ -299,23 +299,23 @@ internal static class PlayerStats
         return total;
     }
 
-    private static string GetLastEnemyHitText(Player player)
-    {
-        NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
-        return string.IsNullOrWhiteSpace(tracker.LastEnemyHitName) ? "None" : tracker.LastEnemyHitName;
-    }
+    //private static string GetLastEnemyHitText(Player player)
+    //{
+    //    NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
+    //    return string.IsNullOrWhiteSpace(tracker.LastEnemyHitName) ? "None" : tracker.LastEnemyHitName;
+    //}
 
-    private static string GetLastPlayerHitText(Player player)
-    {
-        NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
-        return string.IsNullOrWhiteSpace(tracker.LastPlayerHitName) ? "None" : tracker.LastPlayerHitName;
-    }
+    //private static string GetLastPlayerHitText(Player player)
+    //{
+    //    NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
+    //    return string.IsNullOrWhiteSpace(tracker.LastPlayerHitName) ? "None" : tracker.LastPlayerHitName;
+    //}
 
-    private static string GetBossDamageText(Player player)
-    {
-        long damage = player.GetModPlayer<NPCHitTrackerPlayer>().TotalBossDamage;
-        return damage.ToString("N0");
-    }
+    //private static string GetBossDamageText(Player player)
+    //{
+    //    long damage = player.GetModPlayer<NPCHitTrackerPlayer>().TotalBossDamage;
+    //    return damage.ToString("N0");
+    //}
 
     private static string GetMovementSpeed(Player player)
     {
@@ -478,102 +478,102 @@ internal static class PlayerStats
         return npc == null ? "None nearby" : npc.FullName;
     }
 
-    private static NPC FindLastEnemyHitNPC(Player player)
-    {
-        NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
+    //private static NPC FindLastEnemyHitNPC(Player player)
+    //{
+    //    NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
 
-        if (string.IsNullOrWhiteSpace(tracker.LastEnemyHitName))
-            return null;
+    //    if (string.IsNullOrWhiteSpace(tracker.LastEnemyHitName))
+    //        return null;
 
-        for (int i = 0; i < Main.maxNPCs; i++)
-        {
-            NPC npc = Main.npc[i];
+    //    for (int i = 0; i < Main.maxNPCs; i++)
+    //    {
+    //        NPC npc = Main.npc[i];
 
-            if (npc?.active == true && npc.FullName == tracker.LastEnemyHitName)
-                return npc;
-        }
+    //        if (npc?.active == true && npc.FullName == tracker.LastEnemyHitName)
+    //            return npc;
+    //    }
 
-        return null;
-    }
+    //    return null;
+    //}
 
-    private static Asset<Texture2D> GetLastEnemyHitIcon(Player player)
-    {
-        NPC npc = FindLastEnemyHitNPC(player);
+    //private static Asset<Texture2D> GetLastEnemyHitIcon(Player player)
+    //{
+    //    NPC npc = FindLastEnemyHitNPC(player);
 
-        if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
-            return Ass.PvE;
+    //    if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
+    //        return Ass.PvE;
 
-        Main.instance.LoadNPC(npc.type);
-        return TextureAssets.Npc[npc.type];
-    }
+    //    Main.instance.LoadNPC(npc.type);
+    //    return TextureAssets.Npc[npc.type];
+    //}
 
-    private static Rectangle? GetLastEnemyHitFrame(Player player)
-    {
-        NPC npc = FindLastEnemyHitNPC(player);
+    //private static Rectangle? GetLastEnemyHitFrame(Player player)
+    //{
+    //    NPC npc = FindLastEnemyHitNPC(player);
 
-        if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
-            return null;
+    //    if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
+    //        return null;
 
-        return npc.frame;
-    }
+    //    return npc.frame;
+    //}
 
-    private static Player FindLastPlayerHit(Player player)
-    {
-        NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
+    //private static Player FindLastPlayerHit(Player player)
+    //{
+    //    NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
 
-        if (string.IsNullOrWhiteSpace(tracker.LastPlayerHitName))
-            return null;
+    //    if (string.IsNullOrWhiteSpace(tracker.LastPlayerHitName))
+    //        return null;
 
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            Player target = Main.player[i];
+    //    for (int i = 0; i < Main.maxPlayers; i++)
+    //    {
+    //        Player target = Main.player[i];
 
-            if (target?.active == true && target.name == tracker.LastPlayerHitName)
-                return target;
-        }
+    //        if (target?.active == true && target.name == tracker.LastPlayerHitName)
+    //            return target;
+    //    }
 
-        return null;
-    }
+    //    return null;
+    //}
 
-    private static void DrawLastPlayerHitHead(SpriteBatch spriteBatch, Rectangle area, Player player)
-    {
-        Player target = FindLastPlayerHit(player);
+    //private static void DrawLastPlayerHitHead(SpriteBatch spriteBatch, Rectangle area, Player player)
+    //{
+    //    Player target = FindLastPlayerHit(player);
 
-        if (target == null)
-        {
-            spriteBatch.Draw(Ass.PvP.Value, area, Color.White);
-            return;
-        }
+    //    if (target == null)
+    //    {
+    //        spriteBatch.Draw(Ass.PvP.Value, area, Color.White);
+    //        return;
+    //    }
 
-        Vector2 position = area.Center.ToVector2();
-        //EntityDrawer.DrawPlayerHead(spriteBatch, target, position, 0.85f);
-    }
+    //    Vector2 position = area.Center.ToVector2();
+    //    EntityDrawer.DrawPlayerHead(spriteBatch, target, position, 0.85f);
+    //}
 
-    private static Asset<Texture2D> GetLatestSummonStaffIcon(Player player)
-    {
-        if (player.GetModPlayer<SummonTrackerPlayer>().TryGetLatestSummonItem(out int itemType) &&
-            itemType > 0 &&
-            itemType < TextureAssets.Item.Length)
-        {
-            Main.instance.LoadItem(itemType);
-            return TextureAssets.Item[itemType];
-        }
+    //private static Asset<Texture2D> GetLatestSummonStaffIcon(Player player)
+    //{
+    //    if (player.GetModPlayer<SummonTrackerPlayer>().TryGetLatestSummonItem(out int itemType) &&
+    //        itemType > 0 &&
+    //        itemType < TextureAssets.Item.Length)
+    //    {
+    //        Main.instance.LoadItem(itemType);
+    //        return TextureAssets.Item[itemType];
+    //    }
 
-        return Ass.MinionCount;
-    }
+    //    return Ass.MinionCount;
+    //}
 
-    private static Rectangle? GetLatestSummonStaffFrame(Player player)
-    {
-        if (!player.GetModPlayer<SummonTrackerPlayer>().TryGetLatestSummonItem(out int itemType) ||
-            itemType <= 0 ||
-            itemType >= TextureAssets.Item.Length)
-        {
-            return null;
-        }
+    //private static Rectangle? GetLatestSummonStaffFrame(Player player)
+    //{
+    //    if (!player.GetModPlayer<SummonTrackerPlayer>().TryGetLatestSummonItem(out int itemType) ||
+    //        itemType <= 0 ||
+    //        itemType >= TextureAssets.Item.Length)
+    //    {
+    //        return null;
+    //    }
 
-        Main.instance.LoadItem(itemType);
-        Texture2D texture = TextureAssets.Item[itemType].Value;
+    //    Main.instance.LoadItem(itemType);
+    //    Texture2D texture = TextureAssets.Item[itemType].Value;
 
-        return Main.itemAnimations[itemType]?.GetFrame(texture) ?? texture.Frame();
-    }
+    //    return Main.itemAnimations[itemType]?.GetFrame(texture) ?? texture.Frame();
+    //}
 }

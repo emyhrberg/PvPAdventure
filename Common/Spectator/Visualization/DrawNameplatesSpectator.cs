@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Config;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Graphics;
@@ -231,10 +232,10 @@ internal sealed class DrawNameplatesSpectator : ModSystem
         if (otherPlayer == null || !otherPlayer.active || otherPlayer.dead || otherPlayer.whoAmI == Main.myPlayer)
             return false;
 
-        if (otherPlayer.ghost || SpectatorSystem.IsInSpectateMode(otherPlayer))
+        if (otherPlayer.ghost || SpectatorModeSystem.IsInSpectateMode(otherPlayer))
             return false;
 
-        if (SpectatorSystem.IsInSpectateMode(localPlayer))
+        if (SpectatorModeSystem.IsInSpectateMode(localPlayer))
         {
             return true;
         }
