@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PvPAdventure.Common.Spectator.Drawers;
+using PvPAdventure.Common.Spectator.Drawers.Inventory;
 using Terraria;
 
 namespace PvPAdventure.Common.Spectator.UI;
@@ -34,6 +34,5 @@ internal static class SpectatorInventoryOverlay
 
         Rectangle viewport = new(0, 0, Main.screenWidth, Main.screenHeight);
         InventoryDrawer.DrawInventory(spriteBatch, new Vector2(20f, 20f), player, viewport);
-        InventoryDrawer.DrawEquipment(spriteBatch, player, viewport);
     }
 }

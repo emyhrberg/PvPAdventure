@@ -277,13 +277,26 @@ internal sealed class SpectatorControls : UIElement
                 if (Parent is not SlotElement slot || slot.Parent is not SpectatorControls controls)
                     return;
 
-                bool selected = controls.locked == slot.playerIndex || controls.hovered == slot.playerIndex;
-                Asset<Texture2D> texture = selected ? TextureAssets.InventoryBack15 : TextureAssets.InventoryBack7;
+                bool selected = controls.locked == slot.playerIndex;
+                bool hovered = controls.hovered == slot.playerIndex || slot.IsMouseHovering;
+                bool active = selected || hovered;
+
+                Asset<Texture2D> texture =
+                    selected ? TextureAssets.InventoryBack14 :
+                    hovered ? TextureAssets.InventoryBack15 :
+                    TextureAssets.InventoryBack7;
+
                 Texture2D value = texture.Value;
 
-                float size = selected ? 64 : 30f;
+                float selectedSize = Slot - 4f;
+                float unselectedSize = Slot - 12f;
+                float size = active ? selectedSize : unselectedSize;
                 float scale = size / value.Width;
-                Color color = selected ? Color.Yellow : Color.White;
+
+                Color color =
+                    selected ? Color.Yellow :
+                    hovered ? Color.White :
+                    Color.White;
 
                 sb.Draw(value, GetDimensions().Center(), null, color, 0f, value.Size() * 0.5f, scale, SpriteEffects.None, 0f);
             }
@@ -296,8 +309,8 @@ internal sealed class SpectatorControls : UIElement
             public Head(int playerIndex)
             {
                 this.playerIndex = playerIndex;
-                Width.Set(40f, 0f);
-                Height.Set(40f, 0f);
+                Width.Set(52f, 0f);
+                Height.Set(52f, 0f);
                 HAlign = 0.5f;
                 VAlign = 0.5f;
                 IgnoresMouseInteraction = true;
@@ -316,7 +329,9 @@ internal sealed class SpectatorControls : UIElement
                 if (player.ghost || SpectatorModeSystem.IsInSpectateMode(player))
                 {
                     Texture2D texture = player.direction == -1 ? Ass.GhostLeft.Value : Ass.Ghost.Value;
-                    sb.Draw(texture, position, null, Color.White, 0f, texture.Size() * 0.5f, scale * 1.15f, SpriteEffects.None, 0f);
+                    float ghostScale = scale *= 1.5f;
+                    position += new Vector2(4, 2);
+                    sb.Draw(texture, position, null, Color.White, 0f, texture.Size() * 0.5f, ghostScale, SpriteEffects.None, 0f);
                     return;
                 }
 

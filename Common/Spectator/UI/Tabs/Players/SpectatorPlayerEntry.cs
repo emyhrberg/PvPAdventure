@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.Drawers;
+using PvPAdventure.Common.Spectator.Drawers.Inventory;
 using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Graphics;
@@ -76,7 +77,6 @@ internal sealed class SpectatorPlayerEntry : SpectatorEntityEntry
 
         Rectangle viewport = new(0, 0, Main.screenWidth, Main.screenHeight);
         InventoryDrawer.DrawInventory(spriteBatch, new Vector2(20f, 20f), inventoryPlayer, viewport);
-        InventoryDrawer.DrawEquipment(spriteBatch, inventoryPlayer, viewport);
     }
 
     internal static void ClearSelectedInventory()

@@ -110,7 +110,10 @@ internal sealed class DrawNameplatesSpectator : ModSystem
             if (player.ghost)
             {
                 Texture2D texture = this.player.direction == -1 ? Ass.GhostLeft.Value : Ass.Ghost.Value;
-                Main.spriteBatch.Draw(texture, vec, null, Color.White, 0f, texture.Size() * 0.5f, 1.4f, SpriteEffects.None, 0f);
+                Vector2 ghostPos = vec + new Vector2(12f, 0f);
+                float ghostScale = 1.0f;
+
+                Main.spriteBatch.Draw(texture, ghostPos, null, Color.White, 0f, texture.Size() * 0.5f, ghostScale, SpriteEffects.None, 0f);
             }
         }
 
@@ -229,16 +232,20 @@ internal sealed class DrawNameplatesSpectator : ModSystem
 
     private static bool ShouldDrawNamePlate(Player localPlayer, Player otherPlayer)
     {
-        if (otherPlayer == null || !otherPlayer.active || otherPlayer.dead || otherPlayer.whoAmI == Main.myPlayer)
+        if (otherPlayer == null || !otherPlayer.active || otherPlayer.whoAmI == Main.myPlayer)
             return false;
 
-        if (otherPlayer.ghost || SpectatorModeSystem.IsInSpectateMode(otherPlayer))
+        bool drawSpectators = ModContent.GetInstance<ClientConfig>().DrawSpectators;
+        bool otherIsSpectator = otherPlayer.ghost || SpectatorModeSystem.IsInSpectateMode(otherPlayer);
+
+        if (otherPlayer.dead && !otherIsSpectator)
             return false;
+
+        if (otherIsSpectator)
+            return drawSpectators;
 
         if (SpectatorModeSystem.IsInSpectateMode(localPlayer))
-        {
             return true;
-        }
 
         return localPlayer.team != 0 && otherPlayer.team == localPlayer.team;
     }
