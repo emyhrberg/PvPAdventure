@@ -128,6 +128,12 @@ internal sealed class SpectatorSettingsPanel : UIElement
             new("Fullbright", () => OnOff(FloodlightSpectatorSystem.Enabled), () => FloodlightSpectatorSystem.Enabled = !FloodlightSpectatorSystem.Enabled),
             new("Reveal Map", () => OnOff(MapRevealHelper.Revealed), () => MapRevealHelper.SetRevealed(!MapRevealHelper.Revealed)),
             new("Draw Players", () => SpectatorClientSettings.DrawPlayersLabel, SpectatorClientSettings.CycleDrawPlayers),
+            new(
+                "Player Cards",
+                () => SpectatorControlsPanel.ShownPlayerCardCount.ToString(),
+                () => SpectatorControlsPanel.ChangeShownPlayerCards(1),
+                () => SpectatorControlsPanel.ChangeShownPlayerCards(-1),
+                "Left click: to increase\nRight click to decrease"),
             new("Auto Director", () => OnOff(AutoDirectorSystem.Enabled), () => AutoDirectorSystem.Enabled = !AutoDirectorSystem.Enabled)
         ];
     }
@@ -138,13 +144,17 @@ internal sealed class SpectatorSettingsPanel : UIElement
     {
         public readonly string Label;
         public readonly Func<string> GetValue;
-        public readonly Action OnClick;
+        public readonly Action OnLeftClick;
+        public readonly Action OnRightClick;
+        public readonly string Tooltip;
 
-        public SettingField(string label, Func<string> getValue, Action onClick = null)
+        public SettingField(string label, Func<string> getValue, Action onLeftClick = null, Action onRightClick = null, string tooltip = null)
         {
             Label = label;
             GetValue = getValue;
-            OnClick = onClick;
+            OnLeftClick = onLeftClick;
+            OnRightClick = onRightClick;
+            Tooltip = tooltip;
         }
     }
 
@@ -167,8 +177,11 @@ internal sealed class SpectatorSettingsPanel : UIElement
 
             Append(text);
 
-            if (field.OnClick is not null)
-                OnLeftClick += (_, _) => field.OnClick();
+            if (field.OnLeftClick is not null)
+                OnLeftClick += (_, _) => field.OnLeftClick();
+
+            if (field.OnRightClick is not null)
+                OnRightClick += (_, _) => field.OnRightClick();
         }
 
         public override void Update(GameTime gameTime)
@@ -179,7 +192,12 @@ internal sealed class SpectatorSettingsPanel : UIElement
             text.TextColor = IsMouseHovering ? Color.White : Color.Gray;
 
             if (IsMouseHovering)
+            {
                 Main.LocalPlayer.mouseInterface = true;
+
+                if (!string.IsNullOrEmpty(field.Tooltip))
+                    Main.instance.MouseText(field.Tooltip);
+            }
         }
     }
 }

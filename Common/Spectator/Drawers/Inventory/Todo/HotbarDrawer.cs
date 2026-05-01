@@ -48,6 +48,8 @@ public static class HotbarDrawer
                 Color lightColor = new Color(255, 255, 255, a);
                 if (!player.hbLocked && !PlayerInput.IgnoreMouseInterface && Main.mouseX >= num && (float)Main.mouseX <= (float)num + (float)TextureAssets.InventoryBack.Width() * Main.hotbarScale[i] && Main.mouseY >= num3 && (float)Main.mouseY <= (float)num3 + (float)TextureAssets.InventoryBack.Height() * Main.hotbarScale[i] && !player.channel)
                 {
+                    ownsHotbarHoverThisFrame = true;
+                    Main.LocalPlayer.mouseInterface = true;
                     player.mouseInterface = true;
                     player.cursorItemIconEnabled = false;
                     //if (Main.mouseLeft && !player.hbLocked && !Main.blockMouse)
@@ -87,6 +89,7 @@ public static class HotbarDrawer
             {
                 Main.HoverItem = new Item();
                 Main.hoverItemName = "";
+                Main.mouseText = false;
                 Main.rare = 0;
             }
 

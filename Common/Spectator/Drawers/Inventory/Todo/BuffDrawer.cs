@@ -13,8 +13,12 @@ namespace PvPAdventure.Common.Spectator.Drawers.Inventory;
 
 public static class BuffDrawer
 {
+    private static bool ownedBuffHover;
+
     private static void DrawBuffs(SpriteBatch sb, Vector2 start, Player player, Rectangle viewport)
     {
+        bool ownsBuffHoverThisFrame = false;
+
         try
         {
             const int size = 32;
@@ -75,12 +79,14 @@ public static class BuffDrawer
 
                 if (hover)
                 {
+                    ownsBuffHoverThisFrame = true;
+                    Main.LocalPlayer.mouseInterface = true;
+
                     string name = Lang.GetBuffName(id);
                     string desc = Lang.GetBuffDescription(id);
                     string tooltip = string.IsNullOrEmpty(desc) ? name : name + "\n" + desc;
 
                     Main.instance.MouseText(tooltip);
-                    //OwnHover();
                 }
 
                 n++;
@@ -88,7 +94,14 @@ public static class BuffDrawer
         }
         finally
         {
+            if (ownedBuffHover && !ownsBuffHoverThisFrame)
+            {
+                Main.HoverItem = new Item();
+                Main.hoverItemName = "";
+                Main.mouseText = false;
+            }
 
+            ownedBuffHover = ownsBuffHoverThisFrame;
         }
         
     }

@@ -25,8 +25,14 @@ internal sealed class SpectatorControlsPanel : UIPanel
 {
     private const int MinShownPlayerCards = 1;
     private const int MaxShownPlayerCards = 6;
+    private static int requestedShownPlayerCards = 1;
+    private static bool userChangedShownPlayerCards;
+    private static int cardCountRevision;
+    private static int lastShownPlayerCards = 1;
+
     private int shownPlayerCards = 1; // number of player cards shown in the panel
     private int visibleTargetStart; // first target index shown in the player card window
+    private int observedCardCountRevision;
 
     private int locked = -1; // currently locked spectated player index, -1 means no locked target
     private int hovered = -1; // currently hovered spectated player index, -1 means no hovered target
@@ -84,6 +90,8 @@ internal sealed class SpectatorControlsPanel : UIPanel
             hovered = -1;
 
         shownPlayerCards = GetShownPlayerCardsForTargetCount(targets.Count);
+        lastShownPlayerCards = shownPlayerCards;
+        requestedShownPlayerCards = shownPlayerCards;
         Width.Set(GetPanelWidth(), 0f);
 
         // Update the number of visible targets based on the number of player cards to show
@@ -182,6 +190,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
 #endif
 
         RebuildIfNeeded();
+        RebuildIfCardCountChanged();
         HandleTargetNavigationKeys(gameTime);
 
         int nextHover = GetHoveredSlot();
@@ -304,11 +313,13 @@ internal sealed class SpectatorControlsPanel : UIPanel
         return playerIndex >= 0 && SpectatorTargetSystem.GetTargets(Main.myPlayer).Contains(playerIndex);
     }
 
-    private void ChangeShownPlayerCards(int direction)
+    public static int ShownPlayerCardCount => lastShownPlayerCards;
+
+    public static void ChangeShownPlayerCards(int direction)
     {
         int targetCount = SpectatorTargetSystem.GetTargets(Main.myPlayer).Count;
         int maxShownPlayerCards = Math.Min(MaxShownPlayerCards, targetCount);
-        int next = shownPlayerCards + direction;
+        int next = lastShownPlayerCards + direction;
 
         if (next < MinShownPlayerCards)
         {
@@ -322,9 +333,9 @@ internal sealed class SpectatorControlsPanel : UIPanel
             return;
         }
 
-        shownPlayerCards = next;
-        visibleTargetStart = Math.Clamp(visibleTargetStart, 0, Math.Max(0, targetCount - shownPlayerCards));
-        Rebuild();
+        userChangedShownPlayerCards = true;
+        requestedShownPlayerCards = next;
+        cardCountRevision++;
     }
 
     #region Target navigation
@@ -446,6 +457,15 @@ internal sealed class SpectatorControlsPanel : UIPanel
         if (playerListHash != shownPlayerListHash)
             Rebuild();
     }
+
+    private void RebuildIfCardCountChanged()
+    {
+        if (observedCardCountRevision == cardCountRevision)
+            return;
+
+        observedCardCountRevision = cardCountRevision;
+        Rebuild();
+    }
     private static int GetActivePlayerListHash()
     {
         HashCode hash = new();
@@ -508,7 +528,10 @@ internal sealed class SpectatorControlsPanel : UIPanel
         if (targetCount <= 0)
             return MinShownPlayerCards;
 
-        return Math.Clamp(targetCount, MinShownPlayerCards, MaxShownPlayerCards);
+        int maxShownPlayerCards = Math.Min(MaxShownPlayerCards, targetCount);
+        int desired = userChangedShownPlayerCards ? requestedShownPlayerCards : targetCount;
+
+        return Math.Clamp(desired, MinShownPlayerCards, maxShownPlayerCards);
     }
 
     private static int GetPanelHeight()
