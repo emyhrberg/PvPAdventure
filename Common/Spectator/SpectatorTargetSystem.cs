@@ -11,6 +11,7 @@ public class SpectatorTargetSystem : ModSystem
 {
     private static int target = -1;
     private static int previewTarget = -1;
+    private static int cameraTarget = -1;
 
     #region Targeting
     private static bool CanTarget(int playerId)
@@ -75,9 +76,10 @@ public class SpectatorTargetSystem : ModSystem
         if (local?.active == true)
         {
             Vector2 screenPosition = local.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
-            SpectateCameraFade.SetScreenPosition(screenPosition);
+            SpectateCameraFade.SetScreenPosition(screenPosition, allowFade: true);
         }
 
+        cameraTarget = -1;
         target = -1;
     }
 
@@ -113,8 +115,14 @@ public class SpectatorTargetSystem : ModSystem
         if (GetPlayerTarget() is Player player)
         {
             Vector2 screenPosition = player.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
-            SpectateCameraFade.SetScreenPosition(screenPosition);
+            bool targetChanged = cameraTarget != player.whoAmI;
+
+            SpectateCameraFade.SetScreenPosition(screenPosition, targetChanged);
+            cameraTarget = player.whoAmI;
+            return;
         }
+
+        cameraTarget = -1;
     }
     #endregion
 }

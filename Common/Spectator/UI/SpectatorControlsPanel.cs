@@ -154,6 +154,9 @@ internal sealed class SpectatorControlsPanel : UIPanel
             playerCard.Left.Set(cardsStart + i * (cardWidth + cardGap), 0f);
             playerCard.OnLeftClick += (evt, element) =>
             {
+                if (evt.Target != playerCard)
+                    return;
+
                 SpectatorTargetSystem.TogglePlayerTarget(playerIndex);
                 UpdateTarget();
                 UpdateStatusText();

@@ -21,11 +21,11 @@ internal sealed class SpectateCameraFade : ModSystem
     private static bool hasLastPosition;
     private static Vector2 lastPosition;
 
-    public static void SetScreenPosition(Vector2 position)
+    public static void SetScreenPosition(Vector2 position, bool allowFade = false)
     {
         Vector2 comparePosition = hasLastPosition ? lastPosition : Main.screenPosition;
 
-        if (Vector2.DistanceSquared(comparePosition, position) >= 16*16*100)
+        if (allowFade && Vector2.DistanceSquared(comparePosition, position) >= FadeDistancePixelsSq)
         {
             fadeTicksLeft = FadeTicks;
 
