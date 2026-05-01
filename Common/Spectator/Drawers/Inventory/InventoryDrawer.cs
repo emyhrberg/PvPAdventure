@@ -17,11 +17,16 @@ namespace PvPAdventure.Common.Spectator.Drawers.Inventory;
 
 public static class InventoryDrawer
 {
+    private static bool ownedHoverLastFrame;
+    private static bool ownedHoverThisFrame;
+
     public static void DrawInventory(SpriteBatch sb, Vector2 start, Player player, Rectangle viewport)
     {
         float oldInventoryScale = Main.inventoryScale;
         Color oldInventoryBack = Main.inventoryBack;
         bool oldArmorHide = Main.armorHide;
+
+        ownedHoverThisFrame = false;
 
         try
         {
@@ -52,7 +57,62 @@ public static class InventoryDrawer
             Main.inventoryScale = oldInventoryScale;
             Main.inventoryBack = oldInventoryBack;
             Main.armorHide = oldArmorHide;
+
+            FinishHoverFrame();
         }
+    }
+
+    public static void ClearOwnedHover()
+    {
+        if (!ownedHoverLastFrame)
+            return;
+
+        ClearGlobalHover();
+        ownedHoverLastFrame = false;
+        ownedHoverThisFrame = false;
+    }
+
+    private static void HoverItemSlot(Item[] items, int context, int slot)
+    {
+        OwnHover();
+        ItemSlot.OverrideHover(items, context, slot);
+        ItemSlot.MouseHover(items, context, slot);
+    }
+
+    private static void HoverItemSlot(ref Item item, int context)
+    {
+        OwnHover();
+        ItemSlot.MouseHover(ref item, context);
+    }
+
+    private static void SetHoverText(string text)
+    {
+        OwnHover();
+        Main.HoverItem = new Item();
+        Main.hoverItemName = text ?? "";
+    }
+
+    private static void OwnHover()
+    {
+        ownedHoverThisFrame = true;
+        Main.LocalPlayer.mouseInterface = true;
+    }
+
+    private static void FinishHoverFrame()
+    {
+        if (ownedHoverLastFrame && !ownedHoverThisFrame)
+            ClearGlobalHover();
+
+        ownedHoverLastFrame = ownedHoverThisFrame;
+        ownedHoverThisFrame = false;
+    }
+
+    private static void ClearGlobalHover()
+    {
+        Main.HoverItem = new Item();
+        Main.hoverItemName = "";
+        Main.mouseText = false;
+        Main.armorHide = false;
     }
 
     public static void DrawItems(Player player)
@@ -67,8 +127,6 @@ public static class InventoryDrawer
                 new Color(100, 100, 100, 100);
                 if (Main.mouseX >= num7 && (float)Main.mouseX <= (float)num7 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num8 && (float)Main.mouseY <= (float)num8 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
                 {
-                    player.mouseInterface = true;
-                    ItemSlot.OverrideHover(player.inventory, 0, num9);
                     if (player.inventoryChestStack[num9] && (player.inventory[num9].type == 0 || player.inventory[num9].stack == 0))
                     {
                         player.inventoryChestStack[num9] = false;
@@ -82,7 +140,7 @@ public static class InventoryDrawer
                         //    Recipe.FindRecipes();
                         //}
                     }
-                    ItemSlot.MouseHover(player.inventory, 0, num9);
+                    HoverItemSlot(player.inventory, 0, num9);
                 }
                 ItemSlot.Draw(Main.spriteBatch, player.inventory, 0, num9, new Vector2(num7, num8));
             }
@@ -102,12 +160,11 @@ public static class InventoryDrawer
         ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, FontAssets.MouseText.Value, player.statDefense.ToString(), vector - vector2 * 0.5f * Main.inventoryScale, Color.White, 0f, Vector2.Zero, new Vector2(Main.inventoryScale));
         if (Utils.CenteredRectangle(vector, TextureAssets.Extra[58].Value.Size()).Contains(new Point(Main.mouseX, Main.mouseY)) && !PlayerInput.IgnoreMouseInterface)
         {
-            player.mouseInterface = true;
             Player.DefenseStat statDefense = player.statDefense;
             string value = statDefense.ToString() + " " + Lang.inter[10].Value;
             if (!string.IsNullOrEmpty(value))
             {
-                Main.hoverItemName = value;
+                SetHoverText(value);
             }
         }
         UILinkPointNavigator.SetPosition(1557, vector + TextureAssets.Extra[58].Value.Size() * Main.inventoryScale / 4f);
@@ -119,19 +176,20 @@ public static class InventoryDrawer
         int num22 = Main.DrawPageIcons(num20 - 32);
         if (num22 > -1)
         {
-            Main.HoverItem = new Item();
+            string hoverText = "";
             switch (num22)
             {
                 case 1:
-                    Main.hoverItemName = Lang.inter[80].Value;
+                    hoverText = Lang.inter[80].Value;
                     break;
                 case 2:
-                    Main.hoverItemName = Lang.inter[79].Value;
+                    hoverText = Lang.inter[79].Value;
                     break;
                 case 3:
-                    Main.hoverItemName = (Main.CaptureModeDisabled ? Lang.inter[115].Value : Lang.inter[81].Value);
+                    hoverText = (Main.CaptureModeDisabled ? Lang.inter[115].Value : Lang.inter[81].Value);
                     break;
             }
+            SetHoverText(hoverText);
         }
     }
 
@@ -145,7 +203,8 @@ public static class InventoryDrawer
             int num19 = 8 + player.GetAmountOfExtraAccessorySlotsToShow();
             int num20 = 174 + Main.mH;
 
-        if(Main.EquipPage == 0)
+
+        if (Main.EquipPage == 0)
         {
                 int num35 = 4;
                 if (Main.mouseX > Main.screenWidth - 64 - 28 && Main.mouseX < (int)((float)(Main.screenWidth - 64 - 28) + 56f * Main.inventoryScale) && Main.mouseY > num20 && Main.mouseY < (int)((float)num20 + 448f * Main.inventoryScale) && !PlayerInput.IgnoreMouseInterface)
@@ -213,13 +272,11 @@ public static class InventoryDrawer
                     else if (Main.mouseX >= num41 && (float)Main.mouseX <= (float)num41 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num42 && (float)Main.mouseY <= (float)num42 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
                     {
                         Main.armorHide = true;
-                        player.mouseInterface = true;
-                        ItemSlot.OverrideHover(player.armor, context2, num40);
                         if (flag7 || Main.mouseItem.IsAir)
                         {
                             //ItemSlot.LeftClick(Main.player[Main.myPlayer].armor, context2, num40);
                         }
-                        ItemSlot.MouseHover(player.armor, context2, num40);
+                        HoverItemSlot(player.armor, context2, num40);
                     }
                     if (flag4)
                     {
@@ -231,8 +288,7 @@ public static class InventoryDrawer
                         Main.spriteBatch.Draw(value3, new Vector2(num43, num44), Color.White * 0.7f);
                         if (num45 > 0)
                         {
-                            Main.HoverItem = new Item();
-                            Main.hoverItemName = Lang.inter[58 + num45].Value;
+                            SetHoverText(Lang.inter[58 + num45].Value);
                         }
                     }
                 }
@@ -266,15 +322,13 @@ public static class InventoryDrawer
                     }
                     if (Main.mouseX >= num48 && (float)Main.mouseX <= (float)num48 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num49 && (float)Main.mouseY <= (float)num49 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
                     {
-                        player.mouseInterface = true;
                         Main.armorHide = true;
-                        ItemSlot.OverrideHover(player.armor, context3, num46);
                         if (!flag8)
                         {
                             //ItemSlot.LeftClick(Main.player[Main.myPlayer].armor, context3, num46);
                             //ItemSlot.RightClick(Main.player[Main.myPlayer].armor, context3, num46);
                         }
-                        ItemSlot.MouseHover(player.armor, context3, num46);
+                        HoverItemSlot(player.armor, context3, num46);
                     }
                     if (flag4)
                     {
@@ -307,18 +361,16 @@ public static class InventoryDrawer
                     }
                     if (Main.mouseX >= num52 && (float)Main.mouseX <= (float)num52 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num53 && (float)Main.mouseY <= (float)num53 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
                     {
-                        player.mouseInterface = true;
                         Main.armorHide = true;
-                        ItemSlot.OverrideHover(player.dye, 12, num50);
-                        if (!flag9)
-                        {
-                            if (Main.mouseRightRelease && Main.mouseRight)
-                            {
-                                ItemSlot.RightClick(player.dye, 12, num50);
-                            }
-                            ItemSlot.LeftClick(player.dye, 12, num50);
-                        }
-                        ItemSlot.MouseHover(player.dye, 12, num50);
+                        //if (!flag9)
+                        //{
+                        //    if (Main.mouseRightRelease && Main.mouseRight)
+                        //    {
+                        //        ItemSlot.RightClick(player.dye, 12, num50);
+                        //    }
+                        //    ItemSlot.LeftClick(player.dye, 12, num50);
+                        //}
+                        HoverItemSlot(player.dye, 12, num50);
                     }
                     if (flag4)
                     {
@@ -465,9 +517,9 @@ public static class InventoryDrawer
                     }
                     if (r.Contains(value) && !flag3 && !PlayerInput.IgnoreMouseInterface)
                     {
-                        Main.player[Main.myPlayer].mouseInterface = true;
                         Main.armorHide = true;
                         //ItemSlot.Handle(inv, context, m);
+                        HoverItemSlot(inv, context, m);
                     }
                     ItemSlot.Draw(Main.spriteBatch, inv, context, m, r.TopLeft());
                     if (num25 != -1)
@@ -475,8 +527,7 @@ public static class InventoryDrawer
                         Main.spriteBatch.Draw(value2, r2.TopLeft(), Color.White * 0.7f);
                         if (num26 > 0)
                         {
-                            Main.HoverItem = new Item();
-                            Main.hoverItemName = Lang.inter[58 + num26].Value;
+                            SetHoverText(Lang.inter[58 + num26].Value);
                         }
                     }
                     if (flag2)
@@ -484,8 +535,7 @@ public static class InventoryDrawer
                         Main.spriteBatch.Draw(value2, r2.TopLeft(), Color.White);
                         if (num26 > 0)
                         {
-                            Main.HoverItem = new Item();
-                            Main.hoverItemName = Language.GetTextValue((num26 == 1) ? "GameUI.SuperCartDisabled" : "GameUI.SuperCartEnabled");
+                            SetHoverText(Language.GetTextValue((num26 == 1) ? "GameUI.SuperCartDisabled" : "GameUI.SuperCartEnabled"));
                         }
                     }
                 }
@@ -550,10 +600,8 @@ public static class InventoryDrawer
 
                     if (rect.Contains(Main.MouseScreen.ToPoint()) && !PlayerInput.IgnoreMouseInterface)
                     {
-                        Main.LocalPlayer.mouseInterface = true;
                         Main.armorHide = true;
-                        ItemSlot.OverrideHover(items, contexts[i], drawSlot);
-                        ItemSlot.MouseHover(items, contexts[i], drawSlot);
+                        HoverItemSlot(items, contexts[i], drawSlot);
                     }
 
                     ItemSlot.Draw(Main.spriteBatch, items, contexts[i], drawSlot, position);
@@ -601,10 +649,8 @@ public static class InventoryDrawer
 
                     if (rect.Contains(Main.MouseScreen.ToPoint()) && !PlayerInput.IgnoreMouseInterface)
                     {
-                        Main.LocalPlayer.mouseInterface = true;
                         Main.armorHide = true;
-                        ItemSlot.OverrideHover(items, contexts[i], drawSlot);
-                        ItemSlot.MouseHover(items, contexts[i], drawSlot);
+                        HoverItemSlot(items, contexts[i], drawSlot);
                     }
 
                     ItemSlot.Draw(Main.spriteBatch, items, contexts[i], drawSlot, position);
@@ -638,15 +684,13 @@ public static class InventoryDrawer
             new Color(100, 100, 100, 100);
             if (Main.mouseX >= num98 && (float)Main.mouseX <= (float)num98 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num99 && (float)Main.mouseY <= (float)num99 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
             {
-                Main.player[Main.myPlayer].mouseInterface = true;
-                ItemSlot.OverrideHover(Main.player[Main.myPlayer].inventory, 1, slot);
                 //ItemSlot.LeftClick(Main.player[Main.myPlayer].inventory, 1, slot);
                 //ItemSlot.RightClick(Main.player[Main.myPlayer].inventory, 1, slot);
                 //if (Main.mouseLeftRelease && Main.mouseLeft)
                 //{
                 //    Recipe.FindRecipes();
                 //}
-                ItemSlot.MouseHover(Main.player[Main.myPlayer].inventory, 1, slot);
+                HoverItemSlot(player.inventory, 1, slot);
             }
             ItemSlot.Draw(Main.spriteBatch, player.inventory, 1, slot, new Vector2(num98, num99));
         }
@@ -669,15 +713,13 @@ public static class InventoryDrawer
             new Color(100, 100, 100, 100);
             if (Main.mouseX >= num102 && (float)Main.mouseX <= (float)num102 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num103 && (float)Main.mouseY <= (float)num103 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
             {
-                Main.player[Main.myPlayer].mouseInterface = true;
-                ItemSlot.OverrideHover(player.inventory, 2, slot2);
                 //ItemSlot.LeftClick(Main.player[Main.myPlayer].inventory, 2, slot2);
                 //ItemSlot.RightClick(Main.player[Main.myPlayer].inventory, 2, slot2);
                 //if (Main.mouseLeftRelease && Main.mouseLeft)
                 //{
                 //    Recipe.FindRecipes();
                 //}
-                ItemSlot.MouseHover(Main.player[Main.myPlayer].inventory, 2, slot2);
+                HoverItemSlot(player.inventory, 2, slot2);
             }
             ItemSlot.Draw(Main.spriteBatch, player.inventory, 2, slot2, new Vector2(num102, num103));
         }
@@ -706,13 +748,12 @@ public static class InventoryDrawer
         new Color(150, 150, 150, 150);
         if (Main.mouseX >= num && (float)Main.mouseX <= (float)num + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num2 && (float)Main.mouseY <= (float)num2 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
         {
-            player.mouseInterface = true;
             //ItemSlot.LeftClick(ref player.trashItem, 6);
             //if (Main.mouseLeftRelease && Main.mouseLeft)
             //{
             //    Recipe.FindRecipes();
             //}
-            ItemSlot.MouseHover(ref player.trashItem, 6);
+            HoverItemSlot(ref player.trashItem, 6);
         }
         ItemSlot.Draw(Main.spriteBatch, ref player.trashItem, 6, new Vector2(num, num2));
     }
@@ -787,7 +828,7 @@ public static class InventoryDrawer
                 string tooltip = string.IsNullOrEmpty(desc) ? name : name + "\n" + desc;
 
                 Main.instance.MouseText(tooltip);
-                Main.LocalPlayer.mouseInterface = true;
+                OwnHover();
             }
 
             n++;

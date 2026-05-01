@@ -25,8 +25,13 @@ internal sealed class SpectateCameraFade : ModSystem
     {
         Vector2 comparePosition = hasLastPosition ? lastPosition : Main.screenPosition;
 
-        if (Vector2.DistanceSquared(comparePosition, position) >= 16*16*10)
+        if (Vector2.DistanceSquared(comparePosition, position) >= 16*16*100)
+        {
             fadeTicksLeft = FadeTicks;
+
+            // Log only when the fade is activated
+            Log.Chat("Fade Activated! SetNewScreenPosition: " + position);
+        }
 
         hasLastPosition = true;
         lastPosition = position;

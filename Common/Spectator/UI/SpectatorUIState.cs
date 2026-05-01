@@ -16,6 +16,11 @@ internal sealed class SpectatorUIState : UIState
         RemoveAllChildren();
     }
 
+    public void RebuildSpectatorControlsPanel()
+    {
+        spectatorControlsElement?.Rebuild();
+    }
+
     internal void EnsureSpectatorHUDStaysOpen()
     {
         if (spectatorControlsElement?.Parent is not null)

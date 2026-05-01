@@ -31,8 +31,8 @@ internal class InventoryWhileDeadSystem : ModSystem
     {
         if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) || self.ghost)
         {
-            CloseOwnInventory();
-            return;
+            //CloseOwnInventory();
+            //return;
         }
 
         if (KeyboardHelper.Pressed(Keys.Escape))
@@ -40,7 +40,10 @@ internal class InventoryWhileDeadSystem : ModSystem
             Player target = SpectatorTargetSystem.GetPlayerTarget();
 
             if (target?.active == true)
+            {
+                Log.Chat("Toggle spectated player's inventory for " + target.name);
                 InventoryOverlay.Toggle(target.whoAmI);
+            }
             else
             {
                 // TODO
@@ -99,8 +102,8 @@ internal class InventoryWhileDeadSystem : ModSystem
     {
         if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) || Main.LocalPlayer.ghost)
         {
-            CloseOwnInventory();
-            return;
+            //CloseOwnInventory();
+            //return;
         }
 
         bool flag = Main.playerInventory;
@@ -123,6 +126,7 @@ internal class InventoryWhileDeadSystem : ModSystem
 
     private static void CloseOwnInventory()
     {
+        Log.Chat("Closing ghost/spectator inventory");
         Main.playerInventory = false;
         Main.LocalPlayer.chest = -1;
         Main.InGuideCraftMenu = false;

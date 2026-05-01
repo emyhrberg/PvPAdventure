@@ -14,12 +14,11 @@ internal static class InventoryOverlay
     // Hotfix to prevent logging the inventory disabled text if we closed settings menu with escape.
     private static bool optionsWindowWasOpen;
 
-    public static void Update()
-    {
-        bool optionsWindowIsOpen = Main.ingameOptionsWindow;
-        bool optionsWindowWasOpenLastFrame = optionsWindowWasOpen;
-        optionsWindowWasOpen = optionsWindowIsOpen;
-
+  public static void Update()
+    { 
+        //bool optionsWindowIsOpen = Main.ingameOptionsWindow;
+        //bool optionsWindowWasOpenLastFrame = optionsWindowWasOpen;
+        //optionsWindowWasOpen = optionsWindowIsOpen;
         Player local = Main.LocalPlayer;
 
         if (local?.active != true || !SpectatorModeSystem.IsInSpectateMode(local))
@@ -40,9 +39,6 @@ internal static class InventoryOverlay
 
         releaseInventory = false;
 
-        if (optionsWindowIsOpen || optionsWindowWasOpenLastFrame)
-            return;
-
         Player target = SpectatorTargetSystem.GetPlayerTarget();
 
         if (target?.active != true)
@@ -51,12 +47,28 @@ internal static class InventoryOverlay
             return;
         }
 
-        Toggle(target.whoAmI);
+        Toggle(target);
+    }
+
+    public static bool IsOpen(Player target)
+    {
+        return target?.active == true && playerIndex == target.whoAmI;
     }
 
     public static bool IsOpen(int targetPlayerIndex)
     {
         return IsValidPlayerIndex(targetPlayerIndex) && playerIndex == targetPlayerIndex;
+    }
+
+    public static void Toggle(Player target)
+    {
+        if (target?.active != true)
+        {
+            Clear();
+            return;
+        }
+
+        playerIndex = IsOpen(target) ? -1 : target.whoAmI;
     }
 
     public static void Toggle(int targetPlayerIndex)
@@ -77,14 +89,39 @@ internal static class InventoryOverlay
 
     public static void Draw(SpriteBatch spriteBatch)
     {
-        if (!IsValidPlayerIndex(playerIndex))
+        Player target = GetDrawTarget();
+
+        if (target?.active != true)
         {
             Clear();
             return;
         }
 
         Rectangle viewport = new(0, 0, Main.screenWidth, Main.screenHeight);
-        InventoryDrawer.DrawInventory(spriteBatch, new Vector2(20f, 20f), Main.player[playerIndex], viewport);
+
+        if (IsOpen(target))
+        {
+            InventoryDrawer.DrawInventory(spriteBatch, new Vector2(20f, 20f), target, viewport);
+            return;
+        }
+
+        DrawHotbarPlaceholder(spriteBatch, target);
+    }
+
+    private static Player GetDrawTarget()
+    {
+        if (IsValidPlayerIndex(playerIndex))
+            return Main.player[playerIndex];
+
+        return SpectatorTargetSystem.GetPlayerTarget();
+    }
+
+    private static void DrawHotbarPlaceholder(SpriteBatch spriteBatch, Player target)
+    {
+        string text = $"Hotbar: {target.name}";
+        Vector2 position = new(20f, 20f);
+
+        Utils.DrawBorderString(spriteBatch, text, position, Color.White, 1f);
     }
 
     private static bool IsValidPlayerIndex(int targetPlayerIndex)

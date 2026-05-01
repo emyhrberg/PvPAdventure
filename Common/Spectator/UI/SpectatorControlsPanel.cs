@@ -176,12 +176,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
 #endif
 
         RebuildIfNeeded();
-
-        if (KeyboardHelper.Pressed(Keys.Left))
-            ScrollVisibleTargets(-1);
-
-        if (KeyboardHelper.Pressed(Keys.Right))
-            ScrollVisibleTargets(1);
+        HandleTargetNavigationKeys(gameTime);
 
         int nextHover = GetHoveredSlot();
 
@@ -317,24 +312,97 @@ internal sealed class SpectatorControlsPanel : UIPanel
         Rebuild();
     }
 
-    #region Scroll targets
-    private void ScrollVisibleTargets(int direction)
+    #region Target navigation
+    private Keys? heldNavigationKey;
+    private double navigationRepeatTimer;
+
+    private const double NavigationInitialRepeatDelay = 0.35;
+    private const double NavigationRepeatInterval = 0.06;
+    private void HandleTargetNavigationKeys(GameTime gameTime)
+    {
+        int direction = 0;
+
+        if (JustPressed(Keys.Left))
+            direction = -1;
+
+        if (JustPressed(Keys.Right))
+            direction = 1;
+
+        if (direction != 0)
+        {
+            NavigateTarget(direction);
+            heldNavigationKey = direction < 0 ? Keys.Left : Keys.Right;
+            navigationRepeatTimer = NavigationInitialRepeatDelay;
+            return;
+        }
+
+        if (heldNavigationKey is not Keys heldKey || !Main.keyState.IsKeyDown(heldKey))
+        {
+            heldNavigationKey = null;
+            return;
+        }
+
+        navigationRepeatTimer -= gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (navigationRepeatTimer > 0)
+            return;
+
+        navigationRepeatTimer += NavigationRepeatInterval;
+        NavigateTarget(heldKey == Keys.Left ? -1 : 1);
+    }
+
+    private void NavigateTarget(int direction)
     {
         List<int> targets = SpectatorTargetSystem.GetTargets(Main.myPlayer);
 
-        if (targets.Count <= shownPlayerCards)
+        if (targets.Count == 0)
+        {
+            SpectatorTargetSystem.ClearTarget();
+            UpdateTarget();
+            UpdateStatusText();
             return;
+        }
 
-        int maxVisibleTargetStart = Math.Max(0, targets.Count - shownPlayerCards);
-        visibleTargetStart += direction;
+        int oldVisibleTargetStart = visibleTargetStart;
+        int currentIndex = targets.IndexOf(locked);
+        int nextIndex = currentIndex < 0 ? direction < 0 ? targets.Count - 1 : 0 : currentIndex + direction;
 
-        if (visibleTargetStart < 0)
-            visibleTargetStart = maxVisibleTargetStart;
+        if (nextIndex < 0)
+            nextIndex = targets.Count - 1;
 
-        if (visibleTargetStart > maxVisibleTargetStart)
-            visibleTargetStart = 0;
+        if (nextIndex >= targets.Count)
+            nextIndex = 0;
 
-        Rebuild();
+        int playerIndex = targets[nextIndex];
+
+        SpectatorTargetSystem.SetPlayerTarget(playerIndex);
+        locked = playerIndex;
+
+        MakeTargetVisible(nextIndex, targets.Count);
+
+        if (visibleTargetStart != oldVisibleTargetStart)
+            Rebuild();
+        else
+            UpdateStatusText();
+    }
+
+    private void MakeTargetVisible(int targetIndex, int targetCount)
+    {
+        int maxVisibleTargetStart = Math.Max(0, targetCount - shownPlayerCards);
+
+        visibleTargetStart = Math.Clamp(visibleTargetStart, 0, maxVisibleTargetStart);
+
+        if (targetIndex < visibleTargetStart)
+            visibleTargetStart = targetIndex;
+        else if (targetIndex >= visibleTargetStart + shownPlayerCards)
+            visibleTargetStart = targetIndex - shownPlayerCards + 1;
+
+        visibleTargetStart = Math.Clamp(visibleTargetStart, 0, maxVisibleTargetStart);
+    }
+
+    private static bool JustPressed(Keys key)
+    {
+        return Main.keyState.IsKeyDown(key) && !Main.oldKeyState.IsKeyDown(key);
     }
     #endregion
 
@@ -426,7 +494,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
         prevButton.Height.Set(30f * scale, 0f); prevButton.Width.Set(navButtonWidth, 0f);
         prevButton.BackgroundColor = new Color(55, 48, 92) * 0.9f;
         prevButton.BorderColor = Color.Black;
-        prevButton.OnLeftClick += (evt, element) => ScrollVisibleTargets(-1);
+        prevButton.OnLeftClick += (evt, element) => NavigateTarget(-1);
         prevButton.OnMouseOver += (evt, element) =>
         {
             prevButton.BorderColor = Color.Yellow;
@@ -451,7 +519,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
         nextButton.Width.Set(navButtonWidth, 0f);
         nextButton.BackgroundColor = new Color(55, 48, 92) * 0.9f;
         nextButton.BorderColor = Color.Black;
-        nextButton.OnLeftClick += (evt, element) => ScrollVisibleTargets(1);
+        nextButton.OnLeftClick += (evt, element) => NavigateTarget(1);
         nextButton.OnMouseOver += (evt, element) =>
         {
             nextButton.BorderColor = Color.Yellow;

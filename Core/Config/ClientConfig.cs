@@ -211,10 +211,7 @@ public class ClientConfig : ModConfig
 
         // Rebuild spectate UI
         var spectateUISystem = ModContent.GetInstance<SpectatorUISystem>();
-        if (spectateUISystem != null)
-        {
-            spectateUISystem?.sta?.ForceRebuildNextUpdate();
-        }
+        spectateUISystem?.RebuildUI();
     }
     #endregion
 }

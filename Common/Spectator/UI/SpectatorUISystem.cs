@@ -15,8 +15,8 @@ namespace PvPAdventure.Common.Spectator.UI;
 [Autoload(Side = ModSide.Client)]
 public class SpectatorUISystem : ModSystem
 {
-    private static UserInterface spectatorInterface;
-    private static SpectatorUIState spectatorState;
+    private UserInterface spectatorInterface;
+    private SpectatorUIState spectatorState;
 
     public override void OnWorldLoad()
     {
@@ -24,7 +24,12 @@ public class SpectatorUISystem : ModSystem
         spectatorState = new();
     }
 
-    public static void OnLocalModeAccepted(PlayerMode mode)
+    public void RebuildUI()
+    {
+        spectatorState?.RebuildSpectatorControlsPanel();
+    }
+
+    public void OnLocalModeAccepted(PlayerMode mode)
     {
         if (mode == PlayerMode.Spectator)
         {
@@ -37,7 +42,7 @@ public class SpectatorUISystem : ModSystem
         Main.NewText("You are now a player.", Color.Yellow);
     }
 
-    public static void EnsureSpectatorHUDStaysOpen()
+    public void EnsureSpectatorHUDStaysOpen()
     {
         spectatorState?.EnsureSpectatorHUDStaysOpen();
     }

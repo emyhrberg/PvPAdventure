@@ -101,7 +101,17 @@ internal sealed class SpectatorModeSystem : ModSystem
         Log.Chat($"Player {playerId} received mode: {mode}, player ghost now set to: {Main.LocalPlayer.ghost}");
 
         if (playerId == Main.myPlayer && oldMode != mode && Main.netMode != NetmodeID.Server)
-            SpectatorUISystem.OnLocalModeAccepted(mode);
+        {
+            var specSystem = ModContent.GetInstance<SpectatorUISystem>();
+            if (specSystem != null)
+            {
+                specSystem.OnLocalModeAccepted(mode);
+            }
+            else
+            {
+                Log.Warn("SpectatorUISystem is null when trying to call OnLocalModeAccepted");
+            }
+        }
 
         if (mode == PlayerMode.Spectator)
             Main.playerInventory = false;
