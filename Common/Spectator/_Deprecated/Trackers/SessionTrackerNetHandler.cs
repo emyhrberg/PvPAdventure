@@ -5,7 +5,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Trackers;
+namespace PvPAdventure.Common.Spectator._Deprecated.Trackers;
 
 internal static class SessionTrackerNetHandler
 {

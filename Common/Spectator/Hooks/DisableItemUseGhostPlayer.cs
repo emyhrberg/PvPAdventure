@@ -2,7 +2,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 internal class DisableItemUseGhostPlayer : ModPlayer
 {

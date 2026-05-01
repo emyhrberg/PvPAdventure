@@ -46,15 +46,11 @@ public class ClientConfig : ModConfig
     [DefaultValue(false)] 
     public bool ShowVanityVisuals = false;
 
-    [BackgroundColor(50, 70, 120)]
-    [DefaultValue(true)]
-    public bool DrawSpectators = true;
-
     [Header("Movement")]
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(true)] public bool IsVanillaDashEnabled;
 
-    [Header("UI")]
+    [Header("PortalTravel")]
     [BackgroundColor(30, 150, 150)]
     [DefaultValue(AdventureUIPosition.Top)]
     [JsonConverter(typeof(StringEnumConverter))]
@@ -65,8 +61,13 @@ public class ClientConfig : ModConfig
     [JsonConverter(typeof(StringEnumConverter))]
     public AdventureUISize travelUISize;
 
+    [Header("Spectating")]
     [BackgroundColor(30, 150, 150)]
-    [DefaultValue(AdventureUISize.Small)]
+    [DefaultValue(true)]
+    public bool ShowCameraFade = true;
+
+    [BackgroundColor(30, 150, 150)]
+    [DefaultValue(AdventureUISize.Medium)]
     [JsonConverter(typeof(StringEnumConverter))]
     public AdventureUISize spectateUISize;
 
@@ -74,6 +75,10 @@ public class ClientConfig : ModConfig
     [DefaultValue(AdventureUIPosition.Top)]
     [JsonConverter(typeof(StringEnumConverter))]
     public AdventureUIPosition spectateUIPosition;
+
+    [BackgroundColor(30, 150, 150)]
+    [DefaultValue(true)]
+    public bool DrawSpectators = true;
 
     [Header("Sound")]
     [Expand(false, false)]

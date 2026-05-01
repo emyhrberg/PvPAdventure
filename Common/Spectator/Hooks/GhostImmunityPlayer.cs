@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 internal sealed class GhostImmunityPlayer : ModPlayer
 {

@@ -37,8 +37,9 @@ internal sealed class SpectatorControlsPanel : UIPanel
         Width.Set(GetPanelWidth(), 0f);
         Height.Set(GetPanelHeight(), 0f);
         HAlign = 0.5f;
-        VAlign = 1f;
-        Top.Set(-25, 0f); // bottom padding
+        //VAlign = 1f;
+        //Top.Set(-25, 0f); // bottom padding
+        ApplyTopOrBottomPosition(this, GetScale());
         //BackgroundColor = new Color(33, 43, 79) * 0.3f;
         BackgroundColor = new Color(73, 94, 171)*0.3f;
         Rebuild();
@@ -50,11 +51,13 @@ internal sealed class SpectatorControlsPanel : UIPanel
 
         // Universal scale
         float scale = GetScale();
+        //Log.Chat("scale: " + scale);
 
         SetPadding(10f*scale);
         Width.Set(GetPanelWidth(), 0f);
         Height.Set(GetPanelHeight(), 0f);
-        Top.Set(-25f * GetScale(), 0f); // bottom padding
+        //Top.Set(-25f * GetScale(), 0f); // bottom padding
+        ApplyTopOrBottomPosition(this, GetScale());
 
         //BackgroundColor = new Color(73, 94, 171)*0.8f;
         BackgroundColor = new Color(22, 28, 48) * 0.85f;
@@ -84,7 +87,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
         int visibleTargets = Math.Min(targets.Count - visibleTargetStart, shownPlayerCards);
 
         // Layout
-        float topRowHeight = 30f * scale;
+        float topRowHeight = GetNamePanelHeight(scale);
         float topRowPadding = 4f * scale;
         float rowGap = 4f * scale;
         float playerPanelPadding = 4f * scale;
@@ -455,15 +458,30 @@ internal sealed class SpectatorControlsPanel : UIPanel
     #endregion
 
     #region Layout Helpers
+    private static void ApplyTopOrBottomPosition(UIElement element, float scale)
+    {
+        ClientConfig clientConfig = ModContent.GetInstance<ClientConfig>();
+
+        if (clientConfig.spectateUIPosition == ClientConfig.AdventureUIPosition.Top)
+        {
+            element.VAlign = 0f;
+            element.Top.Set(40f * scale, 0f);
+            return;
+        }
+
+        element.VAlign = 1f;
+        element.Top.Set(-25f * scale, 0f);
+    }
+
     private static float GetScale()
     {
         ClientConfig clientConfig = ModContent.GetInstance<ClientConfig>();
 
-        float scale = clientConfig.travelUISize switch
+        float scale = clientConfig.spectateUISize switch
         {
-            ClientConfig.AdventureUISize.VerySmall => 0.8f,
-            ClientConfig.AdventureUISize.Small => 0.9f,
-            ClientConfig.AdventureUISize.Medium => 1.0f,
+            ClientConfig.AdventureUISize.VerySmall => 0.7f,
+            ClientConfig.AdventureUISize.Small => 0.8f,
+            ClientConfig.AdventureUISize.Medium => 0.9f,
             ClientConfig.AdventureUISize.Big => 1.15f,
             _ => 1f
         };
@@ -471,9 +489,22 @@ internal sealed class SpectatorControlsPanel : UIPanel
         return scale;
     }
 
+    private static float GetNamePanelHeight(float scale)
+    {
+        return 38f * scale;
+    }
+
     private static int GetPanelHeight()
     {
-        return (int)((UIPlayerCard.CardHeight + 62) * GetScale());
+        float scale = GetScale();
+
+        float outerPadding = 10f * scale;
+        float topRowHeight = GetNamePanelHeight(scale);
+        float rowGap = 4f * scale;
+        float playerPanelPadding = 4f * scale;
+        float cardHeight = UIPlayerCard.CardHeight * scale;
+
+        return (int)(outerPadding * 2f + topRowHeight + rowGap + cardHeight + playerPanelPadding * 2f);
     }
 
     private int GetPanelWidth()
@@ -501,7 +532,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
         prevButton.OnMouseOver += (evt, element) =>
         {
             prevButton.BorderColor = Color.Yellow;
-            statusText?.SetText("Show previous players");
+            statusText?.SetText("Go to previous player");
         };
         prevButton.OnMouseOut += (evt, element) =>
         {
@@ -526,7 +557,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
         nextButton.OnMouseOver += (evt, element) =>
         {
             nextButton.BorderColor = Color.Yellow;
-            statusText?.SetText("Show next players");
+            statusText?.SetText("Go to next player");
         };
         nextButton.OnMouseOut += (evt, element) =>
         {

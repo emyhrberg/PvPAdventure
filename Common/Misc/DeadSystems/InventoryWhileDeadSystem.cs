@@ -29,12 +29,17 @@ internal class InventoryWhileDeadSystem : ModSystem
 
     private void ModifyIngameOptionsInput(On_Player.orig_TryOpeningInGameOptionsBasedOnInput orig, Player self)
     {
+        // Spectator special case
         if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) || self.ghost)
         {
-            //CloseOwnInventory();
-            //return;
+            CloseOwnInventory();
+            if (!Main.ingameOptionsWindow)
+            {
+                return;
+            }
         }
 
+        // Press escape special case
         if (KeyboardHelper.Pressed(Keys.Escape))
         {
             Player target = SpectatorTargetSystem.GetPlayerTarget();
@@ -49,7 +54,7 @@ internal class InventoryWhileDeadSystem : ModSystem
                 // TODO
                 // This never reaches because it's handled in InventoryOverlay.Update.
                 // ...So this is redundant, but keep it just in-case.
-                Main.NewText("Inventory is disabled as a spectator unless you are spectating another player.", Color.Yellow);
+                //Main.NewText("Inventory is disabled as a spectator unless you are spectating another player.", Color.Yellow);
             }
 
             return;
@@ -102,8 +107,8 @@ internal class InventoryWhileDeadSystem : ModSystem
     {
         if (SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) || Main.LocalPlayer.ghost)
         {
-            //CloseOwnInventory();
-            //return;
+            CloseOwnInventory();
+            return;
         }
 
         bool flag = Main.playerInventory;
@@ -126,7 +131,7 @@ internal class InventoryWhileDeadSystem : ModSystem
 
     private static void CloseOwnInventory()
     {
-        Log.Chat("Closing ghost/spectator inventory");
+        //Log.Chat("Closing ghost/spectator inventory");
         Main.playerInventory = false;
         Main.LocalPlayer.chest = -1;
         Main.InGuideCraftMenu = false;

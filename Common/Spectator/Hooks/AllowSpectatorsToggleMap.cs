@@ -5,7 +5,7 @@ using Terraria;
 using Terraria.GameInput;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Map;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 /// <summary>
 /// Allows opening the fullscreen map as a ghost 

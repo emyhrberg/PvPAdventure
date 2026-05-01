@@ -4,11 +4,11 @@ using Terraria;
 using Terraria.Graphics.Light;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 internal class FloodlightSpectatorSystem : ModSystem
 {
-    int strength = 1;
+    public static int strength = 1;
 
     public override void Load()
     {
@@ -22,7 +22,7 @@ internal class FloodlightSpectatorSystem : ModSystem
         if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer))
             return;
 
-        //if (strength > 0)
-        //    outputColor += Vector3.One * strength;
+        if (strength > 0)
+            outputColor += Vector3.One * strength;
     }
 }

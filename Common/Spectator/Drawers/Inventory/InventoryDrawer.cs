@@ -33,7 +33,7 @@ public static class InventoryDrawer
             Main.inventoryScale = 0.85f;
 
             string name = player.name + "'s " + Lang.inter[4].Value;
-            sb.DrawString(FontAssets.MouseText.Value, name, new Vector2(40f, 0f), new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor), 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            sb.DrawString(FontAssets.MouseText.Value, name, new Vector2(4f, 0f), new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor), 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
             DrawItems(player);
             DrawCoins(player);
@@ -45,10 +45,9 @@ public static class InventoryDrawer
             DrawEquips(player);
 
             // --- Todos ---
-            DrawCrafting(player);
+            //DrawCrafting(player);
             //DrawChestUI(player);
             //DrawCursor();
-            //DrawHotbar();
             //DrawBuffs();
             //DrawHousingMenu();
         }
@@ -758,90 +757,4 @@ public static class InventoryDrawer
         ItemSlot.Draw(Main.spriteBatch, ref player.trashItem, 6, new Vector2(num, num2));
     }
 
-    private static void DrawCrafting(Player player)
-    {
-
-    }
-
-    private static void DrawBuffs(SpriteBatch sb, Vector2 start, Player player, Rectangle viewport)
-    {
-        const int size = 32;
-        const int pad = 8;
-        const int perRow = 9;
-        const float timeScale = 0.75f;
-
-        DynamicSpriteFont font = FontAssets.MouseText.Value;
-        Point mouse = Main.MouseScreen.ToPoint();
-
-        bool debugBuffs = false;
-        int[] buffTypes = player.buffType;
-        int[] buffTimes = player.buffTime;
-
-//#if DEBUG
-//        debugBuffs = true;
-//        buffTypes = [BuffID.Regeneration, BuffID.Swiftness, BuffID.Ironskin, BuffID.WellFed, BuffID.Shine, BuffID.NightOwl, BuffID.Hunter, BuffID.Spelunker, BuffID.Featherfall, BuffID.Gravitation, BuffID.ObsidianSkin, BuffID.WaterWalking, BuffID.Gills, BuffID.Mining, BuffID.Builder];
-//        buffTimes = new int[buffTypes.Length];
-//        for (int i = 0; i < buffTimes.Length; i++)
-//            buffTimes[i] = 60 * (30 + i * 20);
-//#endif
-
-        int n = 0;
-
-        for (int i = 0; i < buffTypes.Length; i++)
-        {
-            int id = buffTypes[i];
-            int buffTime = buffTimes[i];
-
-            if (id <= 0 || (!debugBuffs && !player.HasBuff(id)) || id >= TextureAssets.Buff.Length || TextureAssets.Buff[id]?.Value == null)
-                continue;
-
-            int row = n / perRow;
-            int col = n % perRow;
-
-            Rectangle iconRect = new(
-                (int)(start.X + col * (size + pad)),
-                (int)(start.Y + row * (size + pad + 16)),
-                size,
-                size);
-
-            if (iconRect.Bottom > viewport.Bottom - 10)
-                break;
-
-            bool hover = iconRect.Contains(mouse) && !PlayerInput.IgnoreMouseInterface;
-            float alpha = hover ? 1f : 0.6f;
-
-            sb.Draw(TextureAssets.Buff[id].Value, iconRect, Color.White * alpha);
-
-            if (buffTime > 2 && !Main.buffNoTimeDisplay[id])
-            {
-                string timeText = GetBuffTimeText(buffTime);
-                Vector2 textSize = font.MeasureString(timeText) * timeScale;
-                Vector2 textPos = new(iconRect.Center.X - textSize.X * 0.5f, iconRect.Bottom - 1f);
-
-                Utils.DrawBorderString(sb, timeText, textPos, Color.White * alpha, timeScale);
-            }
-
-            if (hover)
-            {
-                string name = Lang.GetBuffName(id);
-                string desc = Lang.GetBuffDescription(id);
-                string tooltip = string.IsNullOrEmpty(desc) ? name : name + "\n" + desc;
-
-                Main.instance.MouseText(tooltip);
-                OwnHover();
-            }
-
-            n++;
-        }
-    }
-
-    private static string GetBuffTimeText(int ticks)
-    {
-        int seconds = ticks / 60;
-
-        if (seconds >= 60)
-            return seconds / 60 + " m";
-
-        return seconds + " s";
-    }
 }

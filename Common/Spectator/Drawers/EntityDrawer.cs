@@ -1,12 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PvPAdventure.Common.Spectator.Visualization;
+using PvPAdventure.Common.Spectator.Hooks;
 using PvPAdventure.Common.Visualization;
+using PvPAdventure.Core.Config;
 using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.Graphics;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace PvPAdventure.Common.Spectator.Drawers;
 
@@ -77,15 +79,49 @@ public static class EntityDrawer
 
         Player drawPlayer = CreateFullDrawPlayer(player);
 
-        float scale = Math.Min(area.Width / (drawPlayer.width + 4f), area.Height / drawPlayer.height);
-        scale = 1f;
+        //float scale = Math.Min(area.Width / (drawPlayer.width + 4f), area.Height / drawPlayer.height);
+        float scale = GetPlayerScale();
 
         Vector2 drawSize = new(drawPlayer.width * scale, drawPlayer.height * scale);
         Vector2 drawPos = new(
             (int)MathF.Round(area.Center.X - drawSize.X * 0.5f),
             (int)MathF.Round(area.Center.Y - drawSize.Y * 0.5f + drawPlayer.gfxOffY * scale));
 
+        drawPos.Y += GetPlayerScaleVerticalOffset();
+
         DrawFullPlayer(sb, player, drawPos, scale);
+    }
+
+    private static float GetPlayerScale()
+    {
+        ClientConfig clientConfig = ModContent.GetInstance<ClientConfig>();
+
+        float scale = clientConfig.spectateUISize switch
+        {
+            ClientConfig.AdventureUISize.VerySmall => 0.8f,
+            ClientConfig.AdventureUISize.Small => 1.0f,
+            ClientConfig.AdventureUISize.Medium => 1.25f,
+            ClientConfig.AdventureUISize.Big => 1.5f,
+            _ => 1f
+        };
+
+        return scale;
+    }
+
+    private static float GetPlayerScaleVerticalOffset()
+    {
+        ClientConfig clientConfig = ModContent.GetInstance<ClientConfig>();
+
+        float scale = clientConfig.spectateUISize switch
+        {
+            ClientConfig.AdventureUISize.VerySmall => -7f,
+            ClientConfig.AdventureUISize.Small => 5f,
+            ClientConfig.AdventureUISize.Medium => 10f,
+            ClientConfig.AdventureUISize.Big => 20,
+            _ => 1f
+        };
+
+        return scale;
     }
 
     public static void DrawFullPlayer(SpriteBatch sb, Player player, Vector2 position, float scale = 1f)

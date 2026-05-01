@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using PvPAdventure.Common.Spectator.Map;
 using PvPAdventure.Common.Spectator.Net;
 using PvPAdventure.Common.Spectator.UI;
 using PvPAdventure.Common.SSC;

@@ -1,7 +1,7 @@
 ﻿using PvPAdventure.Core.Config;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Trackers;
+namespace PvPAdventure.Common.Spectator._Deprecated.Trackers;
 
 /// <summary>
 /// Whether we track stats for spectating.

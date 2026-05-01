@@ -5,7 +5,7 @@ using Terraria.Graphics;
 using Terraria.Graphics.Renderers;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 [Autoload(Side = ModSide.Client)]
 internal sealed class DisableGhostDrawSystem : ModSystem

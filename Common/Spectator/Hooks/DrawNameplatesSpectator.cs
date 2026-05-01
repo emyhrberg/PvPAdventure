@@ -13,7 +13,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 /// <summary>
 /// Skip drawing ghost player nameplates 

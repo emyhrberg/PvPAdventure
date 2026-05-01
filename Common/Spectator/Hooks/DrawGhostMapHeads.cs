@@ -10,7 +10,7 @@ using Terraria.Map;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 /// <summary>
 /// Draws all ghosts on the map with a custom icon instead of the default player head.

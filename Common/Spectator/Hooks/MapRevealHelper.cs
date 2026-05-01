@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Map;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 internal static class MapRevealHelper
 {
@@ -33,7 +33,7 @@ internal static class MapRevealHelper
 
         Main.Map.Clear();
         Main.refreshMap = true;
-        Main.mapFullscreen = false;
+        //Main.mapFullscreen = false;
         //Main.mapStyle = 0;
     }
 }

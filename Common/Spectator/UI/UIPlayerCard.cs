@@ -36,11 +36,12 @@ internal sealed class UIPlayerCard : UIPanel
 
         SetPadding(0f);
 
-        float buttonSize = 27f * scale;
-        float buttonTop = CardHeight * scale - buttonSize - 5f * scale;
+        float buttonSize = 32f * scale;
+        float buttonGap = 2f * scale;
+        float buttonTop = CardHeight * scale - 5f * scale - buttonSize;
         float buttonLeft = 5f * scale;
 
-        AddInventoryButton(buttonLeft, buttonTop, buttonSize);
+        AddActionButtons(GetPlayerCardActions());
     }
 
     protected override void DrawSelf(SpriteBatch sb)
@@ -58,8 +59,9 @@ internal sealed class UIPlayerCard : UIPanel
         }
         else if (IsMouseHovering)
         {
-            BackgroundColor = Colors.FancyUIFatButtonMouseOver * 0.25f;
-            BorderColor = Colors.FancyUIFatButtonMouseOver;
+            BackgroundColor = new Color(63, 82, 151) * 0.45f;
+            //BorderColor = Colors.FancyUIFatButtonMouseOver * 0.3f;
+            BorderColor = Colors.FancyUIFatButtonMouseOver*0.3f;
         }
         else
         {
@@ -69,6 +71,7 @@ internal sealed class UIPlayerCard : UIPanel
 
         base.DrawSelf(sb);
 
+        // Null checks
         if (PlayerIndex < 0 || PlayerIndex >= Main.maxPlayers)
             return;
 
@@ -84,16 +87,32 @@ internal sealed class UIPlayerCard : UIPanel
 
         // Layout
         int shrink = (int)MathF.Round(5f * scale);
-        int buttonSize = (int)MathF.Round(27f * scale);
+        int buttonSize = (int)MathF.Round(32f * scale);
+        int buttonGap = (int)MathF.Round(2f * scale);
+        int buttonCount = 3;
         int buttonRowHeight = buttonSize;
-        int buttonRowGap = (int)MathF.Round(4f * scale);
-        int buttonContentWidth = (int)MathF.Round(85f * scale);
+        int buttonRowGap = (int)MathF.Round(3f * scale);
+        int buttonContentWidth = buttonSize * buttonCount + buttonGap * (buttonCount - 1);
+        int infoGap = (int)MathF.Round(6f * scale);
+        int infoTopPadding = (int)MathF.Round(6f * scale);
+        int infoRightPadding = (int)MathF.Round(8f * scale);
 
         Rectangle backgroundRect = rect;
         Rectangle contentRect = new(rect.X + shrink, rect.Y + shrink, rect.Width - shrink * 2, rect.Height - shrink * 2);
-        Rectangle playerPreviewRect = new(contentRect.X, contentRect.Y, buttonContentWidth, contentRect.Height - buttonRowHeight - buttonRowGap);
-        Rectangle infoRect = new(playerPreviewRect.Right + (int)MathF.Round(6f * scale), playerPreviewRect.Y + (int)MathF.Round(8f * scale), rect.Right - playerPreviewRect.Right - (int)MathF.Round(12f * scale), playerPreviewRect.Height - (int)MathF.Round(16f * scale));
-        Rectangle nameRect = new(infoRect.X, infoRect.Y, infoRect.Width, (int)MathF.Round(26f * scale));
+
+        Rectangle playerPreviewRect = new(
+            contentRect.X,
+            contentRect.Y,
+            buttonContentWidth,
+            contentRect.Height - buttonRowHeight - buttonRowGap);
+
+        Rectangle infoRect = new(
+            playerPreviewRect.Right + infoGap,
+            contentRect.Y + infoTopPadding,
+            contentRect.Right - playerPreviewRect.Right - infoGap - infoRightPadding,
+            contentRect.Height - infoTopPadding * 2);
+
+        Rectangle nameRect = new(infoRect.X, infoRect.Y - 2, infoRect.Width, (int)MathF.Round(24f * scale));
 
         // Draw biome BG
         BiomeBackgroundDrawer.DrawMapFullscreenBackground(sb, backgroundRect, player.Center, shrinkPadding: shrink);
@@ -103,7 +122,7 @@ internal sealed class UIPlayerCard : UIPanel
         EntityDrawer.DrawPlayerPreview(sb, player, playerPreviewRect);
 
         // Draw player info to the right of the preview
-        Rectangle healthRect = new(infoRect.X, nameRect.Bottom + (int)MathF.Round(6f * scale), infoRect.Width, (int)MathF.Round(27f * scale));
+        Rectangle healthRect = new(infoRect.X, nameRect.Bottom + (int)MathF.Round(2f * scale), infoRect.Width, (int)MathF.Round(27f * scale));
 
         // Draw name
         string name = PlayerIndex == Main.myPlayer ? "You" : player.name;
@@ -114,10 +133,23 @@ internal sealed class UIPlayerCard : UIPanel
 
         Utils.DrawBorderString(sb, displayName, namePosition, Color.White, textScale);
 
-        // Draw health stat
-        //Rectangle stat1Rect = ...;
-        //StatDrawer.DrawPlayerStat(sb, stat1Rect, stat.Biome);
+        // --- Draw player stats ---
+        int statH = (int)MathF.Round(27f * scale);
+        int statG = (int)MathF.Round(3f * scale);
 
+        // Stat 1: Life
+        Rectangle stat1Rect = new(infoRect.X, nameRect.Bottom + (int)MathF.Round(2f * scale), infoRect.Width, statH);
+        StatDrawer.DrawPlayerStat(sb, stat1Rect, PlayerStats.Life.Build(player), scale);
+
+        // Stat 2: Mana
+        Rectangle stat2Rect = new(infoRect.X, stat1Rect.Bottom + statG, infoRect.Width, statH);
+        StatDrawer.DrawPlayerStat(sb, stat2Rect, PlayerStats.Mana.Build(player), scale);
+
+        // Stat 3: Defense
+        Rectangle stat3Rect = new(infoRect.X, stat2Rect.Bottom + statG, infoRect.Width, statH);
+        StatDrawer.DrawPlayerStat(sb, stat3Rect, PlayerStats.Biome.Build(player), scale);
+
+        // Draw health stat
         //StatDrawer.DrawBack(sb, healthRect);
 
         //string hp = $"{player.statLife}/{player.statLifeMax2}";
@@ -137,6 +169,8 @@ internal sealed class UIPlayerCard : UIPanel
 
         // Debug draw rectangles
         //DebugDrawer.DrawRectangle(playerPreviewRect, drawSize: true);
+        //DebugDrawer.DrawRectangle(nameRect, drawSize: true);
+        //DebugDrawer.DrawRectangle(stat1Rect, drawSize: true);
     }
 
     private void AddInventoryButton(float left, float top, float size)
@@ -167,6 +201,128 @@ internal sealed class UIPlayerCard : UIPanel
         else if (Main.netMode == NetmodeID.MultiplayerClient)
             NetMessage.SendData(MessageID.TeleportEntity, -1, -1, null, 2, local.whoAmI, teleportPosition.X, teleportPosition.Y, TeleportationStyleID.PotionOfReturn);
     }
+
+    #region Action buttons
+    private readonly record struct PlayerCardAction(
+        Asset<Texture2D> Icon,
+        Asset<Texture2D> SelectedIcon,
+        string HoverText,
+        string SelectedHoverText,
+        Action<int> Click,
+        Func<int, bool> Selected
+    );
+    private static PlayerCardAction[] GetPlayerCardActions()
+    {
+        return
+        [
+            new PlayerCardAction(
+            TextureAssets.Item[ItemID.TeleportationPotion],
+            TextureAssets.Item[ItemID.TeleportationPotion],
+            "Teleport to player",
+            "Teleport to player",
+            TeleportToPlayer,
+            static _ => false),
+
+        new PlayerCardAction(
+            Ass.Icon_Eye,
+            Ass.Icon_Eye,
+            "Spectate player",
+            "Stop spectating",
+            SpectatorTargetSystem.TogglePlayerTarget,
+            static playerIndex => Main.player[playerIndex]?.active == true && SpectatorTargetSystem.IsLockedTargeting(Main.player[playerIndex])),
+
+        new PlayerCardAction(
+            Ass.Icon_InventoryClosed,
+            Ass.Icon_InventoryOpen,
+            "View inventory",
+            "Close inventory",
+            InventoryOverlay.Toggle,
+            InventoryOverlay.IsOpen)
+        ];
+    }
+
+    private void AddActionButtons(PlayerCardAction[] actions)
+    {
+        float buttonSize = 32f * scale;
+        float buttonGap = 2f * scale;
+        float buttonTop = CardHeight * scale - 5f * scale - buttonSize;
+        float buttonLeft = 5f * scale;
+
+        for (int i = 0; i < actions.Length; i++)
+        {
+            AddActionButton(actions[i], buttonLeft, buttonTop, buttonSize);
+            buttonLeft += buttonSize + buttonGap;
+        }
+    }
+
+    private void AddActionButton(PlayerCardAction action, float left, float top, float size)
+    {
+        PlayerCardActionButton button = new(PlayerIndex, owner, action);
+        button.Left.Set(left, 0f);
+        button.Top.Set(top, 0f);
+        button.Width.Set(size, 0f);
+        button.Height.Set(size, 0f);
+        Append(button);
+    }
+
+    private sealed class PlayerCardActionButton : UIElement
+    {
+        private readonly int playerIndex;
+        private readonly SpectatorControlsPanel owner;
+        private readonly PlayerCardAction action;
+
+        public PlayerCardActionButton(int playerIndex, SpectatorControlsPanel owner, PlayerCardAction action)
+        {
+            this.playerIndex = playerIndex;
+            this.owner = owner;
+            this.action = action;
+
+            OnLeftClick += (evt, element) =>
+            {
+                if (IsValidPlayer())
+                    action.Click(playerIndex);
+            };
+
+            OnMouseOver += (evt, element) => owner.SetStatusText(IsSelected() ? action.SelectedHoverText : action.HoverText);
+            OnMouseOut += (evt, element) => owner.ResetStatusText();
+        }
+
+        protected override void DrawSelf(SpriteBatch sb)
+        {
+            Rectangle box = GetDimensions().ToRectangle();
+            bool isSelected = IsSelected();
+
+            Texture2D background = isSelected
+                ? TextureAssets.InventoryBack14.Value
+                : IsMouseHovering
+                    ? TextureAssets.InventoryBack7.Value
+                    : TextureAssets.InventoryBack.Value;
+
+            Asset<Texture2D> iconAsset = isSelected && action.SelectedIcon is not null ? action.SelectedIcon : action.Icon;
+
+            if (iconAsset is null)
+                return;
+
+            Texture2D icon = iconAsset.Value;
+            float scale = Math.Min((box.Width - 8f) / icon.Width, (box.Height - 8f) / icon.Height);
+            Color color = isSelected || IsMouseHovering ? Color.White : Color.White * 0.8f;
+
+            sb.Draw(background, box, Color.White * 0.85f);
+            sb.Draw(icon, box.Center.ToVector2(), null, color, 0f, icon.Size() * 0.5f, Math.Min(1f, scale), SpriteEffects.None, 0f);
+        }
+
+        private bool IsSelected()
+        {
+            return IsValidPlayer() && action.Selected(playerIndex);
+        }
+
+        private bool IsValidPlayer()
+        {
+            return playerIndex >= 0 && playerIndex < Main.maxPlayers && Main.player[playerIndex]?.active == true;
+        }
+    }
+
+    #endregion
 
     private sealed class InventoryButton : UIElement
     {
@@ -202,7 +358,7 @@ internal sealed class UIPlayerCard : UIPanel
             Asset<Texture2D> iconAsset = isSelected ? Ass.Icon_InventoryOpen : Ass.Icon_InventoryClosed;
             Texture2D icon = iconAsset.Value;
 
-            float scale = Math.Min((box.Width - 8f) / icon.Width, (box.Height - 8f) / icon.Height);
+            float scale = Math.Min((box.Width - 10f) / icon.Width, (box.Height - 4f) / icon.Height);
             Color color = isSelected || IsMouseHovering ? Color.White : Color.White * 0.8f;
 
             sb.Draw(background, box, Color.White * 0.85f);

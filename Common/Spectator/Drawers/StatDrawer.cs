@@ -7,6 +7,7 @@ using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.ModLoader.UI;
 using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator.Drawers;
@@ -58,7 +59,7 @@ public static class StatDrawer
 
         int iconPaddingX = (int)MathF.Round(5f * scale);
         int iconPaddingY = (int)MathF.Round(4f * scale);
-        int iconSize = Math.Max(1, (int)MathF.Round(14f * scale));
+        int iconSize = Math.Max(1, (int)MathF.Round(18f * scale));
 
         Rectangle iconArea = new(area.X + iconPaddingX, area.Y + iconPaddingY, iconSize, iconSize);
         Rectangle source = frame ?? texture.Bounds;
@@ -72,12 +73,20 @@ public static class StatDrawer
             spriteBatch.Draw(texture, new Rectangle(iconArea.X, iconArea.Y + (iconArea.Height - height) / 2, width, height), source, Color.White);
         }
 
-        float textScale = 0.75f * scale;
-        int textLeft = area.X + (int)MathF.Round(24f * scale);
+        float textScale = 0.9f * scale;
+        int textLeft = area.X + (int)MathF.Round(28f * scale);
         int textTop = area.Y + (int)MathF.Round(3f * scale);
         Rectangle textArea = new(textLeft, textTop, area.Right - textLeft - (int)MathF.Round(4f * scale), area.Height);
 
-        Utils.DrawBorderString(spriteBatch, Truncate(FontAssets.MouseText.Value, text, textArea.Width, textScale), new Vector2(textArea.X, textArea.Y), Color.White, textScale);
+        string truncatedText = Truncate(FontAssets.MouseText.Value, text, textArea.Width, textScale);
+
+        Utils.DrawBorderString(spriteBatch, truncatedText, new Vector2(textArea.X, textArea.Y), Color.White, textScale);
+
+        // Show tooltip if text is truncated
+        if (truncatedText != text && area.Contains(Main.mouseX, Main.mouseY))
+        {
+            UICommon.TooltipMouseText(text);
+        }
     }
     #endregion
 }

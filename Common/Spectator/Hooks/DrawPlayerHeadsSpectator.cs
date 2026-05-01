@@ -3,7 +3,7 @@ using PvPAdventure.Common.Spectator.SpectatorMode;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 [Autoload(Side = ModSide.Client)]
 internal sealed class DrawAllPlayerHeadsOnMapSystem : ModSystem

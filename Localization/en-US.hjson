@@ -470,6 +470,8 @@ Mods: {
 					Chat: "[i:PvPAdventure/ChatConfigItem] Chat"
 					Visualization: Visualization
 					UI: UI
+					PortalTravel: Portal Travel
+					Spectating: Spectating
 				}
 
 				IsVanillaDashEnabled: {
@@ -574,6 +576,11 @@ Mods: {
 				spectateUIPosition: {
 					Label: Spectate UI Position
 					Tooltip: ""
+				}
+
+				ShowCameraFade: {
+					Label: Show Camera Fade
+					Tooltip: Fades to black when switching camera position to allow for a smoother effect
 				}
 			}
 

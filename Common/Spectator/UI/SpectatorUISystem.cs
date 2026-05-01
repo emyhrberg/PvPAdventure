@@ -34,7 +34,7 @@ public class SpectatorUISystem : ModSystem
         if (mode == PlayerMode.Spectator)
         {
             Main.playerInventory = false;
-            Main.NewText("You are now a spectator. Use free camera or select a player to spectate.", Color.Yellow);
+            Main.NewText("You are now a spectator.", Color.Yellow);
             EnsureSpectatorHUDStaysOpen();
             return;
         }

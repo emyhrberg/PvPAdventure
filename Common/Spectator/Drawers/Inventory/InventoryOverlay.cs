@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.SpectatorMode;
+using ReLogic.Graphics;
 using System;
 using Terraria;
+using Terraria.GameContent;
 
 namespace PvPAdventure.Common.Spectator.Drawers.Inventory;
 
@@ -14,7 +16,7 @@ internal static class InventoryOverlay
     // Hotfix to prevent logging the inventory disabled text if we closed settings menu with escape.
     private static bool optionsWindowWasOpen;
 
-  public static void Update()
+    public static void Update()
     { 
         //bool optionsWindowIsOpen = Main.ingameOptionsWindow;
         //bool optionsWindowWasOpenLastFrame = optionsWindowWasOpen;
@@ -43,16 +45,16 @@ internal static class InventoryOverlay
 
         if (target?.active != true)
         {
-            Main.NewText("Inventory is disabled as a spectator.", Color.Yellow);
+            Main.NewText("Inventory is disabled as a spectator unless you are spectating another player.", Color.Yellow);
             return;
         }
 
         Toggle(target);
     }
 
-    public static bool IsOpen(Player target)
+    public static bool IsOpen(Player player)
     {
-        return target?.active == true && playerIndex == target.whoAmI;
+        return player?.active == true && playerIndex == player.whoAmI;
     }
 
     public static bool IsOpen(int targetPlayerIndex)
@@ -60,15 +62,15 @@ internal static class InventoryOverlay
         return IsValidPlayerIndex(targetPlayerIndex) && playerIndex == targetPlayerIndex;
     }
 
-    public static void Toggle(Player target)
+    public static void Toggle(Player player)
     {
-        if (target?.active != true)
+        if (player?.active != true)
         {
             Clear();
             return;
         }
 
-        playerIndex = IsOpen(target) ? -1 : target.whoAmI;
+        playerIndex = IsOpen(player) ? -1 : player.whoAmI;
     }
 
     public static void Toggle(int targetPlayerIndex)
@@ -87,11 +89,11 @@ internal static class InventoryOverlay
         playerIndex = -1;
     }
 
-    public static void Draw(SpriteBatch spriteBatch)
+    public static void Draw(SpriteBatch sb)
     {
-        Player target = GetDrawTarget();
+        Player player = GetDrawTarget();
 
-        if (target?.active != true)
+        if (player?.active != true)
         {
             Clear();
             return;
@@ -99,13 +101,15 @@ internal static class InventoryOverlay
 
         Rectangle viewport = new(0, 0, Main.screenWidth, Main.screenHeight);
 
-        if (IsOpen(target))
+        if (IsOpen(player))
         {
-            InventoryDrawer.DrawInventory(spriteBatch, new Vector2(20f, 20f), target, viewport);
+            InventoryDrawer.DrawInventory(sb, new Vector2(20f, 20f), player, viewport);
+            DrawResourceBars(sb, player);
             return;
         }
 
-        DrawHotbarPlaceholder(spriteBatch, target);
+        DrawHotbar(sb, player);
+        DrawResourceBars(sb, player);
     }
 
     private static Player GetDrawTarget()
@@ -116,12 +120,25 @@ internal static class InventoryOverlay
         return SpectatorTargetSystem.GetPlayerTarget();
     }
 
-    private static void DrawHotbarPlaceholder(SpriteBatch spriteBatch, Player target)
+    private static void DrawHotbar(SpriteBatch sb, Player player)
     {
-        string text = $"Hotbar: {target.name}";
-        Vector2 position = new(20f, 20f);
+        string text = $"{player.name}'s Hotbar";
+        //Vector2 position = new(4f, 2f);
+        //Utils.DrawBorderString(sb, text, position, Color.White, 0.9f);
 
-        Utils.DrawBorderString(spriteBatch, text, position, Color.White, 1f);
+        sb.DrawString(FontAssets.MouseText.Value, text, new Vector2(4f, 0f), new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor), 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+
+        HotbarDrawer.DrawHotbar(player);
+    }
+
+    private static void DrawBuffs(SpriteBatch spriteBatch, Player player)
+    {
+
+    }
+
+    private static void DrawResourceBars(SpriteBatch spriteBatch, Player player)
+    {
+        ResourceBarsDrawer.DrawResourceBarsLikeVanilla(player);
     }
 
     private static bool IsValidPlayerIndex(int targetPlayerIndex)

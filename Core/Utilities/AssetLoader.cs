@@ -61,6 +61,7 @@ public static class Ass
     public static Asset<Texture2D> CollapseUp; // 32x32
     public static Asset<Texture2D> Ghost; // 18x18. for use in map
     public static Asset<Texture2D> GhostLeft; // 18x18. for use in map
+    public static Asset<Texture2D> Icon_GhostTeleport; // 32x32. player action button.
 
     public static Asset<Texture2D> HeldItem; // 32x32
     public static Asset<Texture2D> ButtonTeleport; // 32x32

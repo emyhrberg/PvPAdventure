@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator.Visualization;
+namespace PvPAdventure.Common.Spectator.Hooks;
 
 /// <summary>
 /// Vanilla: Resource Bars 	Draws health, mana, and breath bars, as well as buff icons.
