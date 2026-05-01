@@ -8,6 +8,15 @@ namespace PvPAdventure.Common.Spectator.Hooks;
 internal static class MapRevealHelper
 {
     public static bool Enabled => true;
+    public static bool Revealed { get; private set; }
+
+    public static void SetRevealed(bool revealed)
+    {
+        if (revealed)
+            RevealLocalMap();
+        else
+            ClearLocalMap();
+    }
 
     public static void RevealLocalMap()
     {
@@ -24,6 +33,7 @@ internal static class MapRevealHelper
         }
 
         Main.refreshMap = true;
+        Revealed = true;
     }
 
     public static void ClearLocalMap()
@@ -33,6 +43,7 @@ internal static class MapRevealHelper
 
         Main.Map.Clear();
         Main.refreshMap = true;
+        Revealed = false;
         //Main.mapFullscreen = false;
         //Main.mapStyle = 0;
     }

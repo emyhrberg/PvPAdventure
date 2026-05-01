@@ -10,6 +10,7 @@ namespace PvPAdventure.Common.Spectator.UI;
 internal sealed class SpectatorUIState : UIState
 {
     private SpectatorControlsPanel spectatorControlsElement;
+    private SpectatorSettingsPanel spectatorSettingsElement;
 
     public override void OnActivate()
     {
@@ -24,10 +25,23 @@ internal sealed class SpectatorUIState : UIState
     internal void EnsureSpectatorHUDStaysOpen()
     {
         if (spectatorControlsElement?.Parent is not null)
+        {
+            EnsureSpectatorSettingsPanel();
             return;
+        }
 
         spectatorControlsElement ??= new SpectatorControlsPanel();
         Append(spectatorControlsElement);
+        EnsureSpectatorSettingsPanel();
+    }
+
+    private void EnsureSpectatorSettingsPanel()
+    {
+        if (spectatorSettingsElement?.Parent is not null)
+            return;
+
+        spectatorSettingsElement ??= new SpectatorSettingsPanel();
+        Append(spectatorSettingsElement);
     }
 
     public override void Update(GameTime gameTime)
@@ -46,6 +60,7 @@ internal sealed class SpectatorUIState : UIState
         else
         {
             spectatorControlsElement?.Remove();
+            spectatorSettingsElement?.Remove();
             InventoryOverlay.Clear();
         }
 

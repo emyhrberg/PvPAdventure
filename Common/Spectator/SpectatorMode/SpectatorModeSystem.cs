@@ -34,6 +34,28 @@ internal sealed class SpectatorModeSystem : ModSystem
 
     public static bool IsInPlayerMode(Player player) => player?.active == true && GetMode(player.whoAmI) == PlayerMode.Player;
 
+    public static int GetPlayersOnlineCount()
+    {
+        int count = 0;
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+            if (Main.player[i]?.active == true)
+                count++;
+
+        return count;
+    }
+
+    public static int GetSpectatorCount()
+    {
+        int count = 0;
+
+        for (int i = 0; i < Main.maxPlayers; i++)
+            if (Main.player[i]?.active == true && GetMode(i) == PlayerMode.Spectator)
+                count++;
+
+        return count;
+    }
+
     internal static PlayerMode GetJoinDefaultMode() => ModContent.GetInstance<SpectatorConfig>().ForceSpectating ? PlayerMode.Spectator : PlayerMode.Player;
 
     public static void ToggleSpectateMode(int slot)

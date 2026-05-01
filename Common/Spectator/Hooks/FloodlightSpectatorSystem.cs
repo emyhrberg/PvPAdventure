@@ -9,6 +9,11 @@ namespace PvPAdventure.Common.Spectator.Hooks;
 internal class FloodlightSpectatorSystem : ModSystem
 {
     public static int strength = 1;
+    public static bool Enabled
+    {
+        get => strength > 0;
+        set => strength = value ? 1 : 0;
+    }
 
     public override void Load()
     {
