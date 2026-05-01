@@ -15,6 +15,7 @@ public static class HotbarDrawer
     public static void DrawHotbar(Player player)
     {
         bool ownsHotbarHoverThisFrame = false;
+        Color oldInventoryBack = Main.inventoryBack;
 
         try
         {
@@ -65,8 +66,10 @@ public static class HotbarDrawer
                 }
                 float num4 = Main.inventoryScale;
                 Main.inventoryScale = num2;
+                Main.inventoryBack = i == player.selectedItem ? Color.Yellow : oldInventoryBack;
                 // --- Actual draw call ---
                 ItemSlot.Draw(Main.spriteBatch, player.inventory, 13, i, new Vector2(num, num3), lightColor);
+                Main.inventoryBack = oldInventoryBack;
                 Main.inventoryScale = num4;
                 num += (int)((float)TextureAssets.InventoryBack.Width() * Main.hotbarScale[i]) + 4;
             }
@@ -79,12 +82,16 @@ public static class HotbarDrawer
                 Color lightColor2 = new Color(255, 255, 255, a2);
                 float num7 = Main.inventoryScale;
                 Main.inventoryScale = num5;
+                Main.inventoryBack = Color.Yellow;
                 ItemSlot.Draw(Main.spriteBatch, player.inventory, 13, selectedItem, new Vector2(num, num6), lightColor2);
+                Main.inventoryBack = oldInventoryBack;
                 Main.inventoryScale = num7;
             }
         }
         finally
         {
+            Main.inventoryBack = oldInventoryBack;
+
             if (ownedHotbarHover && !ownsHotbarHoverThisFrame)
             {
                 Main.HoverItem = new Item();

@@ -17,6 +17,8 @@ namespace PvPAdventure.Common.Spectator.Drawers.Inventory;
 
 public static class InventoryDrawer
 {
+    private static readonly Item[] heldItemSlot = [new Item()];
+
     private static bool ownedHoverLastFrame;
     private static bool ownedHoverThisFrame;
 
@@ -744,6 +746,8 @@ public static class InventoryDrawer
             num2 += Main.trashSlotOffset.Y;
             Main.inventoryScale = 0.755f;
         }
+        DrawHeldItemSlot(player, num - 47, num2);
+
         new Color(150, 150, 150, 150);
         if (Main.mouseX >= num && (float)Main.mouseX <= (float)num + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num2 && (float)Main.mouseY <= (float)num2 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
         {
@@ -755,6 +759,16 @@ public static class InventoryDrawer
             HoverItemSlot(ref player.trashItem, 6);
         }
         ItemSlot.Draw(Main.spriteBatch, ref player.trashItem, 6, new Vector2(num, num2));
+    }
+
+    private static void DrawHeldItemSlot(Player player, int x, int y)
+    {
+        heldItemSlot[0] = player.HeldItem?.Clone() ?? new Item();
+
+        if (Main.mouseX >= x && (float)Main.mouseX <= (float)x + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= y && (float)Main.mouseY <= (float)y + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
+            HoverItemSlot(heldItemSlot, 13, 0);
+
+        ItemSlot.Draw(Main.spriteBatch, heldItemSlot, 13, 0, new Vector2(x, y));
     }
 
 }

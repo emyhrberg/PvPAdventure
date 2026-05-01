@@ -2,6 +2,7 @@
 using PvPAdventure.Common.Spectator.SpectatorMode;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace PvPAdventure.Common.Spectator;
@@ -9,9 +10,16 @@ namespace PvPAdventure.Common.Spectator;
 [Autoload(Side = ModSide.Client)]
 public class SpectatorTargetSystem : ModSystem
 {
+    private const int FollowUpdateDelayTicks = 12;
+    private const float FollowSnapDistance = 1200f;
+    private const float FollowTargetDistance = 220f;
+    private const float FollowVerticalOffset = -80f;
+    private const float FollowLerp = 0.2f;
+
     private static int target = -1;
     private static int previewTarget = -1;
     private static int cameraTarget = -1;
+    private static int followDelayTicks;
 
     #region Targeting
     private static bool CanTarget(int playerId)
@@ -34,6 +42,9 @@ public class SpectatorTargetSystem : ModSystem
             Log.Chat($"target {target}->{next}");
 
         target = next;
+
+        if (CanTarget(target))
+            SnapLocalPlayerNear(Main.player[target]);
     }
 
     public static void TogglePlayerTarget(int slot)
@@ -94,6 +105,7 @@ public class SpectatorTargetSystem : ModSystem
             cameraTarget = -1;
 
         target = -1;
+        followDelayTicks = 0;
     }
 
     public static bool IsTargeting(Player player) => player?.active == true && GetPlayerTarget()?.whoAmI == player.whoAmI;
@@ -136,6 +148,69 @@ public class SpectatorTargetSystem : ModSystem
         }
 
         cameraTarget = -1;
+    }
+
+    public override void PostUpdatePlayers()
+    {
+        Player targetPlayer = GetLockedPlayerTarget();
+        if (targetPlayer?.active != true)
+        {
+            followDelayTicks = 0;
+            return;
+        }
+
+        FollowLockedTarget(targetPlayer);
+    }
+
+    private static void FollowLockedTarget(Player targetPlayer)
+    {
+        Player local = Main.LocalPlayer;
+        if (local?.active != true || targetPlayer?.active != true || targetPlayer.whoAmI == local.whoAmI)
+            return;
+
+        if (followDelayTicks++ < FollowUpdateDelayTicks)
+            return;
+
+        followDelayTicks = 0;
+
+        Vector2 desiredCenter = GetFollowCenter(targetPlayer);
+        float distanceSquared = Vector2.DistanceSquared(local.Center, desiredCenter);
+
+        if (distanceSquared > FollowSnapDistance * FollowSnapDistance)
+            local.Center = desiredCenter;
+        else
+            local.Center = Vector2.Lerp(local.Center, desiredCenter, FollowLerp);
+
+        local.velocity = Vector2.Zero;
+        local.fallStart = (int)(local.position.Y / 16f);
+
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+    }
+
+    private static void SnapLocalPlayerNear(Player targetPlayer)
+    {
+        Player local = Main.LocalPlayer;
+        if (local?.active != true || targetPlayer?.active != true || targetPlayer.whoAmI == local.whoAmI)
+            return;
+
+        local.Center = GetFollowCenter(targetPlayer);
+        local.velocity = Vector2.Zero;
+        local.fallStart = (int)(local.position.Y / 16f);
+        followDelayTicks = 0;
+
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+    }
+
+    private static Vector2 GetFollowCenter(Player targetPlayer)
+    {
+        float horizontalDirection = MathHelper.Distance(targetPlayer.velocity.X, 0f) > 0.1f
+            ? targetPlayer.velocity.X < 0f ? -1f : 1f
+            : targetPlayer.direction == 0 ? 1f : targetPlayer.direction;
+        Vector2 offset = new(-horizontalDirection * FollowTargetDistance, FollowVerticalOffset);
+
+        return targetPlayer.Center + offset;
     }
     #endregion
 }
