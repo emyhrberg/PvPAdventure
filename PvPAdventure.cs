@@ -79,7 +79,7 @@ public class PvPAdventure : Mod
                 break;
 
             case AdventurePacketIdentifier.SessionTracker:
-                PvPAdventure.Common.Spectator._Deprecated.Trackers.SessionTrackerNetHandler.HandlePacket(reader, whoAmI);
+                Common.Spectator._Deprecated.Trackers.SessionTrackerNetHandler.HandlePacket(reader, whoAmI);
                 break;
 
             case AdventurePacketIdentifier.TravelTeleport:

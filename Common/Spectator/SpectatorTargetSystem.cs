@@ -72,14 +72,20 @@ public class SpectatorTargetSystem : ModSystem
 
         Log.Chat($"clear {target}");
 
-        Player local = Main.LocalPlayer;
-        if (local?.active == true)
+        bool previewStillOwnsCamera = CanTarget(previewTarget);
+
+        if (!previewStillOwnsCamera)
         {
-            Vector2 screenPosition = local.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
-            SpectateCameraFade.SetScreenPosition(screenPosition, allowFade: true);
+            Player local = Main.LocalPlayer;
+            if (local?.active == true)
+            {
+                Vector2 screenPosition = local.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
+                SpectateCameraFade.SetScreenPosition(screenPosition, allowFade: true);
+            }
+
+            cameraTarget = -1;
         }
 
-        cameraTarget = -1;
         target = -1;
     }
 

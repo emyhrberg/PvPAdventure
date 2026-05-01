@@ -82,6 +82,9 @@ internal sealed class SpectatorControlsPanel : UIPanel
         if (!targets.Contains(hovered))
             hovered = -1;
 
+        shownPlayerCards = GetShownPlayerCardsForTargetCount(targets.Count);
+        Width.Set(GetPanelWidth(), 0f);
+
         // Update the number of visible targets based on the number of player cards to show
         visibleTargetStart = Math.Clamp(visibleTargetStart, 0, Math.Max(0, targets.Count - shownPlayerCards));
         int visibleTargets = Math.Min(targets.Count - visibleTargetStart, shownPlayerCards);
@@ -113,10 +116,6 @@ internal sealed class SpectatorControlsPanel : UIPanel
         statusText = new UIText("") { HAlign = 0.5f, VAlign = 0.5f };
         topRow.Append(statusText);
         UpdateStatusText();
-
-        // Add player card count buttons
-        AddMinusButton(topRow, topRowHeight);
-        AddPlusButton(topRow, topRowHeight);
 
         // Add player panel
         UIPanel playersPanel = new();
@@ -492,6 +491,14 @@ internal sealed class SpectatorControlsPanel : UIPanel
     private static float GetNamePanelHeight(float scale)
     {
         return 38f * scale;
+    }
+
+    private static int GetShownPlayerCardsForTargetCount(int targetCount)
+    {
+        if (targetCount <= 0)
+            return MinShownPlayerCards;
+
+        return Math.Clamp(targetCount, MinShownPlayerCards, MaxShownPlayerCards);
     }
 
     private static int GetPanelHeight()
