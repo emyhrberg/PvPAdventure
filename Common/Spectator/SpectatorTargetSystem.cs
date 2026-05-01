@@ -10,17 +10,21 @@ namespace PvPAdventure.Common.Spectator;
 [Autoload(Side = ModSide.Client)]
 public class SpectatorTargetSystem : ModSystem
 {
-    private const int FollowUpdateDelayTicks = 12;
+    private const int FullSyncIntervalTicks = 15;
     private const float FollowSnapDistance = 800f;
-    private const float FollowTargetDistance = 96f;
-    private const float FollowVerticalOffset = -48f;
-    private const float FollowLerp = 0.2f;
+    private const float FollowTargetDistance = 16f;
+    private const float FollowVerticalOffset = 0f;
+    private const float FollowTargetLerp = 0.45f;
+    private const float FollowLocalLerp = 0.65f;
 
     private static int target = -1;
     private static int npcTarget = -1;
     private static int previewTarget = -1;
     private static int cameraTarget = -1;
-    private static int followDelayTicks;
+    private static int followTargetKey = -1;
+    private static int netSyncTicks;
+    private static bool hasSmoothedFollowCenter;
+    private static Vector2 smoothedFollowCenter;
 
     #region Targeting
     private static bool CanTarget(int playerId)
@@ -51,6 +55,7 @@ public class SpectatorTargetSystem : ModSystem
 
         target = next;
         npcTarget = -1;
+        ResetFollowState();
 
         if (CanTarget(target))
             SnapLocalPlayerNear(Main.player[target]);
@@ -69,6 +74,7 @@ public class SpectatorTargetSystem : ModSystem
         npcTarget = next;
         target = -1;
         previewTarget = -1;
+        ResetFollowState();
 
         if (CanTargetNPC(npcTarget))
             SnapLocalPlayerNear(Main.npc[npcTarget]);
@@ -148,7 +154,7 @@ public class SpectatorTargetSystem : ModSystem
 
         target = -1;
         npcTarget = -1;
-        followDelayTicks = 0;
+        ResetFollowState();
     }
 
     public static bool IsTargeting(Player player) => player?.active == true && GetPlayerTarget()?.whoAmI == player.whoAmI;
@@ -241,7 +247,7 @@ public class SpectatorTargetSystem : ModSystem
             return;
         }
 
-        followDelayTicks = 0;
+        ResetFollowState();
     }
 
     private static void FollowLockedTarget(Player targetPlayer)
@@ -250,24 +256,7 @@ public class SpectatorTargetSystem : ModSystem
         if (local?.active != true || targetPlayer?.active != true || targetPlayer.whoAmI == local.whoAmI)
             return;
 
-        if (followDelayTicks++ < FollowUpdateDelayTicks)
-            return;
-
-        followDelayTicks = 0;
-
-        Vector2 desiredCenter = GetFollowCenter(targetPlayer.Center, targetPlayer.velocity, targetPlayer.direction);
-        float distanceSquared = Vector2.DistanceSquared(local.Center, desiredCenter);
-
-        if (distanceSquared > FollowSnapDistance * FollowSnapDistance)
-            local.Center = desiredCenter;
-        else
-            local.Center = Vector2.Lerp(local.Center, desiredCenter, FollowLerp);
-
-        local.velocity = Vector2.Zero;
-        local.fallStart = (int)(local.position.Y / 16f);
-
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+        FollowCenter(local, targetPlayer.Center, targetPlayer.velocity, targetPlayer.direction, targetPlayer.whoAmI);
     }
 
     private static void SnapLocalPlayerNear(Player targetPlayer)
@@ -276,13 +265,7 @@ public class SpectatorTargetSystem : ModSystem
         if (local?.active != true || targetPlayer?.active != true || targetPlayer.whoAmI == local.whoAmI)
             return;
 
-        local.Center = GetFollowCenter(targetPlayer.Center, targetPlayer.velocity, targetPlayer.direction);
-        local.velocity = Vector2.Zero;
-        local.fallStart = (int)(local.position.Y / 16f);
-        followDelayTicks = 0;
-
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+        SnapLocalPlayerNear(targetPlayer.Center, targetPlayer.velocity, targetPlayer.direction, targetPlayer.whoAmI);
     }
 
     private static void FollowLockedTarget(NPC targetNPC)
@@ -291,39 +274,84 @@ public class SpectatorTargetSystem : ModSystem
         if (local?.active != true || targetNPC?.active != true)
             return;
 
-        if (followDelayTicks++ < FollowUpdateDelayTicks)
-            return;
-
-        followDelayTicks = 0;
-
-        Vector2 desiredCenter = GetFollowCenter(targetNPC.Center, targetNPC.velocity, targetNPC.direction);
-        float distanceSquared = Vector2.DistanceSquared(local.Center, desiredCenter);
-
-        if (distanceSquared > FollowSnapDistance * FollowSnapDistance)
-            local.Center = desiredCenter;
-        else
-            local.Center = Vector2.Lerp(local.Center, desiredCenter, FollowLerp);
-
-        local.velocity = Vector2.Zero;
-        local.fallStart = (int)(local.position.Y / 16f);
-
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+        FollowCenter(local, targetNPC.Center, targetNPC.velocity, targetNPC.direction, 1000 + targetNPC.whoAmI);
     }
 
     private static void SnapLocalPlayerNear(NPC targetNPC)
     {
-        Player local = Main.LocalPlayer;
-        if (local?.active != true || targetNPC?.active != true)
+        if (targetNPC?.active != true)
             return;
 
-        local.Center = GetFollowCenter(targetNPC.Center, targetNPC.velocity, targetNPC.direction);
+        SnapLocalPlayerNear(targetNPC.Center, targetNPC.velocity, targetNPC.direction, 1000 + targetNPC.whoAmI);
+    }
+
+    private static void FollowCenter(Player local, Vector2 targetCenter, Vector2 targetVelocity, int direction, int targetKey)
+    {
+        Vector2 desiredCenter = GetFollowCenter(targetCenter, targetVelocity, direction);
+        bool targetChanged = followTargetKey != targetKey;
+        bool shouldSnap = targetChanged ||
+            !hasSmoothedFollowCenter ||
+            Vector2.DistanceSquared(local.Center, desiredCenter) > FollowSnapDistance * FollowSnapDistance;
+
+        followTargetKey = targetKey;
+
+        if (shouldSnap)
+        {
+            smoothedFollowCenter = desiredCenter;
+            hasSmoothedFollowCenter = true;
+            local.Center = desiredCenter;
+        }
+        else
+        {
+            smoothedFollowCenter = Vector2.Lerp(smoothedFollowCenter, desiredCenter, FollowTargetLerp);
+            local.Center = Vector2.Lerp(local.Center, smoothedFollowCenter, FollowLocalLerp);
+        }
+
         local.velocity = Vector2.Zero;
         local.fallStart = (int)(local.position.Y / 16f);
-        followDelayTicks = 0;
 
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-            NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+        SyncLocalPlayerPosition(forceFullSync: false);
+    }
+
+    private static void SnapLocalPlayerNear(Vector2 targetCenter, Vector2 targetVelocity, int direction, int targetKey)
+    {
+        Player local = Main.LocalPlayer;
+        if (local?.active != true)
+            return;
+
+        Vector2 desiredCenter = GetFollowCenter(targetCenter, targetVelocity, direction);
+
+        followTargetKey = targetKey;
+        smoothedFollowCenter = desiredCenter;
+        hasSmoothedFollowCenter = true;
+        local.Center = desiredCenter;
+        local.velocity = Vector2.Zero;
+        local.fallStart = (int)(local.position.Y / 16f);
+
+        SyncLocalPlayerPosition(forceFullSync: true);
+    }
+
+    private static void ResetFollowState()
+    {
+        followTargetKey = -1;
+        hasSmoothedFollowCenter = false;
+        netSyncTicks = 0;
+    }
+
+    private static void SyncLocalPlayerPosition(bool forceFullSync)
+    {
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            return;
+
+        Player local = Main.LocalPlayer;
+
+        NetMessage.SendData(MessageID.PlayerControls, -1, -1, null, local.whoAmI);
+
+        if (forceFullSync || ++netSyncTicks >= FullSyncIntervalTicks)
+        {
+            netSyncTicks = 0;
+            NetMessage.SendData(MessageID.SyncPlayer, -1, -1, null, local.whoAmI);
+        }
     }
 
     private static Vector2 GetFollowCenter(Vector2 center, Vector2 velocity, int direction)

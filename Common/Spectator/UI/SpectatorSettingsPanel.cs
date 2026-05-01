@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.UI.Tabs;
 using PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
-using PvPAdventure.Common.Spectator.UI.Tabs.Settings;
 using PvPAdventure.Common.Spectator.UI.Tabs.World;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Content;
@@ -18,12 +17,12 @@ namespace PvPAdventure.Common.Spectator.UI;
 
 internal sealed class SpectatorSettingsPanel : UIElement
 {
-    private const float PanelWidth = 520f;
-    private const float PanelHeight = 500f;
+    private const float PanelWidth = 300f;
+    private const float PanelHeight = 475f;
     private const float HeaderHeight = 32f;
     private const float TabHeight = 36f;
     private const float TopOffset = 335f;
-    private const float RightOffset = 0f;
+    private const float RightOffset = 4f;
 
     public UIPanel TitlePanel;
     public UIPanel ContentPanel;
@@ -43,7 +42,6 @@ internal sealed class SpectatorSettingsPanel : UIElement
         Width.Set(PanelWidth, 0f);
 
         tabs.Add(new SpectatorNPCTab());
-        tabs.Add(new SpectatorSettingsTab());
         tabs.Add(new SpectatorWorldTab());
         currentTab = tabs[1];
 
@@ -82,7 +80,7 @@ internal sealed class SpectatorSettingsPanel : UIElement
         ContentPanel.SetPadding(0f);
         Append(ContentPanel);
 
-        ShowTab(currentTab?.Tab ?? SpectatorTab.Settings);
+        ShowTab(currentTab?.Tab ?? SpectatorTab.World);
     }
 
     public override void Update(GameTime gameTime)
@@ -102,7 +100,7 @@ internal sealed class SpectatorSettingsPanel : UIElement
         TitlePanel.BackgroundColor = new Color(63, 82, 151);
         TitlePanel.BorderColor = Color.Black;
 
-        UIText titleText = new("Spectator Settings", large: true, textScale: 1f)
+        UIText titleText = new("Spectator", large: false, textScale: 1f)
         {
             HAlign = 0.5f,
             VAlign = 0.5f

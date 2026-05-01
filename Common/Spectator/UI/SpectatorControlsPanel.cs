@@ -287,16 +287,16 @@ internal sealed class SpectatorControlsPanel : UIPanel
         if (hovered >= 0 && Main.player[hovered]?.active == true)
         {
             if (locked == hovered)
-                return $"Spectating {Main.player[hovered].name}. Click to stop spectating";
+                return $"Following {Main.player[hovered].name}. Click to stop following";
 
-            return $"Previewing {Main.player[hovered].name}. Click to spectate";
+            return $"Previewing {Main.player[hovered].name}. Click to follow";
         }
 
         if (locked >= 0 && Main.player[locked]?.active == true)
-            return $"Spectating {Main.player[locked].name}";
+            return $"Following {Main.player[locked].name}";
 
         if (lockedNpc >= 0 && Main.npc[lockedNpc]?.active == true)
-            return $"Spectating \"{Main.npc[lockedNpc].FullName}\"";
+            return $"Following \"{Main.npc[lockedNpc].FullName}\"";
 
         return "You are in ghost mode";
     }

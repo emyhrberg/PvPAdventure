@@ -12,8 +12,6 @@ namespace PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
 
 internal sealed class SpectatorNPCTab : UIElement, ISpectatorTab
 {
-    private const float ColumnGap = 8f;
-
     private readonly UIList npcList;
     private readonly List<(int WhoAmI, int Type, string Name)> npcSnapshot = [];
 
@@ -64,7 +62,6 @@ internal sealed class SpectatorNPCTab : UIElement, ISpectatorTab
         npcList.Clear();
 
         int listIndex = 0;
-        NPCRow row = null;
 
         for (int i = 0; i < Main.maxNPCs; i++)
         {
@@ -72,17 +69,10 @@ internal sealed class SpectatorNPCTab : UIElement, ISpectatorTab
             if (!ShouldShowNPC(npc))
                 continue;
 
-            if (listIndex % 2 == 0)
-            {
-                row = new NPCRow();
-                npcList.Add(row);
-            }
-
             UINPCCard card = new(i, listIndex++);
             card.Width.Set(UINPCCard.CardWidth, 0f);
             card.Height.Set(UINPCCard.CardHeight, 0f);
-            card.Left.Set(row.ChildCount == 0 ? 0f : UINPCCard.CardWidth + ColumnGap, 0f);
-            row.AddCard(card);
+            npcList.Add(card);
         }
 
         if (listIndex == 0)
@@ -148,23 +138,5 @@ internal sealed class SpectatorNPCTab : UIElement, ISpectatorTab
     private static bool ShouldShowNPC(NPC npc)
     {
         return npc?.active == true;
-    }
-
-    private sealed class NPCRow : UIElement
-    {
-        public int ChildCount { get; private set; }
-
-        public NPCRow()
-        {
-            Width.Set(UINPCCard.CardWidth * 2f + ColumnGap, 0f);
-            Height.Set(UINPCCard.CardHeight, 0f);
-            SetPadding(0f);
-        }
-
-        public void AddCard(UINPCCard card)
-        {
-            Append(card);
-            ChildCount++;
-        }
     }
 }

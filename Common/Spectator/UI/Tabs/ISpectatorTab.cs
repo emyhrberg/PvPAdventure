@@ -15,6 +15,5 @@ internal interface ISpectatorTab
 internal enum SpectatorTab
 {
     NPCs,
-    Settings,
     World
 }

@@ -31,6 +31,14 @@ internal sealed class UINPCCard : UIPanel
         this.scale = scale;
 
         SetPadding(0f);
+        OnLeftClick += (evt, _) =>
+        {
+            if (evt.Target != this)
+                return;
+
+            SpectatorTargetSystem.ToggleNPCTarget(NPCIndex);
+        };
+
         AddActionButtons(GetNPCCardActions());
     }
 

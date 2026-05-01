@@ -1,6 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.Drawers;
+using PvPAdventure.Common.Spectator.Hooks;
+using PvPAdventure.Common.Spectator.SpectatorMode;
 using PvPAdventure.Common.Spectator.UI.Tabs;
 using PvPAdventure.Core.Utilities;
 using ReLogic.Content;
@@ -63,7 +65,8 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
     private static void AddSections(UIList sectionList)
     {
         sectionList.Clear();
-        sectionList.Add(new SpectatorWorldSection("World info", 222f, static (_, sb, box) => DrawWorldInformation(sb, box)));
+        sectionList.Add(new SpectatorSettingsInfoSection());
+        sectionList.Add(new SpectatorWorldSection("World info", 314f, static (_, sb, box) => DrawWorldInformation(sb, box)));
         sectionList.Add(new SpectatorWorldSection("Bosses defeated", 226f, static (_, sb, box) => DrawBossInformation(sb, box)));
         sectionList.Recalculate();
     }
@@ -71,40 +74,33 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
     private static void DrawWorldInformation(SpriteBatch sb, Rectangle box)
     {
         Rectangle inner = Inner(box);
-        int separatorX = inner.X + inner.Width / 2;
         int leftX = inner.X + 6;
-        int rightX = separatorX + 18;
+        int width = inner.Width - 12;
         int startY = inner.Y + 4;
 
         const int rowHeight = 30;
         const int rowStep = 34;
 
-        DrawColumnSeparator(sb, inner, separatorX);
-
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSignTexture(), WorldInfoHelper.GetNameText(), WorldInfoHelper.GetNameText());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 1 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSizeIcon(), WorldInfoHelper.GetWorldSizeText(), WorldInfoHelper.GetWorldSizeText());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldDifficultyIcon(), WorldInfoHelper.GetDifficultyText(), WorldInfoHelper.GetDifficultyText(), textColor: WorldInfoHelper.GetDifficultyColor());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldEvilIcon(), WorldInfoHelper.GetEvilText(), WorldInfoHelper.GetEvilText(), textColor: WorldInfoHelper.GetEvilColor());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, separatorX - leftX - 18, rowHeight), WorldInfoHelper.GetWorldSeedIcon(), WorldInfoHelper.GetSeedText(), WorldInfoHelper.GetSeedText());
-
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 0 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.Item[ItemID.GoldWatch].Value, WorldInfoHelper.GetTimeText(), WorldInfoHelper.GetTimeText(), iconSize: 14);
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 1 * rowStep, inner.Right - rightX - 6, rowHeight), TextureAssets.Item[ItemID.WeatherRadio].Value, WorldInfoHelper.GetWeatherText(), WorldInfoHelper.GetWeatherText(), iconSize: 14);
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(rightX, startY + 2 * rowStep, inner.Right - rightX - 6, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), WorldInfoHelper.GetMoonText(), iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 0 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldSignTexture(), WorldInfoHelper.GetNameText(), WorldInfoHelper.GetNameText());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 1 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldSizeIcon(), WorldInfoHelper.GetWorldSizeText(), WorldInfoHelper.GetWorldSizeText());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldDifficultyIcon(), WorldInfoHelper.GetDifficultyText(), WorldInfoHelper.GetDifficultyText(), textColor: WorldInfoHelper.GetDifficultyColor());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldEvilIcon(), WorldInfoHelper.GetEvilText(), WorldInfoHelper.GetEvilText(), textColor: WorldInfoHelper.GetEvilColor());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldSeedIcon(), WorldInfoHelper.GetSeedText(), WorldInfoHelper.GetSeedText());
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 5 * rowStep, width, rowHeight), TextureAssets.Item[ItemID.GoldWatch].Value, WorldInfoHelper.GetTimeText(), WorldInfoHelper.GetTimeText(), iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 6 * rowStep, width, rowHeight), TextureAssets.Item[ItemID.WeatherRadio].Value, WorldInfoHelper.GetWeatherText(), WorldInfoHelper.GetWeatherText(), iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 7 * rowStep, width, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), WorldInfoHelper.GetMoonText(), iconSize: 14);
     }
 
     private static void DrawBossInformation(SpriteBatch sb, Rectangle box)
     {
         Rectangle inner = Inner(box);
-        int separatorX = inner.X + inner.Width / 2;
-        int gridX = separatorX + 18;
-        int gridY = inner.Y + 4;
+        int gridX = inner.X + 6;
+        int gridY = inner.Y + 44;
         int gridColumns = Math.Max(1, (inner.Right - gridX + 8) / 46);
         WorldBossInfoHelper.BossEntry[] bosses = WorldBossInfoHelper.GetBossEntries();
         Texture2D checkTexture = Ass.Icon_CheckmarkGreen.Value;
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, separatorX - inner.X - 24, 30), Ass.Icon_CheckmarkGreen.Value, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:", iconSize: 18);
-
-        DrawColumnSeparator(sb, inner, separatorX);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, inner.Width - 12, 30), Ass.Icon_CheckmarkGreen.Value, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:", iconSize: 18);
 
         for (int i = 0; i < bosses.Length; i++)
         {
@@ -170,6 +166,125 @@ internal sealed class SpectatorWorldSection : UIPanel
         sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(box.X + 10, box.Y + 28, box.Width - 20, 2), Color.White * 0.10f);
         Utils.DrawBorderString(sb, title, new Vector2(box.X + 10, box.Y + 6), new Color(255, 228, 140), 0.9f);
         drawContent?.Invoke(this, sb, box);
+    }
+}
+
+internal sealed class SpectatorSettingsInfoSection : UIPanel
+{
+    private const float HeaderHeight = 34f;
+    private const float RowHeight = 28f;
+
+    private readonly SettingField[] rows;
+
+    public SpectatorSettingsInfoSection()
+    {
+        rows = GetRows();
+
+        Width.Set(0f, 1f);
+        Height.Set(HeaderHeight + rows.Length * RowHeight + 10f, 0f);
+        SetPadding(0f);
+        BackgroundColor = new Color(28, 36, 76) * 0.92f;
+        BorderColor = new Color(116, 154, 255) * 0.75f;
+
+        for (int i = 0; i < rows.Length; i++)
+        {
+            SettingTextRow row = new(rows[i]);
+            row.Top.Set(HeaderHeight + i * RowHeight, 0f);
+            row.Width.Set(0f, 1f);
+            row.Height.Set(RowHeight, 0f);
+            Append(row);
+        }
+    }
+
+    protected override void DrawSelf(SpriteBatch sb)
+    {
+        base.DrawSelf(sb);
+
+        Rectangle box = GetDimensions().ToRectangle();
+        sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(box.X + 10, box.Y + 28, box.Width - 20, 2), Color.White * 0.10f);
+        Utils.DrawBorderString(sb, "Settings", new Vector2(box.X + 10, box.Y + 6), new Color(255, 228, 140), 0.9f);
+    }
+
+    private static SettingField[] GetRows()
+    {
+        return
+        [
+            new("Players online", () => SpectatorModeSystem.GetPlayersOnlineCount().ToString()),
+            new("Spectators", () => SpectatorModeSystem.GetSpectatorCount().ToString()),
+            new("Fullbright", () => OnOff(FloodlightSpectatorSystem.Enabled), () => FloodlightSpectatorSystem.Enabled = !FloodlightSpectatorSystem.Enabled),
+            new("Reveal Map", () => OnOff(MapRevealHelper.Revealed), () => MapRevealHelper.SetRevealed(!MapRevealHelper.Revealed)),
+            new("Draw Players", () => SpectatorClientSettings.DrawPlayersLabel, SpectatorClientSettings.CycleDrawPlayers),
+            new(
+                "Player Cards",
+                () => SpectatorControlsPanel.ShownPlayerCardCount.ToString(),
+                () => SpectatorControlsPanel.ChangeShownPlayerCards(1),
+                () => SpectatorControlsPanel.ChangeShownPlayerCards(-1),
+                "Left click: to increase\nRight click to decrease"),
+            new("Auto Director", () => OnOff(AutoDirectorSystem.Enabled), () => AutoDirectorSystem.Enabled = !AutoDirectorSystem.Enabled)
+        ];
+    }
+
+    private static string OnOff(bool value) => value ? "On" : "Off";
+
+    private readonly struct SettingField
+    {
+        public readonly string Label;
+        public readonly Func<string> GetValue;
+        public readonly Action OnLeftClick;
+        public readonly Action OnRightClick;
+        public readonly string Tooltip;
+
+        public SettingField(string label, Func<string> getValue, Action onLeftClick = null, Action onRightClick = null, string tooltip = null)
+        {
+            Label = label;
+            GetValue = getValue;
+            OnLeftClick = onLeftClick;
+            OnRightClick = onRightClick;
+            Tooltip = tooltip;
+        }
+    }
+
+    private sealed class SettingTextRow : UIElement
+    {
+        private readonly SettingField field;
+        private readonly UIText text;
+
+        public SettingTextRow(SettingField field)
+        {
+            this.field = field;
+
+            text = new UIText("", textScale: 0.85f)
+            {
+                HAlign = 0f,
+                VAlign = 0.5f,
+                Left = new StyleDimension(10f, 0f),
+                TextColor = Color.Gray
+            };
+
+            Append(text);
+
+            if (field.OnLeftClick is not null)
+                OnLeftClick += (_, _) => field.OnLeftClick();
+
+            if (field.OnRightClick is not null)
+                OnRightClick += (_, _) => field.OnRightClick();
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+            text.SetText($"{field.Label}: {field.GetValue()}");
+            text.TextColor = IsMouseHovering ? Color.White : Color.Gray;
+
+            if (IsMouseHovering)
+            {
+                Main.LocalPlayer.mouseInterface = true;
+
+                if (!string.IsNullOrEmpty(field.Tooltip))
+                    Main.instance.MouseText(field.Tooltip);
+            }
+        }
     }
 }
 
