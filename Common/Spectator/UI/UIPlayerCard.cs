@@ -216,13 +216,12 @@ internal sealed class UIPlayerCard : UIPanel
         return
         [
             new PlayerCardAction(
-            TextureAssets.Item[ItemID.TeleportationPotion],
-            TextureAssets.Item[ItemID.TeleportationPotion],
-            "Teleport to player",
-            "Teleport to player",
-            TeleportToPlayer,
-            static _ => false),
-
+                Ass.Icon_GhostTeleport,
+                Ass.Icon_GhostTeleport,
+                "Teleport to player",
+                "Teleport to player",
+                TeleportToPlayer,
+                static _ => false),
         new PlayerCardAction(
             Ass.Icon_Eye,
             Ass.Icon_Eye,

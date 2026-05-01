@@ -1,9 +1,13 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using PvPAdventure.Common.Spectator.Hooks;
-using PvPAdventure.Common.Spectator.SpectatorMode;
+using PvPAdventure.Common.Spectator.UI.Tabs;
+using PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
+using PvPAdventure.Common.Spectator.UI.Tabs.Settings;
+using PvPAdventure.Common.Spectator.UI.Tabs.World;
 using PvPAdventure.Core.Utilities;
+using ReLogic.Content;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
@@ -14,9 +18,10 @@ namespace PvPAdventure.Common.Spectator.UI;
 
 internal sealed class SpectatorSettingsPanel : UIElement
 {
-    private const float PanelWidth = 240f;
+    private const float PanelWidth = 520f;
+    private const float PanelHeight = 500f;
     private const float HeaderHeight = 32f;
-    private const float RowHeight = 28f;
+    private const float TabHeight = 36f;
     private const float TopOffset = 335f;
     private const float RightOffset = 0f;
 
@@ -24,6 +29,10 @@ internal sealed class SpectatorSettingsPanel : UIElement
     public UIPanel ContentPanel;
     public UIPanel EyeTogglePanel;
 
+    private readonly List<ISpectatorTab> tabs = [];
+    private readonly List<SpectatorTabButton> tabButtons = [];
+    private ISpectatorTab currentTab;
+    private UIPanel tabPanel;
     private bool expanded = true;
 
     public SpectatorSettingsPanel()
@@ -33,19 +42,59 @@ internal sealed class SpectatorSettingsPanel : UIElement
         Top.Set(TopOffset, 0f);
         Width.Set(PanelWidth, 0f);
 
+        tabs.Add(new SpectatorNPCTab());
+        tabs.Add(new SpectatorSettingsTab());
+        tabs.Add(new SpectatorWorldTab());
+        currentTab = tabs[1];
+
         Rebuild();
     }
 
     public void Rebuild()
     {
         RemoveAllChildren();
+        tabButtons.Clear();
 
         TitlePanel = null;
         ContentPanel = null;
         EyeTogglePanel = null;
+        tabPanel = null;
 
-        Height.Set(expanded ? HeaderHeight + GetRows().Length * RowHeight : HeaderHeight, 0f);
+        Height.Set(expanded ? PanelHeight : HeaderHeight, 0f);
 
+        BuildTitlePanel();
+        Append(TitlePanel);
+
+        if (!expanded)
+            return;
+
+        BuildTabPanel();
+        Append(tabPanel);
+
+        ContentPanel = new UIPanel
+        {
+            Top = new StyleDimension(HeaderHeight + TabHeight, 0f),
+            Width = new StyleDimension(0f, 1f),
+            Height = new StyleDimension(-(HeaderHeight + TabHeight), 1f),
+            BackgroundColor = new Color(20, 20, 60) * 0.7f,
+            BorderColor = Color.Black
+        };
+        ContentPanel.SetPadding(0f);
+        Append(ContentPanel);
+
+        ShowTab(currentTab?.Tab ?? SpectatorTab.Settings);
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        base.Update(gameTime);
+
+        if (ContainsPoint(Main.MouseScreen))
+            Main.LocalPlayer.mouseInterface = true;
+    }
+
+    private void BuildTitlePanel()
+    {
         TitlePanel = new UIPanel();
         TitlePanel.Height.Set(HeaderHeight, 0f);
         TitlePanel.Width.Set(0f, 1f);
@@ -53,7 +102,7 @@ internal sealed class SpectatorSettingsPanel : UIElement
         TitlePanel.BackgroundColor = new Color(63, 82, 151);
         TitlePanel.BorderColor = Color.Black;
 
-        UIText titleText = new("Spectator", large: true, textScale: 0.7f)
+        UIText titleText = new("Spectator Settings", large: true, textScale: 1f)
         {
             HAlign = 0.5f,
             VAlign = 0.5f
@@ -83,120 +132,108 @@ internal sealed class SpectatorSettingsPanel : UIElement
         });
 
         TitlePanel.Append(EyeTogglePanel);
-        Append(TitlePanel);
+    }
 
-        if (!expanded)
+    private void BuildTabPanel()
+    {
+        tabPanel = new UIPanel();
+        tabPanel.Top.Set(HeaderHeight, 0f);
+        tabPanel.Width.Set(0f, 1f);
+        tabPanel.Height.Set(TabHeight, 0f);
+        tabPanel.SetPadding(0f);
+        tabPanel.BackgroundColor = new Color(20, 20, 60) * 0.85f;
+        tabPanel.BorderColor = Color.Black;
+
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            ISpectatorTab capturedTab = tabs[i];
+            SpectatorTabButton button = new(capturedTab.HeaderText, capturedTab.TooltipText, capturedTab.Icon, () => currentTab == capturedTab, () => ShowTab(capturedTab.Tab));
+            button.Left.Set(0f, i / (float)tabs.Count);
+            button.Width.Set(0f, 1f / tabs.Count);
+
+            tabPanel.Append(button);
+            tabButtons.Add(button);
+        }
+    }
+
+    private void ShowTab(SpectatorTab tab)
+    {
+        ISpectatorTab nextTab = GetTab(tab);
+
+        if (nextTab is null || ContentPanel is null)
             return;
 
-        ContentPanel = new UIPanel
-        {
-            Top = new StyleDimension(HeaderHeight, 0f),
-            Width = new StyleDimension(0f, 1f),
-            Height = new StyleDimension(-HeaderHeight, 1f),
-            BackgroundColor = new Color(20, 20, 60) * 0.7f,
-            BorderColor = Color.Black
-        };
-        ContentPanel.SetPadding(0f);
+        ContentPanel.RemoveAllChildren();
+        currentTab = nextTab;
 
-        SettingField[] rows = GetRows();
-        for (int i = 0; i < rows.Length; i++)
+        UIElement element = (UIElement)currentTab;
+        element.Width.Set(0f, 1f);
+        element.Height.Set(0f, 1f);
+        element.SetPadding(0f);
+
+        ContentPanel.Append(element);
+        currentTab.Refresh();
+
+        foreach (SpectatorTabButton button in tabButtons)
+            button.Recalculate();
+
+        Recalculate();
+    }
+
+    private ISpectatorTab GetTab(SpectatorTab tab)
+    {
+        foreach (ISpectatorTab candidate in tabs)
         {
-            SettingTextRow row = new(rows[i]);
-            row.Top.Set(i * RowHeight, 0f);
-            row.Width.Set(0f, 1f);
-            row.Height.Set(RowHeight, 0f);
-            ContentPanel.Append(row);
+            if (candidate.Tab == tab)
+                return candidate;
         }
 
-        Append(ContentPanel);
+        return null;
     }
 
-    public override void Update(GameTime gameTime)
+    private sealed class SpectatorTabButton : UIPanel
     {
-        base.Update(gameTime);
+        private readonly Func<bool> isSelected;
+        private readonly string hoverText;
 
-        if (ContainsPoint(Main.MouseScreen))
-            Main.LocalPlayer.mouseInterface = true;
-    }
-
-    private static SettingField[] GetRows()
-    {
-        return
-        [
-            new("Players online", () => SpectatorModeSystem.GetPlayersOnlineCount().ToString()),
-            new("Spectators", () => SpectatorModeSystem.GetSpectatorCount().ToString()),
-            new("Fullbright", () => OnOff(FloodlightSpectatorSystem.Enabled), () => FloodlightSpectatorSystem.Enabled = !FloodlightSpectatorSystem.Enabled),
-            new("Reveal Map", () => OnOff(MapRevealHelper.Revealed), () => MapRevealHelper.SetRevealed(!MapRevealHelper.Revealed)),
-            new("Draw Players", () => SpectatorClientSettings.DrawPlayersLabel, SpectatorClientSettings.CycleDrawPlayers),
-            new(
-                "Player Cards",
-                () => SpectatorControlsPanel.ShownPlayerCardCount.ToString(),
-                () => SpectatorControlsPanel.ChangeShownPlayerCards(1),
-                () => SpectatorControlsPanel.ChangeShownPlayerCards(-1),
-                "Left click: to increase\nRight click to decrease"),
-            new("Auto Director", () => OnOff(AutoDirectorSystem.Enabled), () => AutoDirectorSystem.Enabled = !AutoDirectorSystem.Enabled)
-        ];
-    }
-
-    private static string OnOff(bool value) => value ? "On" : "Off";
-
-    private readonly struct SettingField
-    {
-        public readonly string Label;
-        public readonly Func<string> GetValue;
-        public readonly Action OnLeftClick;
-        public readonly Action OnRightClick;
-        public readonly string Tooltip;
-
-        public SettingField(string label, Func<string> getValue, Action onLeftClick = null, Action onRightClick = null, string tooltip = null)
+        public SpectatorTabButton(string headerText, string tooltipText, Asset<Texture2D> icon, Func<bool> isSelected, Action onClick)
         {
-            Label = label;
-            GetValue = getValue;
-            OnLeftClick = onLeftClick;
-            OnRightClick = onRightClick;
-            Tooltip = tooltip;
-        }
-    }
+            this.isSelected = isSelected;
+            hoverText = tooltipText;
 
-    private sealed class SettingTextRow : UIElement
-    {
-        private readonly SettingField field;
-        private readonly UIText text;
+            Height.Set(0f, 1f);
+            VAlign = 0.5f;
+            SetPadding(0f);
 
-        public SettingTextRow(SettingField field)
-        {
-            this.field = field;
+            OnLeftClick += (_, _) => onClick();
 
-            text = new UIText("", textScale: 0.85f)
+            Append(new UIImage(icon.Value)
             {
-                HAlign = 0f,
+                Left = new StyleDimension(12f, 0f),
+                Top = new StyleDimension(-3f, 0f),
                 VAlign = 0.5f,
-                Left = new StyleDimension(10f, 0f),
-                TextColor = Color.Gray
-            };
+                Width = new StyleDimension(22f, 0f),
+                Height = new StyleDimension(22f, 0f)
+            });
 
-            Append(text);
-
-            if (field.OnLeftClick is not null)
-                OnLeftClick += (_, _) => field.OnLeftClick();
-
-            if (field.OnRightClick is not null)
-                OnRightClick += (_, _) => field.OnRightClick();
+            Append(new UIText(headerText, textScale: 0.85f)
+            {
+                Left = new StyleDimension(42f, 0f),
+                VAlign = 0.5f
+            });
         }
 
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            text.SetText($"{field.Label}: {field.GetValue()}");
-            text.TextColor = IsMouseHovering ? Color.White : Color.Gray;
+            BackgroundColor = isSelected() ? new Color(83, 97, 168) : new Color(63, 82, 151) * 0.85f;
+            BorderColor = IsMouseHovering ? Color.Yellow : isSelected() ? Color.White : Color.Black;
 
             if (IsMouseHovering)
             {
                 Main.LocalPlayer.mouseInterface = true;
-
-                if (!string.IsNullOrEmpty(field.Tooltip))
-                    Main.instance.MouseText(field.Tooltip);
+                Main.instance.MouseText(hoverText);
             }
         }
     }

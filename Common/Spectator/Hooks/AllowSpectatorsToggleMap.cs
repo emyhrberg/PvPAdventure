@@ -29,7 +29,7 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
         if (Main.mapFullscreen && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
         {
             Main.mapFullscreen = false;
-            Main.mapStyle = 0;
+            //Main.mapStyle = 0;
             return;
         }
 
@@ -64,7 +64,7 @@ internal sealed class AllowSpectatorsToggleMap : ModSystem
         }
 
         Main.mapFullscreen = false;
-        Main.mapStyle = 0;
+        //Main.mapStyle = 0;
     }
 
     private static void UpdateFullscreenMapZoom()

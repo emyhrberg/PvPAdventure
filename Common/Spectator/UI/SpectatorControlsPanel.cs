@@ -35,6 +35,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
     private int observedCardCountRevision;
 
     private int locked = -1; // currently locked spectated player index, -1 means no locked target
+    private int lockedNpc = -1; // currently locked spectated NPC index, -1 means no locked NPC target
     private int hovered = -1; // currently hovered spectated player index, -1 means no hovered target
     private bool lastAutoDirectorEnabled;
     private UIText statusText; // UI element for displaying the current status like "Spectating: PlayerName" or "Free camera" or "Auto-director"
@@ -138,7 +139,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
 
         if (targets.Count == 0)
         {
-            UIText noPlayersText = new("No players are available to spectate.")
+            UIText noPlayersText = new("No players are available to spectate.", 0.9f)
             {
                 HAlign = 0.5f,
                 VAlign = 0.5f,
@@ -217,11 +218,15 @@ internal sealed class SpectatorControlsPanel : UIPanel
     public void UpdateTarget()
     {
         int oldLocked = locked;
+        int oldLockedNpc = lockedNpc;
 
         Player target = SpectatorTargetSystem.GetLockedPlayerTarget();
         locked = target?.active == true ? target.whoAmI : -1;
 
-        if (locked != oldLocked)
+        NPC npcTarget = SpectatorTargetSystem.GetLockedNPCTarget();
+        lockedNpc = npcTarget?.active == true ? npcTarget.whoAmI : -1;
+
+        if (locked != oldLocked || lockedNpc != oldLockedNpc)
             UpdateStatusText();
     }
 
@@ -289,6 +294,9 @@ internal sealed class SpectatorControlsPanel : UIPanel
 
         if (locked >= 0 && Main.player[locked]?.active == true)
             return $"Spectating {Main.player[locked].name}";
+
+        if (lockedNpc >= 0 && Main.npc[lockedNpc]?.active == true)
+            return $"Spectating \"{Main.npc[lockedNpc].FullName}\"";
 
         return "You are in ghost mode";
     }
@@ -403,6 +411,7 @@ internal sealed class SpectatorControlsPanel : UIPanel
 
         SpectatorTargetSystem.SetPlayerTarget(playerIndex);
         locked = playerIndex;
+        lockedNpc = -1;
 
         MakeTargetVisible(nextIndex, targets.Count);
 

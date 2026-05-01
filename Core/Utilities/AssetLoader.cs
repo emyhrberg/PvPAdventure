@@ -27,6 +27,7 @@ public static class Ass
 
     // Admin tools assets
     public static Asset<Texture2D> Icon_Reset;
+    public static Asset<Texture2D> Icon_Refresh;
     public static Asset<Texture2D> Icon_Resize;
     public static Asset<Texture2D> Slider;
     public static Asset<Texture2D> SliderHighlight;
@@ -199,6 +200,8 @@ public static class Ass
                 }
             }
         }
+
+        Icon_Refresh ??= Icon_Reset;
 
         Initialized = true;
     }
