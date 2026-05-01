@@ -15,10 +15,10 @@ namespace PvPAdventure.Common.Spectator.UI;
 internal sealed class SpectatorSettingsPanel : UIElement
 {
     private const float PanelWidth = 240f;
-    private const float HeaderHeight = 40f;
+    private const float HeaderHeight = 32f;
     private const float RowHeight = 28f;
-    private const float TopOffset = 235f;
-    private const float RightOffset = 20f;
+    private const float TopOffset = 335f;
+    private const float RightOffset = 0f;
 
     public UIPanel TitlePanel;
     public UIPanel ContentPanel;
@@ -29,7 +29,7 @@ internal sealed class SpectatorSettingsPanel : UIElement
     public SpectatorSettingsPanel()
     {
         HAlign = 1f;
-        Left.Set(-RightOffset - PanelWidth, 0f);
+        Left.Set(-RightOffset, 0f);
         Top.Set(TopOffset, 0f);
         Width.Set(PanelWidth, 0f);
 
@@ -126,7 +126,9 @@ internal sealed class SpectatorSettingsPanel : UIElement
             new("Players online", () => SpectatorModeSystem.GetPlayersOnlineCount().ToString()),
             new("Spectators", () => SpectatorModeSystem.GetSpectatorCount().ToString()),
             new("Fullbright", () => OnOff(FloodlightSpectatorSystem.Enabled), () => FloodlightSpectatorSystem.Enabled = !FloodlightSpectatorSystem.Enabled),
-            new("Reveal Map", () => OnOff(MapRevealHelper.Revealed), () => MapRevealHelper.SetRevealed(!MapRevealHelper.Revealed))
+            new("Reveal Map", () => OnOff(MapRevealHelper.Revealed), () => MapRevealHelper.SetRevealed(!MapRevealHelper.Revealed)),
+            new("Draw Players", () => SpectatorClientSettings.DrawPlayersLabel, SpectatorClientSettings.CycleDrawPlayers),
+            new("Auto Director", () => OnOff(AutoDirectorSystem.Enabled), () => AutoDirectorSystem.Enabled = !AutoDirectorSystem.Enabled)
         ];
     }
 

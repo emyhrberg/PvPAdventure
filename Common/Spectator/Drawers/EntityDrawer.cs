@@ -72,6 +72,19 @@ public static class EntityDrawer
     #endregion
 
     #region Player
+    public static void DrawPlayerCardPreview(SpriteBatch sb, Player player, Rectangle area)
+    {
+        switch (SpectatorClientSettings.DrawPlayers)
+        {
+            case SpectatorPlayerDrawMode.FullPlayer:
+                DrawPlayerPreview(sb, player, area);
+                break;
+            case SpectatorPlayerDrawMode.PlayerHeads:
+                DrawPlayerHead(sb, player, area.Center.ToVector2(), Math.Min(area.Width, area.Height) / 42f);
+                break;
+        }
+    }
+
     public static void DrawPlayerPreview(SpriteBatch sb, Player player, Rectangle area)
     {
         if (area.Width <= 0 || area.Height <= 0)

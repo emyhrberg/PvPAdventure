@@ -119,7 +119,7 @@ internal sealed class UIPlayerCard : UIPanel
 
         // Draw player preview background + player preview
         EntityDrawer.DrawEntityBackground(sb, playerPreviewRect);
-        EntityDrawer.DrawPlayerPreview(sb, player, playerPreviewRect);
+        EntityDrawer.DrawPlayerCardPreview(sb, player, playerPreviewRect);
 
         // Draw player info to the right of the preview
         Rectangle healthRect = new(infoRect.X, nameRect.Bottom + (int)MathF.Round(2f * scale), infoRect.Width, (int)MathF.Round(27f * scale));

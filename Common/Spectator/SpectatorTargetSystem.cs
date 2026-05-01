@@ -23,8 +23,11 @@ public class SpectatorTargetSystem : ModSystem
             (SpectatorModeSystem.IsInPlayerMode(Main.player[playerId]) || SpectatorModeSystem.IsInSpectateMode(Main.player[playerId]) || Main.player[playerId].ghost);
     }
 
-    public static void SetPlayerTarget(int slot)
+    public static void SetPlayerTarget(int slot, bool preserveAutoDirector = false)
     {
+        if (!preserveAutoDirector)
+            AutoDirectorSystem.Enabled = false;
+
         int next = CanTarget(slot) ? slot : -1;
 
         if (target != next)
@@ -65,8 +68,11 @@ public class SpectatorTargetSystem : ModSystem
         return targets;
     }
 
-    public static void ClearTarget()
+    public static void ClearTarget(bool preserveAutoDirector = false, bool moveCameraToLocal = true)
     {
+        if (!preserveAutoDirector)
+            AutoDirectorSystem.Enabled = false;
+
         if (target == -1)
             return;
 
@@ -74,7 +80,7 @@ public class SpectatorTargetSystem : ModSystem
 
         bool previewStillOwnsCamera = CanTarget(previewTarget);
 
-        if (!previewStillOwnsCamera)
+        if (!previewStillOwnsCamera && moveCameraToLocal)
         {
             Player local = Main.LocalPlayer;
             if (local?.active == true)
@@ -82,9 +88,10 @@ public class SpectatorTargetSystem : ModSystem
                 Vector2 screenPosition = local.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
                 SpectateCameraFade.SetScreenPosition(screenPosition, allowFade: true);
             }
-
-            cameraTarget = -1;
         }
+
+        if (!previewStillOwnsCamera)
+            cameraTarget = -1;
 
         target = -1;
     }
