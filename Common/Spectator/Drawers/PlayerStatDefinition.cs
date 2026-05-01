@@ -4,9 +4,9 @@ using ReLogic.Content;
 using System;
 using Terraria;
 
-namespace PvPAdventure.Common.Spectator.UI.Tabs.Players;
+namespace PvPAdventure.Common.Spectator.Drawers;
 
-internal sealed class PlayerStatDefinition
+public sealed class PlayerStatDefinition
 {
     public PlayerStatDefinition(
         string id,
@@ -49,7 +49,7 @@ internal sealed class PlayerStatDefinition
     }
 }
 
-internal readonly record struct PlayerStatSnapshot(
+public readonly record struct PlayerStatSnapshot(
     string Label,
     string Text,
     string HoverText,

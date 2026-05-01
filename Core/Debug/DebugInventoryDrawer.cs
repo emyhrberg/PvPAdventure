@@ -29,7 +29,8 @@ internal class DebugInventoryDrawer : ModSystem
 
     private void OnMainDrawInventory(On_Main.orig_DrawInventory orig, Main self)
     {
-        //orig(self);
+        orig(self);
+        return;
 
         Recipe.GetThroughDelayedFindRecipes();
         if (Main.ShouldPVPDraw)

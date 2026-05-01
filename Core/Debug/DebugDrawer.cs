@@ -100,7 +100,7 @@ internal static class DebugDrawer
             $"World: {Main.worldName} (ID {Main.worldID}, seed {WorldGen.currentWorldSeed})",
             $"Hardmode: {Main.hardMode} | Expert: {Main.expertMode} | Master: {Main.masterMode}",
             $"Halloween: {Main.halloween}",
-            $"Hot Reload available: {MetadataUpdater.IsSupported}",
+            $"MetadataUpdater.IsSupported: {MetadataUpdater.IsSupported}",
         ];
 
         // Calculate width of the longest line to right-align the column

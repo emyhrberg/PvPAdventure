@@ -3,7 +3,7 @@ using Terraria.ModLoader;
 
 namespace PvPAdventure.Common.Spectator.Commands;
 
-internal class ShowSpectatorsCommand : ModCommand
+internal class ShowGhostsCommand : ModCommand
 {
     public override string Command => "showghosts";
     public override string Description => "Toggles the config option that draws ghosts (spectators) and their nameplates";

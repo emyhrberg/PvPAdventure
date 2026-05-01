@@ -469,7 +469,7 @@ Mods: {
 					Movement: "[i:HermesBoots] Movement"
 					Chat: "[i:PvPAdventure/ChatConfigItem] Chat"
 					Visualization: Visualization
-					PortalTravel: Portal Travel
+					UI: UI
 				}
 
 				IsVanillaDashEnabled: {
@@ -563,6 +563,16 @@ Mods: {
 
 				travelUISize: {
 					Label: Portal Travel UI Size
+					Tooltip: ""
+				}
+
+				spectateUISize: {
+					Label: Spectate UI Size
+					Tooltip: ""
+				}
+
+				spectateUIPosition: {
+					Label: Spectate UI Position
 					Tooltip: ""
 				}
 			}
@@ -1958,7 +1968,7 @@ Mods: {
 				}
 			}
 
-			TravelUIPosition: {
+			AdventureUIPosition: {
 				Tooltip: ""
 
 				Top: {
@@ -1972,27 +1982,27 @@ Mods: {
 				}
 			}
 
-			TravelUISize: {
+			AdventureUISize: {
 				Tooltip: ""
 
 				VerySmall: {
 					Label: Very Small
-					Tooltip: ""
+					Tooltip: "0.8"
 				}
 
 				Small: {
 					Label: Small
-					Tooltip: ""
+					Tooltip: "0.9"
 				}
 
 				Medium: {
 					Label: Medium
-					Tooltip: ""
+					Tooltip: "1.0"
 				}
 
 				Big: {
 					Label: Big
-					Tooltip: ""
+					Tooltip: "1.15"
 				}
 			}
 		}

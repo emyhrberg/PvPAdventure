@@ -77,10 +77,10 @@ public static class InventoryDrawer
                     {
                         //ItemSlot.LeftClick(Main.player[Main.myPlayer].inventory, 0, num9);
                         //ItemSlot.RightClick(Main.player[Main.myPlayer].inventory, 0, num9);
-                        if (Main.mouseLeftRelease && Main.mouseLeft)
-                        {
-                            Recipe.FindRecipes();
-                        }
+                        //if (Main.mouseLeftRelease && Main.mouseLeft)
+                        //{
+                        //    Recipe.FindRecipes();
+                        //}
                     }
                     ItemSlot.MouseHover(player.inventory, 0, num9);
                 }
@@ -199,15 +199,15 @@ public static class InventoryDrawer
                     if (num40 > 2 && rectangle.Contains(new Point(Main.mouseX, Main.mouseY)) && !PlayerInput.IgnoreMouseInterface)
                     {
                         player.mouseInterface = true;
-                        if (Main.mouseLeft && Main.mouseLeftRelease)
-                        {
-                            player.hideVisibleAccessory[num40] = !player.hideVisibleAccessory[num40];
-                            SoundEngine.PlaySound(12);
-                            if (Main.netMode == 1)
-                            {
-                                NetMessage.SendData(4, -1, -1, null, Main.myPlayer);
-                            }
-                        }
+                        //if (Main.mouseLeft && Main.mouseLeftRelease)
+                        //{
+                        //    player.hideVisibleAccessory[num40] = !player.hideVisibleAccessory[num40];
+                        //    SoundEngine.PlaySound(12);
+                        //    if (Main.netMode == 1)
+                        //    {
+                        //        NetMessage.SendData(4, -1, -1, null, Main.myPlayer);
+                        //    }
+                        //}
                         num45 = ((!player.hideVisibleAccessory[num40]) ? 1 : 2);
                     }
                     else if (Main.mouseX >= num41 && (float)Main.mouseX <= (float)num41 + (float)TextureAssets.InventoryBack.Width() * Main.inventoryScale && Main.mouseY >= num42 && (float)Main.mouseY <= (float)num42 + (float)TextureAssets.InventoryBack.Height() * Main.inventoryScale && !PlayerInput.IgnoreMouseInterface)
@@ -417,23 +417,23 @@ public static class InventoryDrawer
                         {
                             Main.player[Main.myPlayer].mouseInterface = true;
                             flag3 = true;
-                            if (Main.mouseLeft && Main.mouseLeftRelease)
-                            {
-                                if (num25 == 0)
-                                {
-                                    Main.player[Main.myPlayer].TogglePet();
-                                }
-                                if (num25 == 1)
-                                {
-                                    Main.player[Main.myPlayer].ToggleLight();
-                                }
-                                Main.mouseLeftRelease = false;
-                                SoundEngine.PlaySound(12);
-                                if (Main.netMode == 1)
-                                {
-                                    NetMessage.SendData(4, -1, -1, null, Main.myPlayer);
-                                }
-                            }
+                            //if (Main.mouseLeft && Main.mouseLeftRelease)
+                            //{
+                            //    if (num25 == 0)
+                            //    {
+                            //        Main.player[Main.myPlayer].TogglePet();
+                            //    }
+                            //    if (num25 == 1)
+                            //    {
+                            //        Main.player[Main.myPlayer].ToggleLight();
+                            //    }
+                            //    Main.mouseLeftRelease = false;
+                            //    SoundEngine.PlaySound(12);
+                            //    if (Main.netMode == 1)
+                            //    {
+                            //        NetMessage.SendData(4, -1, -1, null, Main.myPlayer);
+                            //    }
+                            //}
                             num26 = ((!Main.player[Main.myPlayer].hideMisc[num25]) ? 1 : 2);
                         }
                     }
@@ -642,10 +642,10 @@ public static class InventoryDrawer
                 ItemSlot.OverrideHover(Main.player[Main.myPlayer].inventory, 1, slot);
                 //ItemSlot.LeftClick(Main.player[Main.myPlayer].inventory, 1, slot);
                 //ItemSlot.RightClick(Main.player[Main.myPlayer].inventory, 1, slot);
-                if (Main.mouseLeftRelease && Main.mouseLeft)
-                {
-                    Recipe.FindRecipes();
-                }
+                //if (Main.mouseLeftRelease && Main.mouseLeft)
+                //{
+                //    Recipe.FindRecipes();
+                //}
                 ItemSlot.MouseHover(Main.player[Main.myPlayer].inventory, 1, slot);
             }
             ItemSlot.Draw(Main.spriteBatch, player.inventory, 1, slot, new Vector2(num98, num99));
@@ -673,10 +673,10 @@ public static class InventoryDrawer
                 ItemSlot.OverrideHover(player.inventory, 2, slot2);
                 //ItemSlot.LeftClick(Main.player[Main.myPlayer].inventory, 2, slot2);
                 //ItemSlot.RightClick(Main.player[Main.myPlayer].inventory, 2, slot2);
-                if (Main.mouseLeftRelease && Main.mouseLeft)
-                {
-                    Recipe.FindRecipes();
-                }
+                //if (Main.mouseLeftRelease && Main.mouseLeft)
+                //{
+                //    Recipe.FindRecipes();
+                //}
                 ItemSlot.MouseHover(Main.player[Main.myPlayer].inventory, 2, slot2);
             }
             ItemSlot.Draw(Main.spriteBatch, player.inventory, 2, slot2, new Vector2(num102, num103));
@@ -708,10 +708,10 @@ public static class InventoryDrawer
         {
             player.mouseInterface = true;
             //ItemSlot.LeftClick(ref player.trashItem, 6);
-            if (Main.mouseLeftRelease && Main.mouseLeft)
-            {
-                Recipe.FindRecipes();
-            }
+            //if (Main.mouseLeftRelease && Main.mouseLeft)
+            //{
+            //    Recipe.FindRecipes();
+            //}
             ItemSlot.MouseHover(ref player.trashItem, 6);
         }
         ItemSlot.Draw(Main.spriteBatch, ref player.trashItem, 6, new Vector2(num, num2));

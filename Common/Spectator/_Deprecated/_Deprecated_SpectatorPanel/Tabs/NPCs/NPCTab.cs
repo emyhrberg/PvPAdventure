@@ -1,7 +1,4 @@
 ﻿//using Microsoft.Xna.Framework.Graphics;
-//using PvPAdventure.Common.Spectator.UI;
-//using PvPAdventure.Common.Spectator.UI.Tabs;
-//using PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
 //using PvPAdventure.Core.Utilities;
 //using ReLogic.Content;
 //using System;
@@ -11,7 +8,7 @@
 //using Terraria.ID;
 //using Terraria.UI;
 
-//namespace PvPAdventure.Common.Spectator._Deprecated;
+//namespace PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
 
 //internal sealed class NPCTab : UIElement, ISpectatorTab
 //{

@@ -4,7 +4,7 @@ using ReLogic.Content;
 using System;
 using Terraria;
 
-namespace PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
+namespace PvPAdventure.Common.Spectator.Drawers;
 
 internal sealed class NPCStatDefinition(string id, string label, Asset<Texture2D> icon, Func<NPC, string> getText, Func<NPC, string>? getHoverText = null, Rectangle? iconFrame = null)
 {

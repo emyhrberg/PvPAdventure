@@ -8,7 +8,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
 
-namespace PvPAdventure.Common.Spectator.UI.Tabs.NPCs;
+namespace PvPAdventure.Common.Spectator.Drawers;
 
 internal static class NPCStats
 {

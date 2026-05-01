@@ -10,6 +10,7 @@ namespace PvPAdventure.Common.Spectator;
 public class SpectatorTargetSystem : ModSystem
 {
     private static int target = -1;
+    private static int previewTarget = -1;
 
     #region Targeting
     private static bool CanTarget(int playerId)
@@ -29,6 +30,27 @@ public class SpectatorTargetSystem : ModSystem
             Log.Chat($"target {target}->{next}");
 
         target = next;
+    }
+
+    public static void TogglePlayerTarget(int slot)
+    {
+        if (target == slot)
+        {
+            ClearTarget();
+            return;
+        }
+
+        SetPlayerTarget(slot);
+    }
+
+    public static void SetPreviewTarget(int slot)
+    {
+        previewTarget = CanTarget(slot) ? slot : -1;
+    }
+
+    public static void ClearPreviewTarget()
+    {
+        previewTarget = -1;
     }
 
     public static List<int> GetTargets(int exclude = -1)
@@ -60,7 +82,23 @@ public class SpectatorTargetSystem : ModSystem
     }
 
     public static bool IsTargeting(Player player) => player?.active == true && GetPlayerTarget()?.whoAmI == player.whoAmI;
+    public static bool IsLockedTargeting(Player player) => player?.active == true && CanTarget(target) && target == player.whoAmI;
+
     public static Player GetPlayerTarget()
+    {
+        if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer))
+            return null;
+
+        if (CanTarget(previewTarget))
+            return Main.player[previewTarget];
+
+        if (CanTarget(target))
+            return Main.player[target];
+
+        return null;
+    }
+
+    public static Player GetLockedPlayerTarget()
     {
         if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer) || !CanTarget(target))
             return null;
@@ -78,29 +116,5 @@ public class SpectatorTargetSystem : ModSystem
             SpectateCameraFade.SetScreenPosition(screenPosition);
         }
     }
-    #endregion
-
-
-    #region Cycle targets
-    private static void CycleTarget(bool forward)
-    {
-        if (!SpectatorModeSystem.IsInSpectateMode(Main.LocalPlayer))
-            return;
-
-        List<int> targets = GetTargets(Main.myPlayer);
-        if (targets.Count == 0)
-        {
-            ClearTarget();
-            return;
-        }
-
-        int index = targets.IndexOf(target);
-        index = index < 0 ? (forward ? 0 : targets.Count - 1) : forward ? (index + 1) % targets.Count : (index - 1 + targets.Count) % targets.Count;
-        target = targets[index];
-    }
-    public static void NextPlayerTarget() => CycleTarget(forward: true);
-
-    public static void PreviousPlayerTarget() => CycleTarget(forward: false);
-
     #endregion
 }
