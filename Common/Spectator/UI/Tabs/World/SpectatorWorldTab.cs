@@ -38,7 +38,7 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
         RemoveAllChildren();
 
         UIScrollbar scrollbar = new();
-        scrollbar.Left.Set(-28f, 1f);
+        scrollbar.Left.Set(-24f, 1f);
         scrollbar.Top.Set(14f, 0f);
         scrollbar.Height.Set(-66f, 1f);
         Append(scrollbar);
@@ -50,8 +50,8 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
         };
 
         sectionList.Top.Set(10f, 0f);
-        sectionList.Left.Set(12f, 0f);
-        sectionList.Width.Set(-44f, 1f);
+        sectionList.Left.Set(8f, 0f);
+        sectionList.Width.Set(-36f, 1f);
         sectionList.Height.Set(-30f, 1f);
         sectionList.SetScrollbar(scrollbar);
         Append(sectionList);
@@ -74,8 +74,8 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
     private static void DrawWorldInformation(SpriteBatch sb, Rectangle box)
     {
         Rectangle inner = Inner(box);
-        int leftX = inner.X + 6;
-        int width = inner.Width - 12;
+        int leftX = inner.X + 3;
+        int width = inner.Width - 6;
         int startY = inner.Y + 4;
 
         const int rowHeight = 30;
@@ -86,21 +86,21 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
         StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 2 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldDifficultyIcon(), WorldInfoHelper.GetDifficultyText(), WorldInfoHelper.GetDifficultyText(), textColor: WorldInfoHelper.GetDifficultyColor());
         StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 3 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldEvilIcon(), WorldInfoHelper.GetEvilText(), WorldInfoHelper.GetEvilText(), textColor: WorldInfoHelper.GetEvilColor());
         StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 4 * rowStep, width, rowHeight), WorldInfoHelper.GetWorldSeedIcon(), WorldInfoHelper.GetSeedText(), WorldInfoHelper.GetSeedText());
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 5 * rowStep, width, rowHeight), TextureAssets.Item[ItemID.GoldWatch].Value, WorldInfoHelper.GetTimeText(), WorldInfoHelper.GetTimeText(), iconSize: 14);
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 6 * rowStep, width, rowHeight), TextureAssets.Item[ItemID.WeatherRadio].Value, WorldInfoHelper.GetWeatherText(), WorldInfoHelper.GetWeatherText(), iconSize: 14);
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 7 * rowStep, width, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), WorldInfoHelper.GetMoonText(), iconSize: 14);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 5 * rowStep, width, rowHeight), TextureAssets.Item[ItemID.GoldWatch].Value, WorldInfoHelper.GetTimeText(), WorldInfoHelper.GetTimeText(), iconSize: 18);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 6 * rowStep, width, rowHeight), TextureAssets.Item[ItemID.WeatherRadio].Value, WorldInfoHelper.GetWeatherText(), WorldInfoHelper.GetWeatherText(), iconSize: 18);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(leftX, startY + 7 * rowStep, width, rowHeight), WorldInfoHelper.GetSextantIcon(), WorldInfoHelper.GetMoonText(), WorldInfoHelper.GetMoonText(), iconSize: 18);
     }
 
     private static void DrawBossInformation(SpriteBatch sb, Rectangle box)
     {
         Rectangle inner = Inner(box);
-        int gridX = inner.X + 6;
+        int gridX = inner.X + 3;
         int gridY = inner.Y + 44;
         int gridColumns = Math.Max(1, (inner.Right - gridX + 8) / 46);
         WorldBossInfoHelper.BossEntry[] bosses = WorldBossInfoHelper.GetBossEntries();
         Texture2D checkTexture = Ass.Icon_CheckmarkGreen.Value;
 
-        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 6, inner.Y + 4, inner.Width - 12, 30), Ass.Icon_CheckmarkGreen.Value, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:", iconSize: 18);
+        StatDrawer.DrawWorldStatPanel(sb, new Rectangle(inner.X + 3, inner.Y + 4, inner.Width - 6, 30), Ass.Icon_CheckmarkGreen.Value, $"Bosses Defeated: {WorldBossInfoHelper.GetBossesDefeatedText()}", "Bosses Defeated:");
 
         for (int i = 0; i < bosses.Length; i++)
         {
@@ -137,7 +137,7 @@ internal sealed class SpectatorWorldTab : UIElement, ISpectatorTab
 
     private static Rectangle Inner(Rectangle box)
     {
-        return new Rectangle(box.X + 12, box.Y + 34, box.Width - 24, box.Height - 44);
+        return new Rectangle(box.X + 6, box.Y + 34, box.Width - 12, box.Height - 44);
     }
 }
 
@@ -202,7 +202,7 @@ internal sealed class SpectatorSettingsInfoSection : UIPanel
 
         Rectangle box = GetDimensions().ToRectangle();
         sb.Draw(TextureAssets.MagicPixel.Value, new Rectangle(box.X + 10, box.Y + 28, box.Width - 20, 2), Color.White * 0.10f);
-        Utils.DrawBorderString(sb, "Settings", new Vector2(box.X + 10, box.Y + 6), new Color(255, 228, 140), 0.9f);
+        Utils.DrawBorderString(sb, "Spectator Settings", new Vector2(box.X + 10, box.Y + 6), new Color(255, 228, 140), 0.9f);
     }
 
     private static SettingField[] GetRows()

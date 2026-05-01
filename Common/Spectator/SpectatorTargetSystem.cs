@@ -11,16 +11,19 @@ namespace PvPAdventure.Common.Spectator;
 public class SpectatorTargetSystem : ModSystem
 {
     private const int FullSyncIntervalTicks = 15;
-    private const float FollowSnapDistance = 800f;
+    private const float GhostFollowSpeed = 5f;
     private const float FollowTargetDistance = 16f;
     private const float FollowVerticalOffset = 0f;
     private const float FollowTargetLerp = 0.45f;
-    private const float FollowLocalLerp = 0.65f;
+    private const float CameraFollowLerp = 0.28f;
+    private const float CameraSnapDistance = 2200f;
 
     private static int target = -1;
     private static int npcTarget = -1;
     private static int previewTarget = -1;
     private static int cameraTarget = -1;
+    private static bool hasCameraCenter;
+    private static Vector2 smoothedCameraCenter;
     private static int followTargetKey = -1;
     private static int netSyncTicks;
     private static bool hasSmoothedFollowCenter;
@@ -206,22 +209,11 @@ public class SpectatorTargetSystem : ModSystem
     #region Hooks
     public override void ModifyScreenPosition()
     {
-        if (GetPlayerTarget() is Player player)
+        if (TryGetCameraTarget(out Vector2 targetCenter, out int cameraId))
         {
-            Vector2 screenPosition = player.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
-            int cameraId = player.whoAmI;
             bool targetChanged = cameraTarget != cameraId;
-
-            SpectateCameraFade.SetScreenPosition(screenPosition, targetChanged);
-            cameraTarget = cameraId;
-            return;
-        }
-
-        if (GetLockedNPCTarget() is NPC npc)
-        {
-            Vector2 screenPosition = npc.Center - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
-            int cameraId = 1000 + npc.whoAmI;
-            bool targetChanged = cameraTarget != cameraId;
+            Vector2 cameraCenter = GetSmoothedCameraCenter(targetCenter, targetChanged);
+            Vector2 screenPosition = ClampScreenPosition(cameraCenter - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f);
 
             SpectateCameraFade.SetScreenPosition(screenPosition, targetChanged);
             cameraTarget = cameraId;
@@ -229,6 +221,7 @@ public class SpectatorTargetSystem : ModSystem
         }
 
         cameraTarget = -1;
+        hasCameraCenter = false;
     }
 
     public override void PostUpdatePlayers()
@@ -274,7 +267,7 @@ public class SpectatorTargetSystem : ModSystem
         if (local?.active != true || targetNPC?.active != true)
             return;
 
-        FollowCenter(local, targetNPC.Center, targetNPC.velocity, targetNPC.direction, 1000 + targetNPC.whoAmI);
+        FollowCenter(local, targetNPC.Center, targetNPC.velocity, GetNPCDirection(targetNPC), 1000 + targetNPC.whoAmI);
     }
 
     private static void SnapLocalPlayerNear(NPC targetNPC)
@@ -282,18 +275,17 @@ public class SpectatorTargetSystem : ModSystem
         if (targetNPC?.active != true)
             return;
 
-        SnapLocalPlayerNear(targetNPC.Center, targetNPC.velocity, targetNPC.direction, 1000 + targetNPC.whoAmI);
+        SnapLocalPlayerNear(targetNPC.Center, targetNPC.velocity, GetNPCDirection(targetNPC), 1000 + targetNPC.whoAmI);
     }
 
     private static void FollowCenter(Player local, Vector2 targetCenter, Vector2 targetVelocity, int direction, int targetKey)
     {
         Vector2 desiredCenter = GetFollowCenter(targetCenter, targetVelocity, direction);
         bool targetChanged = followTargetKey != targetKey;
-        bool shouldSnap = targetChanged ||
-            !hasSmoothedFollowCenter ||
-            Vector2.DistanceSquared(local.Center, desiredCenter) > FollowSnapDistance * FollowSnapDistance;
+        bool shouldSnap = targetChanged || !hasSmoothedFollowCenter;
 
         followTargetKey = targetKey;
+        ApplyFollowDirection(local, direction);
 
         if (shouldSnap)
         {
@@ -304,10 +296,9 @@ public class SpectatorTargetSystem : ModSystem
         else
         {
             smoothedFollowCenter = Vector2.Lerp(smoothedFollowCenter, desiredCenter, FollowTargetLerp);
-            local.Center = Vector2.Lerp(local.Center, smoothedFollowCenter, FollowLocalLerp);
+            MoveLocalPlayerToward(local, smoothedFollowCenter);
         }
 
-        local.velocity = Vector2.Zero;
         local.fallStart = (int)(local.position.Y / 16f);
 
         SyncLocalPlayerPosition(forceFullSync: false);
@@ -324,6 +315,7 @@ public class SpectatorTargetSystem : ModSystem
         followTargetKey = targetKey;
         smoothedFollowCenter = desiredCenter;
         hasSmoothedFollowCenter = true;
+        ApplyFollowDirection(local, direction);
         local.Center = desiredCenter;
         local.velocity = Vector2.Zero;
         local.fallStart = (int)(local.position.Y / 16f);
@@ -354,6 +346,35 @@ public class SpectatorTargetSystem : ModSystem
         }
     }
 
+    private static void MoveLocalPlayerToward(Player local, Vector2 destination)
+    {
+        Vector2 oldCenter = local.Center;
+        Vector2 delta = destination - oldCenter;
+
+        if (delta.LengthSquared() <= GhostFollowSpeed * GhostFollowSpeed)
+            local.Center = destination;
+        else
+            local.Center = oldCenter + Vector2.Normalize(delta) * GhostFollowSpeed;
+
+        local.velocity = Vector2.Zero;
+    }
+
+    private static void ApplyFollowDirection(Player local, int direction)
+    {
+        int normalizedDirection = direction < 0 ? -1 : 1;
+
+        local.direction = normalizedDirection;
+        local.ghostDir = normalizedDirection;
+    }
+
+    private static int GetNPCDirection(NPC npc)
+    {
+        if (npc.spriteDirection != 0)
+            return npc.spriteDirection;
+
+        return npc.direction;
+    }
+
     private static Vector2 GetFollowCenter(Vector2 center, Vector2 velocity, int direction)
     {
         float horizontalDirection = MathHelper.Distance(velocity.X, 0f) > 0.1f
@@ -362,6 +383,65 @@ public class SpectatorTargetSystem : ModSystem
         Vector2 offset = new(-horizontalDirection * FollowTargetDistance, FollowVerticalOffset);
 
         return center + offset;
+    }
+
+    private static bool TryGetCameraTarget(out Vector2 targetCenter, out int cameraId)
+    {
+        Player lockedPlayer = GetLockedPlayerTarget();
+        if (lockedPlayer?.active == true)
+        {
+            targetCenter = lockedPlayer.Center;
+            cameraId = lockedPlayer.whoAmI;
+            return true;
+        }
+
+        NPC lockedNPC = GetLockedNPCTarget();
+        if (lockedNPC?.active == true)
+        {
+            targetCenter = lockedNPC.Center;
+            cameraId = 1000 + lockedNPC.whoAmI;
+            return true;
+        }
+
+        if (CanTarget(previewTarget))
+        {
+            Player previewPlayer = Main.player[previewTarget];
+            targetCenter = previewPlayer.Center;
+            cameraId = 2000 + previewPlayer.whoAmI;
+            return true;
+        }
+
+        targetCenter = Vector2.Zero;
+        cameraId = -1;
+        return false;
+    }
+
+    private static Vector2 GetSmoothedCameraCenter(Vector2 targetCenter, bool targetChanged)
+    {
+        bool shouldSnap = targetChanged ||
+            !hasCameraCenter ||
+            Vector2.DistanceSquared(smoothedCameraCenter, targetCenter) > CameraSnapDistance * CameraSnapDistance;
+
+        if (shouldSnap)
+        {
+            smoothedCameraCenter = targetCenter;
+            hasCameraCenter = true;
+            return smoothedCameraCenter;
+        }
+
+        smoothedCameraCenter = Vector2.Lerp(smoothedCameraCenter, targetCenter, CameraFollowLerp);
+        return smoothedCameraCenter;
+    }
+
+    private static Vector2 ClampScreenPosition(Vector2 screenPosition)
+    {
+        float maxX = System.Math.Max(0f, Main.maxTilesX * 16f - Main.screenWidth);
+        float maxY = System.Math.Max(0f, Main.maxTilesY * 16f - Main.screenHeight);
+
+        screenPosition.X = MathHelper.Clamp(screenPosition.X, 0f, maxX);
+        screenPosition.Y = MathHelper.Clamp(screenPosition.Y, 0f, maxY);
+
+        return screenPosition;
     }
     #endregion
 }

@@ -17,16 +17,30 @@ public class SpectatorUISystem : ModSystem
 {
     private UserInterface spectatorInterface;
     private SpectatorUIState spectatorState;
+    private UserInterface spectatorSettingsInterface;
+    private SpectatorSettingsPanelUIState spectatorSettingsPanelState;
+    private SpectatorSettingsEyeUIState spectatorSettingsEyeState;
+    private bool spectatorSettingsExpanded = true;
 
     public override void OnWorldLoad()
     {
         spectatorInterface = new();
         spectatorState = new();
+        spectatorSettingsInterface = new();
+        spectatorSettingsPanelState = new();
+        spectatorSettingsEyeState = new();
     }
 
     public void RebuildUI()
     {
         spectatorState?.RebuildSpectatorControlsPanel();
+        spectatorSettingsPanelState?.Rebuild();
+    }
+
+    public void ToggleSpectatorSettingsPanel()
+    {
+        spectatorSettingsExpanded = !spectatorSettingsExpanded;
+        RefreshSpectatorSettingsState();
     }
 
     public void OnLocalModeAccepted(PlayerMode mode)
@@ -56,6 +70,8 @@ public class SpectatorUISystem : ModSystem
                 spectatorInterface?.SetState(spectatorState);
                 SoundEngine.PlaySound(SoundID.MenuOpen);
             }
+
+            RefreshSpectatorSettingsState();
         }
         else
         {
@@ -64,9 +80,13 @@ public class SpectatorUISystem : ModSystem
                 spectatorInterface?.SetState(null);
                 SoundEngine.PlaySound(SoundID.MenuClose);
             }
+
+            if (spectatorSettingsInterface?.CurrentState != null)
+                spectatorSettingsInterface?.SetState(null);
         }
 
         spectatorInterface?.Update(gameTime);
+        spectatorSettingsInterface?.Update(gameTime);
     }
 
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
@@ -92,6 +112,29 @@ public class SpectatorUISystem : ModSystem
                 },
                 InterfaceScaleType.UI));
         }
+
+        if (spectatorSettingsInterface?.CurrentState != null)
+        {
+            layers.Insert(index, new LegacyGameInterfaceLayer(
+                "PvPAdventure: Spectator Settings UI",
+                () =>
+                {
+                    spectatorSettingsInterface.Draw(Main.spriteBatch, new GameTime());
+                    return true;
+                },
+                InterfaceScaleType.UI));
+        }
+    }
+
+    private void RefreshSpectatorSettingsState()
+    {
+        if (spectatorSettingsInterface is null)
+            return;
+
+        UIState desiredState = spectatorSettingsExpanded ? spectatorSettingsPanelState : spectatorSettingsEyeState;
+
+        if (spectatorSettingsInterface.CurrentState != desiredState)
+            spectatorSettingsInterface.SetState(desiredState);
     }
 
     private static bool ShouldShowSpectateUI()

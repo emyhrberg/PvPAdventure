@@ -11,18 +11,20 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
+using Terraria.ModLoader;
 using Terraria.UI;
 
 namespace PvPAdventure.Common.Spectator.UI;
 
 internal sealed class SpectatorSettingsPanel : UIElement
 {
-    private const float PanelWidth = 300f;
-    private const float PanelHeight = 475f;
-    private const float HeaderHeight = 32f;
+    internal static float PanelWidth => UINPCCard.CardWidth + 48f;
+    internal const float PanelHeight = 475f;
+    internal const float HeaderHeight = 32f;
+    internal const float TopOffset = 335f;
+    internal const float RightOffset = 4f;
+
     private const float TabHeight = 36f;
-    private const float TopOffset = 335f;
-    private const float RightOffset = 4f;
 
     public UIPanel TitlePanel;
     public UIPanel ContentPanel;
@@ -32,7 +34,6 @@ internal sealed class SpectatorSettingsPanel : UIElement
     private readonly List<SpectatorTabButton> tabButtons = [];
     private ISpectatorTab currentTab;
     private UIPanel tabPanel;
-    private bool expanded = true;
 
     public SpectatorSettingsPanel()
     {
@@ -58,13 +59,10 @@ internal sealed class SpectatorSettingsPanel : UIElement
         EyeTogglePanel = null;
         tabPanel = null;
 
-        Height.Set(expanded ? PanelHeight : HeaderHeight, 0f);
+        Height.Set(PanelHeight, 0f);
 
         BuildTitlePanel();
         Append(TitlePanel);
-
-        if (!expanded)
-            return;
 
         BuildTabPanel();
         Append(tabPanel);
@@ -100,34 +98,14 @@ internal sealed class SpectatorSettingsPanel : UIElement
         TitlePanel.BackgroundColor = new Color(63, 82, 151);
         TitlePanel.BorderColor = Color.Black;
 
-        UIText titleText = new("Spectator", large: false, textScale: 1f)
+        UIText titleText = new("Spectator Info", large: false, textScale: 1f)
         {
             HAlign = 0.5f,
             VAlign = 0.5f
         };
         TitlePanel.Append(titleText);
 
-        EyeTogglePanel = new UIPanel
-        {
-            Height = new StyleDimension(0f, 1f),
-            Width = new StyleDimension(HeaderHeight, 0f),
-            HAlign = 1f,
-            VAlign = 0.5f
-        };
-        EyeTogglePanel.SetPadding(0f);
-        EyeTogglePanel.OnLeftClick += (_, _) =>
-        {
-            expanded = !expanded;
-            SoundEngine.PlaySound(expanded ? SoundID.MenuOpen : SoundID.MenuClose);
-            Rebuild();
-        };
-        EyeTogglePanel.OnMouseOver += (_, _) => EyeTogglePanel.BorderColor = Color.Yellow;
-        EyeTogglePanel.OnMouseOut += (_, _) => EyeTogglePanel.BorderColor = Color.Black;
-        EyeTogglePanel.Append(new UIImage(Ass.Icon_Eye.Value)
-        {
-            HAlign = 0.5f,
-            VAlign = 0.5f
-        });
+        EyeTogglePanel = new PanelEyeToggleButton();
 
         TitlePanel.Append(EyeTogglePanel);
     }
@@ -151,6 +129,43 @@ internal sealed class SpectatorSettingsPanel : UIElement
 
             tabPanel.Append(button);
             tabButtons.Add(button);
+        }
+    }
+
+    internal sealed class PanelEyeToggleButton : UIPanel
+    {
+        public PanelEyeToggleButton()
+        {
+            Height = new StyleDimension(0f, 1f);
+            Width = new StyleDimension(HeaderHeight, 0f);
+            HAlign = 1f;
+            VAlign = 0.5f;
+            SetPadding(0f);
+
+            OnLeftClick += (_, _) =>
+            {
+                SoundEngine.PlaySound(SoundID.MenuClose);
+                ModContent.GetInstance<SpectatorUISystem>().ToggleSpectatorSettingsPanel();
+            };
+
+            Append(new UIImage(Ass.Icon_Eye.Value)
+            {
+                HAlign = 0.5f,
+                VAlign = 0.5f
+            });
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+            BorderColor = IsMouseHovering ? Color.Yellow : Color.Black;
+
+            if (IsMouseHovering)
+            {
+                Main.LocalPlayer.mouseInterface = true;
+                Main.instance.MouseText("Hide spectator info");
+            }
         }
     }
 

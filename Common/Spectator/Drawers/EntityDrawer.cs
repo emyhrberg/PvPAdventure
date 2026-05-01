@@ -171,12 +171,13 @@ public static class EntityDrawer
     public static void DrawPlayerHead(SpriteBatch sb, Player player, Vector2 position, float scale = 1f)
     {
         Player drawPlayer = CreateHeadDrawPlayer(player);
+        Color borderColor = player.team > 0 ? Main.teamColor[player.team] : Color.Black;
 
         FullBrightPlayerDrawer.ForceFullBrightOnce = true;
 
         try
         {
-            Main.PlayerRenderer.DrawPlayerHead(Main.Camera, drawPlayer, position, 1f, scale, Color.Transparent);
+            Main.MapPlayerRenderer.DrawPlayerHead(Main.Camera, drawPlayer, position, scale: scale, borderColor: borderColor);
         }
         finally
         {

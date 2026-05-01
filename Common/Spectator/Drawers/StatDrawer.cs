@@ -94,12 +94,12 @@ public static class StatDrawer
         }
     }
 
-    public static void DrawWorldStatPanel(SpriteBatch spriteBatch, Rectangle area, Texture2D texture, string text, string hoverText, int iconSize = 18, Color? textColor = null, float scale = 1f)
+    public static void DrawWorldStatPanel(SpriteBatch spriteBatch, Rectangle area, Texture2D texture, string text, string hoverText, int iconSize = 22, Color? textColor = null, float scale = 1f)
     {
         DrawBack(spriteBatch, area, scale);
 
-        int iconPaddingX = (int)MathF.Round(5f * scale);
-        int iconPaddingY = (int)MathF.Round(5f * scale);
+        int iconPaddingX = (int)MathF.Round(3f * scale);
+        int iconPaddingY = (int)MathF.Round(3f * scale);
         Rectangle iconArea = new(area.X + iconPaddingX, area.Y + iconPaddingY, Math.Max(1, (int)MathF.Round(iconSize * scale)), Math.Max(1, (int)MathF.Round(iconSize * scale)));
 
         if (texture != null)
@@ -113,7 +113,7 @@ public static class StatDrawer
         }
 
         float textScale = 0.75f * scale;
-        int textLeft = area.X + (int)MathF.Round((iconSize + 15f) * scale);
+        int textLeft = area.X + (int)MathF.Round((iconSize + 9f) * scale);
         int textTop = area.Y + (int)MathF.Round(5f * scale);
         Rectangle textArea = new(textLeft, textTop, area.Right - textLeft - (int)MathF.Round(4f * scale), area.Height);
         string displayText = Truncate(FontAssets.MouseText.Value, text, textArea.Width, textScale);

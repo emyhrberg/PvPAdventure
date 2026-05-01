@@ -61,7 +61,10 @@ internal sealed class SpectatorNPCTab : UIElement, ISpectatorTab
     {
         npcList.Clear();
 
+        int filteredCount = CountFilteredNPCs();
         int listIndex = 0;
+
+        npcList.Add(new NPCFilterSummaryPanel(filteredCount));
 
         for (int i = 0; i < Main.maxNPCs; i++)
         {
@@ -138,5 +141,37 @@ internal sealed class SpectatorNPCTab : UIElement, ISpectatorTab
     private static bool ShouldShowNPC(NPC npc)
     {
         return npc?.active == true;
+    }
+
+    private static int CountFilteredNPCs()
+    {
+        int count = 0;
+
+        for (int i = 0; i < Main.maxNPCs; i++)
+        {
+            if (ShouldShowNPC(Main.npc[i]))
+                count++;
+        }
+
+        return count;
+    }
+
+    private sealed class NPCFilterSummaryPanel : UIPanel
+    {
+        public NPCFilterSummaryPanel(int count)
+        {
+            Width.Set(UINPCCard.CardWidth, 0f);
+            Height.Set(32f, 0f);
+            SetPadding(0f);
+            BackgroundColor = new Color(28, 36, 76) * 0.92f;
+            BorderColor = Color.Black;
+
+            Append(new UIText($"{count} NPCs filtered", textScale: 0.85f)
+            {
+                HAlign = 0.5f,
+                VAlign = 0.5f,
+                TextColor = Color.White
+            });
+        }
     }
 }
