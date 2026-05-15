@@ -37,10 +37,14 @@ public class ShakingChestNPC : GlobalNPC
         .Add(new Item(ItemID.BuilderPotion) { shopCustomPrice = Item.buyPrice(silver: 250) })
         .Add(new Item(ItemID.Cobweb) { shopCustomPrice = Item.buyPrice(silver: 3) })
         .Add(new Item(ItemID.Grenade) { shopCustomPrice = Item.buyPrice(silver: 200) })
-        .Add(new Item(ItemID.MolluskWhistle) { shopCustomPrice = Item.buyPrice(silver: 1002) })
         .Add(new Item(ItemID.Aglet) { shopCustomPrice = Item.buyPrice(silver: 100) })
         .Add(new Item(ItemID.Trident) { shopCustomPrice = Item.buyPrice(silver: 350) })
-        .Add(new Item(ItemID.ObsidianBathtub) { shopCustomPrice = Item.buyPrice(silver: 1000) })
+        .Add(new Item(ItemID.Toolbox) { shopCustomPrice = Item.buyPrice(silver: 500) })
+        .Add(new Item(ItemID.PortableStool) { shopCustomPrice = Item.buyPrice(silver: 100) })
+        .Add(new Item(ItemID.Bottle) { shopCustomPrice = Item.buyPrice(silver: 10) })
+        .Add(new Item(ItemID.Mushroom) { shopCustomPrice = Item.buyPrice(silver: 25) })
+        .Add(new Item(ItemID.WandofSparking) { shopCustomPrice = Item.buyPrice(silver: 775) })
+        .Add(new Item(ItemID.HunterPotion) { shopCustomPrice = Item.buyPrice(silver: 175) })
         .Add(new Item(ItemID.Bomb) { shopCustomPrice = Item.buyPrice(silver: 25) });
 
 

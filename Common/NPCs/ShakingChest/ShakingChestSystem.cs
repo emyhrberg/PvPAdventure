@@ -33,6 +33,7 @@ public class ShakingChestSystem : ModSystem
 
         IL_Main.HoverOverNPCs += PatchBoundSlimeHover;
         On_Main.TryFreeingElderSlime += OnTryFreeingElderSlime;
+        On_NPC.SetDefaults += OnNPCSetDefaults;
     }
 
     public override void Unload()
@@ -41,7 +42,20 @@ public class ShakingChestSystem : ModSystem
         _setChatButtonsHook = null;
         IL_Main.HoverOverNPCs -= PatchBoundSlimeHover;
         On_Main.TryFreeingElderSlime -= OnTryFreeingElderSlime;
+        On_NPC.SetDefaults -= OnNPCSetDefaults;
         _logger = null;
+    }
+
+    private static void OnNPCSetDefaults(On_NPC.orig_SetDefaults orig, NPC self, int type, NPCSpawnParams spawnparams)
+    {
+        orig(self, type, spawnparams);
+
+        if (self.type != NPCID.BoundTownSlimeOld)
+            return;
+
+        self.scale = 4f;
+        self.width = self.width * 4;
+        self.height = self.height * 4;
     }
 
     private static void OnSetChatButtons(
@@ -85,6 +99,7 @@ public class ShakingChestSystem : ModSystem
     public override void OnWorldLoad()
     {
         if (Main.netMode == NetmodeID.MultiplayerClient) return;
+
         if (ModContent.GetInstance<GameManager>().CurrentPhase == GameManager.Phase.Waiting)
             EnsureShakingChestExists();
     }
@@ -123,10 +138,11 @@ public class ShakingChestSystem : ModSystem
 
     private static void SpawnShakingChest()
     {
+        int extraHeightPixels = 18 * 3; // 54px extra height from scaling
         NPC.NewNPC(
             Entity.GetSource_NaturalSpawn(),
             Main.spawnTileX * 16,
-            (Main.spawnTileY - 3) * 16,
+            (Main.spawnTileY - 3) * 16 - extraHeightPixels,
             NPCID.BoundTownSlimeOld);
     }
 }
