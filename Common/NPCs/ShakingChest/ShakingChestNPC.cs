@@ -45,7 +45,9 @@ public class ShakingChestNPC : GlobalNPC
         .Add(new Item(ItemID.Mushroom) { shopCustomPrice = Item.buyPrice(silver: 25) })
         .Add(new Item(ItemID.WandofSparking) { shopCustomPrice = Item.buyPrice(silver: 775) })
         .Add(new Item(ItemID.HunterPotion) { shopCustomPrice = Item.buyPrice(silver: 175) })
+        .Add(new Item(ItemID.Chest) { shopCustomPrice = Item.buyPrice(silver: 50) })
         .Add(new Item(ItemID.Bomb) { shopCustomPrice = Item.buyPrice(silver: 25) });
+
 
 
     public override void SetStaticDefaults()
