@@ -6,6 +6,7 @@ using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader.UI;
 using Terraria.ModLoader.UI.Elements;
@@ -97,7 +98,6 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
         headerRow.Height.Set(32f, 0f);
         headerRow.SetPadding(0f);
         ContentPanel.Append(headerRow);
-
         searchbox = new UISearchbox("");
         searchbox.OnTextChanged += RefreshEntries;
         searchbox.Left.Set(0f, 0f);
@@ -163,7 +163,7 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
         scrollbar.Height.Set(-80f, 1f);
         ContentPanel.Append(scrollbar);
 
-        grid = new UIGrid();
+        grid = new UIClippedGrid();
         grid.Left.Set(10f, 0f);
         grid.Top.Set(50f, 0f);
         grid.Width.Set(-50f, 1f);
@@ -298,6 +298,9 @@ internal abstract class UIBrowserPanel : UIDraggablePanel
 
 internal class UIBrowserEntry : UIElement
 {
+    internal static Rectangle? DrawClip;
+    internal static bool MouseInsideDrawClip => DrawClip is not Rectangle clip || clip.Contains(Main.MouseScreen.ToPoint());
+
     public string SearchText;
 
     protected bool listMode = true;
@@ -350,6 +353,67 @@ internal class UIBrowserEntry : UIElement
     {
         base.DrawSelf(spriteBatch);
 
+    }
+
+    public override void Draw(SpriteBatch spriteBatch)
+    {
+        if (DrawClip is Rectangle clip && !GetDimensions().ToRectangle().Intersects(clip))
+            return;
+
+        base.Draw(spriteBatch);
+    }
+}
+
+internal sealed class UIClippedGrid : UIGrid
+{
+    private static readonly RasterizerState ScissorRasterizer = new()
+    {
+        CullMode = CullMode.CullCounterClockwiseFace,
+        ScissorTestEnable = true
+    };
+
+    public override void Draw(SpriteBatch spriteBatch)
+    {
+        Rectangle drawClip = GetDimensions().ToRectangle();
+        if (drawClip.Width <= 0 || drawClip.Height <= 0)
+            return;
+
+        GraphicsDevice device = Main.instance.GraphicsDevice;
+        Rectangle oldScissor = device.ScissorRectangle;
+        RasterizerState oldRasterizer = device.RasterizerState;
+
+        Rectangle scissor = GetClippingRectangle(spriteBatch);
+        Rectangle screen = new(0, 0, device.PresentationParameters.BackBufferWidth, device.PresentationParameters.BackBufferHeight);
+        scissor = Rectangle.Intersect(scissor, screen);
+
+        if (oldRasterizer?.ScissorTestEnable == true)
+            scissor = Rectangle.Intersect(scissor, oldScissor);
+
+        if (scissor.Width <= 0 || scissor.Height <= 0)
+            return;
+
+        Rectangle? oldDrawClip = UIBrowserEntry.DrawClip;
+        bool oldOverflowHidden = OverflowHidden;
+        UIBrowserEntry.DrawClip = drawClip;
+        // This grid owns the scissor region; avoid UIElement's nested clipping pass.
+        OverflowHidden = false;
+
+        spriteBatch.End();
+        device.ScissorRectangle = scissor;
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, ScissorRasterizer, null, Main.UIScaleMatrix);
+
+        try
+        {
+            base.Draw(spriteBatch);
+        }
+        finally
+        {
+            UIBrowserEntry.DrawClip = oldDrawClip;
+            OverflowHidden = oldOverflowHidden;
+            spriteBatch.End();
+            device.ScissorRectangle = oldScissor;
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, oldRasterizer ?? RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+        }
     }
 }
 

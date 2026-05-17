@@ -5,7 +5,7 @@ using Terraria.ModLoader;
 
 namespace PvPAdventure.Common.Spectator.Drawers;
 
-public class FullBrightDrawer : ModPlayer
+public class FullBrightPlayerDrawer : ModPlayer
 {
     public static bool ForceFullBrightOnce;
     public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)

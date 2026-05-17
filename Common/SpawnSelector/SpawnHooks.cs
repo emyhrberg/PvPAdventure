@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PvPAdventure.Common.Chat;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
@@ -84,7 +85,7 @@ public class SpawnHooks : ModSystem
                 Player.Spawn_ForceClearArea(fx, fy);
 
             orig(self, fx, fy);
-            TeleportChat.Announce(self, type);
+            SpawnSelectorChat.Announce(self, type);
             sp.ClearSelection();
             return;
         }
@@ -98,7 +99,7 @@ public class SpawnHooks : ModSystem
             else
             {
                 self.TeleportationPotion();
-                TeleportChat.Announce(self, type);
+                SpawnSelectorChat.Announce(self, type);
             }
 
             sp.ClearSelection();
@@ -110,7 +111,7 @@ public class SpawnHooks : ModSystem
             if (PortalSystem.TryGetPortalWorldPos(self, out Vector2 portalWorldPos))
             {
                 TeleportAndSync(self, PortalTeleportPos(self, portalWorldPos));
-                TeleportChat.Announce(self, type);
+                SpawnSelectorChat.Announce(self, type);
             }
 
             sp.ClearSelection();
@@ -126,7 +127,7 @@ public class SpawnHooks : ModSystem
                 if (PortalSystem.TryGetPortalWorldPos(portalOwner, out Vector2 portalWorldPos))
                 {
                     TeleportAndSync(self, PortalTeleportPos(self, portalWorldPos));
-                    TeleportChat.Announce(self, type, idx);
+                    SpawnSelectorChat.Announce(self, type, idx);
                 }
             }
 

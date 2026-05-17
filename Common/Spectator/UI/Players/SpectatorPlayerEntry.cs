@@ -1,22 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoMod.Core.Utils;
+using Microsoft.Xna.Framework.Input;
 using PvPAdventure.Common.Spectator.Drawers;
-using PvPAdventure.Common.Spectator.UI.NPCs;
 using PvPAdventure.Common.Spectator.UI.State;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using ReLogic.Content;
-using ReLogic.Graphics;
 using System;
 using System.Text;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
-using Terraria.Graphics;
-using Terraria.Graphics.Light;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader.UI;
 using Terraria.UI;
 
@@ -26,10 +21,16 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 {
     private readonly Player player;
     private readonly UIElement listChrome;
-    private readonly UIText buttonLabel;
+    private readonly UIElement playerButtonRow;
+    private static Player inventoryPlayer;
     private bool needsLateLayout = true;
     private string hoveredStatText;
     public Player Player => player;
+
+    // Cache stats for performance
+    private readonly PlayerStatSnapshot[] cachedStats;
+    private readonly PlayerStatSnapshot[] cachedStatsWithoutHead;
+    private ulong cachedStatsUpdate = ulong.MaxValue;
 
     public int TeamSortValue => player.team == 0 ? int.MaxValue : player.team;
 
@@ -47,26 +48,22 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
         player = targetPlayer ?? new Player();
         SearchText = BuildSearchText();
 
+        cachedStats = new PlayerStatSnapshot[PlayerStats.All.Count];
+        cachedStatsWithoutHead = new PlayerStatSnapshot[Math.Max(0, PlayerStats.All.Count - 1)];
+
         listChrome = new UIElement();
         listChrome.Width.Set(0f, 1f);
         listChrome.Height.Set(0f, 1f);
         Append(listChrome);
 
-        float right = -8f;
+        playerButtonRow = new UIElement();
+        listChrome.Append(playerButtonRow);
 
-        buttonLabel = new UIText("", 0.8f)
-        {
-            HAlign = 1f,
-            IgnoresMouseInteraction = true
-        };
-        buttonLabel.Left.Set(-180f, 0f);
-        buttonLabel.Top.Set(7f, 0f);
-        listChrome.Append(buttonLabel);
+        float left = 0f;
 
-        AddTopRightButton(Ass.ButtonTeleport, ref right, "Teleport", OnTeleportClicked);
-        AddTopRightButton(Ass.ButtonEye, ref right, "Spectate", OnSpectateClicked);
-
-        buttonLabel.Left.Set(right - 4f, 0f);
+        AddPlayerButton(TextureAssets.Item[ItemID.TeleportationPotion], ref left, "Teleport", OnTeleportClicked);
+        AddPlayerButton(Ass.Icon_Eye, ref left, "Spectate", OnSpectateClicked, IsSpectating);
+        AddPlayerButton(TextureAssets.Item[ItemID.PiggyBank], ref left, "Toggle inventory", OnInventoryClicked, IsInventoryOpen);
 
         ApplyLayout();
     }
@@ -92,6 +89,29 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
             if (listChrome.Parent is null)
                 Append(listChrome);
+
+            const int buttonSize = 32;
+            const int buttonGap = 4;
+            const int buttonBottomPadding = 2;
+
+            float rowWidth = buttonSize * 3 + buttonGap * 2;
+            float previewHeight = Math.Max(0f, entrySize - buttonSize - buttonBottomPadding);
+            float previewWidth = Math.Max(0f, previewHeight - 10f);
+
+            playerButtonRow.Width.Set(rowWidth, 0f);
+            playerButtonRow.Height.Set(buttonSize, 0f);
+            playerButtonRow.Left.Set(4f + Math.Max(0f, previewWidth - rowWidth) * 0.5f, 0f);
+            playerButtonRow.Top.Set(entrySize - buttonSize - buttonBottomPadding, 0f);
+
+            if (ShouldShowButtons())
+            {
+                if (playerButtonRow.Parent is null)
+                    listChrome.Append(playerButtonRow);
+            }
+            else
+            {
+                playerButtonRow.Remove();
+            }
         }
         else
         {
@@ -99,10 +119,14 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
             Height.Set(entrySize, 0f);
 
             listChrome.Remove();
-            buttonLabel.SetText("");
         }
 
         Recalculate();
+    }
+
+    private bool ShouldShowButtons()
+    {
+        return listMode && entrySize >= 100;
     }
 
     public override void Update(GameTime gameTime)
@@ -124,28 +148,34 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
         ApplyLayout();
         listChrome.Recalculate();
-        buttonLabel.Recalculate();
         Recalculate();
 
         needsLateLayout = false;
     }
 
-    protected override void DrawSelf(SpriteBatch spriteBatch)
+    protected override void DrawSelf(SpriteBatch sb)
     {
         Rectangle box = GetDimensions().ToRectangle();
+        Rectangle biomeBox = box;
         hoveredStatText = null;
 
-        Utils.DrawInvBG(spriteBatch, box, Color.Black * 0.35f);
-        BackgroundDrawer.DrawMapFullscreenBackground(spriteBatch, box, player, listMode);
+        if (ShouldShowButtons())
+        {
+            const int buttonSize = 32;
+            biomeBox.Height = Math.Max(0, biomeBox.Height - buttonSize);
+        }
+
+        Utils.DrawInvBG(sb, box, Color.Black * 0.35f);
         //Utils.DrawInvBG(spriteBatch, box, IsMouseHovering ? new Color(73, 94, 171, 50) : new Color(0,0,0,25));
+        BackgroundDrawer.DrawMapFullscreenBackground(sb, biomeBox, player, listMode);
 
         if (listMode)
         {
-            PlayerDrawer.DrawFullPlayerPreview(spriteBatch, player, box);
-            DrawListMode(spriteBatch, box);
+            PlayerDrawer.DrawFullPlayerPreview(sb, player, biomeBox);
+            DrawListMode(sb, box);
         }
         else
-            DrawGridMode(spriteBatch, box);
+            DrawGridMode(sb, box);
 
         if (!string.IsNullOrEmpty(hoveredStatText))
             UICommon.TooltipMouseText(hoveredStatText);
@@ -178,38 +208,87 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
     private void DrawListMode(SpriteBatch spriteBatch, Rectangle box)
     {
-        int previewWidth = box.Height - 8;
-        Rectangle area = new(box.X + 4 + previewWidth + 5, box.Y + 30, box.Width - previewWidth - 22, box.Height - 50);
+        const int buttonSize = 32;
+
+        //int previewHeight = Math.Max(0, box.Height - buttonSize);
+        //int previewWidth = Math.Max(0, previewHeight + 32);
+        //int previewHeight = ShouldShowButtons() ? Math.Max(0, box.Height - buttonSize) : box.Height;
+        int previewHeight = Math.Max(0, box.Height - buttonSize);
+        int previewWidth = 100;
+
+        Rectangle area = new(box.X + 4 + previewWidth + 5, box.Y+4, box.Width - previewWidth - 14, previewHeight);
+
         if (area.Width <= 0 || area.Height <= 0)
             return;
 
         hoveredStatText = StatDrawer.DrawPlayerListStats(spriteBatch, area, BuildStats(skipPlayerHead: true));
     }
 
-    private void AddTopRightButton(Asset<Texture2D> texture, ref float rightOffset, string label, UIElement.MouseEvent click = null)
+    private void AddPlayerButton(Asset<Texture2D> texture, ref float leftOffset, string label, UIElement.MouseEvent click = null, Func<bool> selected = null)
     {
-        UIImageButton button = new(texture) { HAlign = 1f };
+        const int buttonSize = 28;
+
+        SpectatorPlayerButton button = new(texture, label, selected);
+        button.Width.Set(buttonSize, 0f);
+        button.Height.Set(buttonSize, 0f);
+        button.Left.Set(leftOffset + 4, 0f);
         button.Top.Set(4f, 0f);
-        button.Left.Set(rightOffset, 0f);
-        button.OnMouseOver += (_, _) => buttonLabel.SetText(label);
-        button.OnMouseOut += (_, _) => buttonLabel.SetText("");
 
         if (click != null)
             button.OnLeftClick += click;
 
-        listChrome.Append(button);
-        rightOffset -= 24f;
+        playerButtonRow.Append(button);
+        leftOffset += buttonSize + 4f;
+    }
+
+    private bool IsInventoryOpen()
+    {
+        return ReferenceEquals(inventoryPlayer, player);
+    }
+
+    private bool IsSpectating()
+    {
+        return SpectatorSystem.IsTargeting(player);
+    }
+
+    private void OnInventoryClicked(UIMouseEvent evt, UIElement listeningElement)
+    {
+        inventoryPlayer = IsInventoryOpen() ? null : player;
+    }
+
+    internal static void DrawSelectedInventory(SpriteBatch sb)
+    {
+        if (inventoryPlayer?.active != true)
+        {
+            inventoryPlayer = null;
+            return;
+        }
+
+        Rectangle viewport = new(0, 0, Main.screenWidth, Main.screenHeight);
+
+        InventoryDrawer.DrawInventory(sb, new Vector2(20f, 20f), inventoryPlayer, viewport);
+        InventoryDrawer.DrawEquipment(sb, inventoryPlayer, viewport);
+    }
+
+    internal static void ClearSelectedInventory()
+    {
+        inventoryPlayer = null;
     }
 
     private PlayerStatSnapshot[] BuildStats(bool skipPlayerHead)
     {
-        int start = skipPlayerHead ? 1 : 0;
-        PlayerStatSnapshot[] stats = new PlayerStatSnapshot[PlayerStats.All.Count - start];
+        if (cachedStatsUpdate != Main.GameUpdateCount)
+        {
+            for (int i = 0; i < PlayerStats.All.Count; i++)
+                cachedStats[i] = PlayerStats.All[i].Build(player);
 
-        for (int i = 0; i < stats.Length; i++)
-            stats[i] = PlayerStats.All[i + start].Build(player);
+            for (int i = 0; i < cachedStatsWithoutHead.Length; i++)
+                cachedStatsWithoutHead[i] = cachedStats[i + 1];
 
-        return stats;
+            cachedStatsUpdate = Main.GameUpdateCount;
+        }
+
+        return skipPlayerHead ? cachedStatsWithoutHead : cachedStats;
     }
 
     private string BuildSearchText()
@@ -235,30 +314,30 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
     private void OnSpectateClicked(UIMouseEvent evt, UIElement listeningElement)
     {
-        if (player is null || !player.active)
+        if (player?.active != true)
             return;
 
-        Player localPlayer = Main.LocalPlayer;
-        Player currentTarget = SpectatorSystem.GetPlayerTarget();
+        Player local = Main.LocalPlayer;
 
-        if (SpectatorSystem.IsInSpectateMode(localPlayer) &&
-            SpectatorSystem.GetCurrentTargetKind() == SpectatorTargetKind.Player &&
-            currentTarget != null &&
-            currentTarget.whoAmI == player.whoAmI)
+        if (local?.active != true || player.whoAmI == local.whoAmI)
+            return;
+
+        if (IsSpectating())
         {
-            localPlayer.GetModPlayer<SpectatorPlayer>().ClearTarget();
+            SpectatorSystem.ClearTarget();
             SpectatorUISystem.TogglePlayerSpectatorControls();
-            Log.Chat($"Stopped spectating {player.name}");
+            Log.Chat("Stopped spectating " + player.name);
             return;
         }
 
-        if (!SpectatorSystem.IsInSpectateMode(localPlayer))
+        if (!SpectatorSystem.IsInSpectateMode(local))
             SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
 
         SpectatorSystem.SetPlayerTarget(player.whoAmI);
         SpectatorUISystem.EnsurePlayerSpectatorControlsOpen();
 
         Log.Chat($"Now spectating {player.name}");
+        //Main.NewText($"Now spectating {player.name}");
     }
 
     private void OnTeleportClicked(UIMouseEvent evt, UIElement listeningElement)
@@ -276,5 +355,51 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
             NetMessage.SendData(MessageID.TeleportEntity, -1, -1, null, 2, Main.LocalPlayer.whoAmI, telePos.X, telePos.Y, TeleportationStyleID.PotionOfReturn);
 
         Log.Chat($"Teleported to {player.name}");
+        //Main.NewText($"Teleported to {player.name}");
+    }
+
+    private sealed class SpectatorPlayerButton : UIElement
+    {
+        private readonly Asset<Texture2D> texture;
+        private readonly string hoverText;
+        private readonly Func<bool> selected;
+
+        public SpectatorPlayerButton(Asset<Texture2D> texture, string hoverText, Func<bool> selected = null)
+        {
+            this.texture = texture;
+            this.hoverText = hoverText;
+            this.selected = selected;
+        }
+
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            Rectangle box = GetDimensions().ToRectangle();
+            bool isSelected = selected?.Invoke() == true;
+
+            // Draw the Background
+            // Use InventoryBack14 (Gold/Yellow) if selected, otherwise standard Back (Blue/Grey)
+            Texture2D backTex = (isSelected ? TextureAssets.InventoryBack14 : TextureAssets.InventoryBack).Value;
+            spriteBatch.Draw(backTex, box, Color.White * 0.8f);
+
+            // Draw the Icon (Centered)
+            Texture2D iconTex = texture.Value;
+            float iconScale = 1f;
+            if (iconTex.Width > box.Width || iconTex.Height > box.Height)
+            {
+                iconScale = iconTex.Width > iconTex.Height
+                    ? (box.Width - 8f) / iconTex.Width
+                    : (box.Height - 8f) / iconTex.Height;
+            }
+
+            Vector2 origin = iconTex.Size() / 2f;
+            Vector2 position = box.Center.ToVector2();
+
+            Color iconColor = IsMouseHovering || isSelected ? Color.White : Color.White * 0.8f;
+
+            spriteBatch.Draw(iconTex, position, null, iconColor, 0f, origin, iconScale, SpriteEffects.None, 0f);
+
+            if (IsMouseHovering)
+                Main.instance.MouseText(hoverText);
+        }
     }
 }

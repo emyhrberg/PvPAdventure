@@ -33,15 +33,12 @@ public static class PlayerPortalNetHandler
         int health = reader.ReadInt32();
         int createTicks = reader.ReadInt32();
 
-        if (playerId >= Main.maxPlayers)
+        if (playerId >= Main.maxPlayers ||
+            Main.netMode == NetmodeID.Server && playerId != whoAmI ||
+            Main.player[playerId] is not { active: true } player)
+        {
             return;
-
-        if (Main.netMode == NetmodeID.Server && playerId != whoAmI)
-            return;
-
-        Player player = Main.player[playerId];
-        if (player == null || !player.active)
-            return;
+        }
 
         player.GetModPlayer<SpawnPlayer>().ApplyPortalFromNet(hasPortal, worldPos, health, createTicks);
 
