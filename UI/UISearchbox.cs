@@ -1,9 +1,8 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using ReLogic.Content;
 using ReLogic.Graphics;
-using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
@@ -40,9 +39,6 @@ public class UISearchbox : UIPanel
 
     internal bool unfocusOnTab = true;
 
-    private readonly ClearSearchButton clearSearchButton;
-    private readonly Asset<Texture2D> clearSearchTexture = Main.Assets.Request<Texture2D>("Images/UI/SearchCancel");
-
     internal UISearchbox(string hintText="", string text = "")
     {
         this.hintText = hintText;
@@ -51,30 +47,6 @@ public class UISearchbox : UIPanel
         BackgroundColor = new Color(63, 82, 151) * 0.7f;
         BackgroundColor = Color.White;
         BorderColor = Color.Black;
-
-        clearSearchButton = new ClearSearchButton();
-        clearSearchButton.HAlign = 1f;
-        clearSearchButton.VAlign = 0.5f;
-        clearSearchButton.Left.Set(-8f, 0f);
-        clearSearchButton.Width.Set(20f, 0f);
-        clearSearchButton.Height.Set(20f, 0f);
-        clearSearchButton.OnLeftClick += (_, _) =>
-        {
-            SetText("");
-            Focus();
-        };
-
-        Append(clearSearchButton);
-        UpdateClearSearchButton();
-        clearSearchButton.Recalculate();
-    }
-
-    private void UpdateClearSearchButton()
-    {
-        bool visible = !string.IsNullOrEmpty(currentString);
-
-        clearSearchButton.Visible = visible;
-        //clearSearchButton.IgnoresMouseInteraction = !visible;
     }
 
     public override bool ContainsPoint(Vector2 point)
@@ -92,13 +64,6 @@ public class UISearchbox : UIPanel
 
     public override void LeftClick(UIMouseEvent evt)
     {
-        if (GetClearSearchButtonBox().Contains(evt.MousePosition.ToPoint()))
-        {
-            SetText("");
-            Focus();
-            return;
-        }
-
         Focus();
         base.LeftClick(evt);
     }
@@ -155,7 +120,6 @@ public class UISearchbox : UIPanel
         if (currentString != text)
         {
             currentString = text;
-            UpdateClearSearchButton();
             OnTextChanged?.Invoke();
         }
     }
@@ -163,14 +127,6 @@ public class UISearchbox : UIPanel
     private static bool JustPressed(Keys key)
     {
         return Main.inputText.IsKeyDown(key) && !Main.oldInputText.IsKeyDown(key);
-    }
-
-    private Rectangle GetClearSearchButtonBox()
-    {
-        Rectangle box = GetDimensions().ToRectangle();
-        const int size = 20;
-
-        return new Rectangle(box.Right - size - 6, box.Y + (box.Height - size) / 2, size, size);
     }
 
     protected override void DrawSelf(SpriteBatch sb)
@@ -185,7 +141,10 @@ public class UISearchbox : UIPanel
 
             string newString = Main.GetInputText(currentString);
             if (!string.Equals(newString, currentString))
-                SetText(newString);
+            {
+                currentString = newString;
+                OnTextChanged?.Invoke();
+            }
 
             if (JustPressed(Keys.Tab))
             {
@@ -217,11 +176,9 @@ public class UISearchbox : UIPanel
 
         DynamicSpriteFont font = FontAssets.MouseText.Value;
         Vector2 drawPos = GetDimensions().Position() + new Vector2(8f, 3f);
-        float maxTextWidth = GetDimensions().Width - 34f;
 
         bool hasText = !string.IsNullOrEmpty(currentString);
         string textToDraw = hasText ? currentString : hintText;
-        //string textToDraw = hasText ? StatDrawer.Truncate(font, currentString, maxTextWidth, 1f) : hintText;
 
         if (hasText) drawPos.X += 3f;
 
@@ -250,29 +207,6 @@ public class UISearchbox : UIPanel
 
         // Fill
         sb.DrawString(font,textToDraw,drawPos,innerColor,0f,Vector2.Zero, scale,SpriteEffects.None, 0f);
-    }
-
-    private sealed class ClearSearchButton : UIElement
-    {
-        private readonly Asset<Texture2D> texture = Main.Assets.Request<Texture2D>("Images/UI/SearchCancel");
-
-        public bool Visible { get; set; }
-
-        public override bool ContainsPoint(Vector2 point)
-        {
-            return Visible && base.ContainsPoint(point);
-        }
-
-        protected override void DrawSelf(SpriteBatch spriteBatch)
-        {
-            //if (!Visible)
-                //return;
-
-            Rectangle box = GetDimensions().ToRectangle();
-            Color color = IsMouseHovering ? Color.White : Color.White * 0.75f;
-
-            spriteBatch.Draw(texture.Value, box, color);
-        }
     }
 
 }

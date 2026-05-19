@@ -33,16 +33,18 @@ internal sealed class PlayerBedNetHandler
         int spawnX = reader.ReadInt32();
         int spawnY = reader.ReadInt32();
 
-        if (playerId >= Main.maxPlayers ||
-            Main.netMode == NetmodeID.Server && playerId != whoAmI ||
-            Main.player[playerId] is not { } p)
-        {
+        if (playerId >= Main.maxPlayers)
             return;
-        }
+
+        if (Main.netMode == NetmodeID.Server && playerId != whoAmI)
+            return;
+
+        Player p = Main.player[playerId];
+        if (p == null)
+            return;
 
         p.SpawnX = spawnX;
         p.SpawnY = spawnY;
-        SpawnPlayer.InvalidateSpawnRegionCaches();
 
         if (Main.netMode != NetmodeID.Server)
             return;

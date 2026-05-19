@@ -2,10 +2,7 @@
 using PvPAdventure.Common.GameTimer;
 using PvPAdventure.Common.SpawnSelector;
 using PvPAdventure.Core.Config;
-using PvPAdventure.Core.Input;
 using PvPAdventure.Core.Net;
-using System;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
@@ -272,6 +269,7 @@ internal class AdventureMirror : ModItem
         if (shouldCreatePortal)
         {
             Log.Debug($"[Mirror] create {player.name} pos={player.Bottom}");
+            ShowPortalCreatedText(player);
             sp.SpawnedPortalThisUse = true;
             PortalSystem.CreatePortalAtPosition(player, player.Bottom);
             ResetUseState(player);
@@ -297,6 +295,11 @@ internal class AdventureMirror : ModItem
         ShowPopup(player, Language.GetTextValue(localizationKey), color);
     }
 
+    private static void ShowPortalCreatedText(Player player)
+    {
+        ShowPopup(player, "portal created", PortalDrawer.GetPortalColor(player));
+    }
+
     private static void ShowPopup(Player player, string text, Color color)
     {
         PopupText.NewText(new AdvancedPopupRequest
@@ -306,28 +309,5 @@ internal class AdventureMirror : ModItem
             Velocity = new Vector2(0f, -4f),
             DurationInFrames = 120
         }, player.Top + new Vector2(0, -4));
-    }
-
-    public override void ModifyTooltips(List<TooltipLine> tooltips)
-    {
-        string controlsText = Keybinds.UseAdventureMirrorLabel == "assign a keybind in Controls"
-            ? "Right click to use, or assign a keybind in Controls"
-            : $"Right click or press {Keybinds.UseAdventureMirrorLabel} to use";
-
-        int controlsIndex = tooltips.FindIndex(static line =>
-            line.Mod == "Terraria" &&
-            line.Text.Contains("Right click or press", StringComparison.OrdinalIgnoreCase));
-
-        if (controlsIndex >= 0)
-        {
-            tooltips[controlsIndex].Text = controlsText;
-            return;
-        }
-
-        int insertIndex = tooltips.FindLastIndex(static line =>
-            line.Mod == "Terraria" &&
-            line.Name.StartsWith("Tooltip", StringComparison.Ordinal));
-
-        tooltips.Insert(insertIndex + 1, new TooltipLine(Mod, "AdventureMirrorControls", controlsText));
     }
 }

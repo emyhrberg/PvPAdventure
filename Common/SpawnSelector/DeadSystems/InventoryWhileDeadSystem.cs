@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using PvPAdventure.Common.Spectator;
-using PvPAdventure.Common.Spectator.UI.State;
 using Terraria;
 using Terraria.GameInput;
 using Terraria.ModLoader;
@@ -34,7 +33,7 @@ internal class InventoryWhileDeadSystem : ModSystem
         //}
         if (SpectatorSystem.IsInSpectateMode(self) && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
         {
-            //Main.NewText("'Esc' key is disabled as a spectator!", Color.Yellow);
+            Main.NewText("'Esc' key is disabled as a spectator!", Color.Yellow);
             return;
         }
 
@@ -84,9 +83,7 @@ internal class InventoryWhileDeadSystem : ModSystem
     {
         if (SpectatorSystem.IsInSpectateMode(Main.LocalPlayer) && Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
         {
-            //Main.NewText("'Esc' key is disabled as a spectator!", Color.Yellow);
-            SpectatorUISystem.EnsurePlayerSpectatorControlsOpen();
-            SpectatorUISystem.ToggleSpectatePanel();
+            Main.NewText("'Esc' key is disabled as a spectator!", Color.Yellow);
             return;
         }
 

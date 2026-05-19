@@ -23,20 +23,19 @@ internal static class SpectatorNetHandler
         switch (op)
         {
             case SpectatorOperation.RequestFullSync:
-                if (Main.netMode == NetmodeID.Server)
-                    SendFullSync(sender);
+                HandleRequestFullSync(sender);
                 break;
 
             case SpectatorOperation.FullSync:
-                ReceiveFullSync(reader);
+                HandleFullSync(reader);
                 break;
 
             case SpectatorOperation.RequestSetMode:
-                ReceiveRequestSetMode(reader, sender);
+                HandleRequestSetMode(reader, sender);
                 break;
 
             case SpectatorOperation.SetMode:
-                ReceiveSetMode(reader);
+                HandleSetMode(reader);
                 break;
         }
     }
@@ -46,7 +45,10 @@ internal static class SpectatorNetHandler
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 
-        Packet(SpectatorOperation.RequestFullSync).Send();
+        ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
+        packet.Write((byte)AdventurePacketIdentifier.Spectator);
+        packet.Write((byte)SpectatorOperation.RequestFullSync);
+        packet.Send();
     }
 
     public static void SendRequestSetMode(int slot, PlayerMode mode)
@@ -54,7 +56,9 @@ internal static class SpectatorNetHandler
         if (Main.netMode != NetmodeID.MultiplayerClient)
             return;
 
-        ModPacket packet = Packet(SpectatorOperation.RequestSetMode);
+        ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
+        packet.Write((byte)AdventurePacketIdentifier.Spectator);
+        packet.Write((byte)SpectatorOperation.RequestSetMode);
         packet.Write(slot);
         packet.Write((byte)mode);
         packet.Send();
@@ -65,9 +69,20 @@ internal static class SpectatorNetHandler
         if (Main.netMode != NetmodeID.Server)
             return;
 
-        SpectatorSystem.EnsureServerModes();
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            Player player = Main.player[i];
 
-        ModPacket packet = Packet(SpectatorOperation.FullSync);
+            if (!player.active)
+                continue;
+
+            if (!SpectatorSystem.Modes.ContainsKey(i))
+                SpectatorSystem.Modes[i] = SpectatorSystem.GetJoinDefaultMode();
+        }
+
+        ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
+        packet.Write((byte)AdventurePacketIdentifier.Spectator);
+        packet.Write((byte)SpectatorOperation.FullSync);
         packet.Write(SpectatorSystem.Modes.Count);
 
         foreach ((int slot, PlayerMode mode) in SpectatorSystem.Modes)
@@ -84,25 +99,44 @@ internal static class SpectatorNetHandler
         if (Main.netMode != NetmodeID.Server)
             return;
 
-        ModPacket packet = Packet(SpectatorOperation.SetMode);
+        ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
+        packet.Write((byte)AdventurePacketIdentifier.Spectator);
+        packet.Write((byte)SpectatorOperation.SetMode);
         packet.Write(slot);
         packet.Write((byte)mode);
         packet.Send(toClient);
     }
 
-    private static void ReceiveFullSync(BinaryReader reader)
+    private static void HandleRequestFullSync(int sender)
+    {
+        if (Main.netMode != NetmodeID.Server)
+            return;
+
+        SendFullSync(sender);
+    }
+
+    private static void HandleFullSync(BinaryReader reader)
     {
         if (Main.netMode == NetmodeID.Server)
             return;
 
         SpectatorSystem.Modes.Clear();
+        Player local = Main.LocalPlayer;
 
         int count = reader.ReadInt32();
+
         for (int i = 0; i < count; i++)
-            SpectatorSystem.SetModeLocal(reader.ReadInt32(), (PlayerMode)reader.ReadByte());
+        {
+            int slot = reader.ReadInt32();
+            PlayerMode mode = (PlayerMode)reader.ReadByte();
+            SpectatorSystem.SetModeLocal(slot, mode);
+
+            if (local?.active == true && local.whoAmI == slot)
+                local.GetModPlayer<SpectatorPlayer>().HandleInitialModeMessage(mode);
+        }
     }
 
-    private static void ReceiveRequestSetMode(BinaryReader reader, int sender)
+    private static void HandleRequestSetMode(BinaryReader reader, int sender)
     {
         if (Main.netMode != NetmodeID.Server)
             return;
@@ -119,27 +153,26 @@ internal static class SpectatorNetHandler
         SpectatorSystem.SetModeServer(slot, mode);
     }
 
-    private static void ReceiveSetMode(BinaryReader reader)
+    private static void HandleSetMode(BinaryReader reader)
     {
         if (Main.netMode == NetmodeID.Server)
             return;
 
-        SpectatorSystem.SetModeLocal(reader.ReadInt32(), (PlayerMode)reader.ReadByte());
-    }
+        int slot = reader.ReadInt32();
+        PlayerMode mode = (PlayerMode)reader.ReadByte();
+        SpectatorSystem.SetModeLocal(slot, mode);
 
-    private static ModPacket Packet(SpectatorOperation operation)
-    {
-        ModPacket packet = ModContent.GetInstance<PvPAdventure>().GetPacket();
-        packet.Write((byte)AdventurePacketIdentifier.Spectator);
-        packet.Write((byte)operation);
-        return packet;
+        Player local = Main.LocalPlayer;
+        if (local?.active == true && local.whoAmI == slot)
+            local.GetModPlayer<SpectatorPlayer>().HandleInitialModeMessage(mode);
     }
 
     private static bool HasDragonLensAdminPermission(int sender)
     {
-        return sender >= 0 && sender < Main.maxPlayers &&
-            ModLoader.HasMod("DragonLens") &&
-            HasDragonLensAdminPermission_DragonLens(sender);
+        if (sender < 0 || sender >= Main.maxPlayers || !ModLoader.HasMod("DragonLens"))
+            return false;
+
+        return HasDragonLensAdminPermission_DragonLens(sender);
     }
 
     [JITWhenModsEnabled("DragonLens")]

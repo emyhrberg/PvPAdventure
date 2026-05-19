@@ -240,8 +240,7 @@ Mods: {
 				Tooltip:
 					'''
 					Gaze in the mirror to go on adventures
-					Creates a portal 
-					Allows you to choose a spawn
+					Right click to use
 					'''
 			}
 
@@ -464,7 +463,7 @@ Mods: {
 				}
 
 				ShowDebugMessages: {
-					Label: Show Debug Messages
+					Label: Debug Messages
 					Tooltip:
 						'''
 						Sends lots of chat messages useful for development flow and debugging.
@@ -473,7 +472,7 @@ Mods: {
 				}
 
 				ShowSavePlayerMessages: {
-					Label: Show Save Messages
+					Label: Save Messages
 					Tooltip: Sends a local chat message whenever the player file is saved
 				}
 
@@ -533,13 +532,8 @@ Mods: {
 				}
 
 				ShowTeleportPlayerMessages: {
-					Label: Show Teleport Messages
+					Label: Show Teleport Player Messages
 					Tooltip: Sends a team message when players use the spawn selector to teleport
-				}
-
-				ShowChatChannelPrefixes: {
-					Label: Show Chat Channel Prefixes
-					Tooltip: ""
 				}
 			}
 
@@ -842,11 +836,6 @@ Mods: {
 
 				AutoAdmins: {
 					Label: Auto Admins
-					Tooltip: ""
-				}
-
-				SpawnTeleportCooldownSeconds: {
-					Label: Spawn Teleport Cooldown Seconds
 					Tooltip: ""
 				}
 			}
@@ -1840,41 +1829,22 @@ Mods: {
 				Headers.Spectate: Spectate
 
 				ShowSpectateOptionWhenJoining: {
-					Label: Join Prompt
+					Label: Show Spectate Option When Joining
 					Tooltip: Whether to show the choose your spectator mode UI when players enter the world
 				}
 
 				ForcePlayersToBeSpectatorsWhenJoining: {
-					Label: Force Spectate On Join
+					Label: Force Players To Be Spectators When Joining
 					Tooltip:
 						'''
 						All players will be forced to spectate when entering the world.
-						This means an admin has to change their spectator status in DragonLens Player Manager to be able to play.
+						This means an admin has to MANUALLY change their spectator status in DragonLens Player Manager to be able to play.
 						'''
 				}
 
 				DrawGhostsForOthers: {
-					Label: Draw Ghosts
-					Tooltip: "Show spectator ghosts to other players. Disable this if spectators should be fully invisible."
-				}
-
-				RevealFullMap: {
-				Label: Reveal Map
-				Tooltip:
-					'''
-					Reveals the full map when entering spectator mode.
-					WARNING! When leaving spectator mode, the map fully is cleared.
-					'''
-				}
-
-				DrawAllPlayerHeadsOnMapWhileSpectating: {
-					Label: Show Map Heads
-					Tooltip: "Show all player head icons on the map while spectating"
-				}
-
-				DrawAllPlayerNamesWhileSpectating: {
-					Label: Show Nameplates
-					Tooltip: "Show all player nameplates while spectating"
+					Label: Draw Ghosts For Others
+					Tooltip: ""
 				}
 			}
 

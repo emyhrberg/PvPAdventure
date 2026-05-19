@@ -51,7 +51,6 @@ public class UIMyPortalButton : UIPanel
         Player local = Main.LocalPlayer;
         var sp = local?.GetModPlayer<SpawnPlayer>();
         bool selected = sp?.SelectedType == SpawnType.MyPortal;
-        bool cooldown = SpawnSystem.IsLocalPlayerOnTeleportCooldown;
         bool available = SpawnSystem.CanUseStoredPortal(local);
 
         if (IsMouseHovering && HasPortal() && available)
@@ -64,9 +63,8 @@ public class UIMyPortalButton : UIPanel
         }
 
         BackgroundColor =
-            !hasPortal || !available ? SpawnSystem.DisabledButtonColor :
-            selected ? new Color(220, 220, 0) :
-            cooldown ? SpawnSystem.DisabledButtonColor :
+            selected && available ? new Color(220, 220, 0) :
+            !hasPortal || !available ? new Color(230, 40, 10) * 0.37f :
             IsMouseHovering ? new Color(73, 92, 161, 150) :
             new Color(63, 82, 151) * 0.8f;
     }
@@ -89,8 +87,11 @@ public class UIMyPortalButton : UIPanel
             PortalDrawer.DrawPortalPreview(sb, Main.LocalPlayer, pos, iconScale, outline: false, drawColor: Color.White * 0.65f);
 
         // Draw forbidden icon above if the player does not have a portal or cannot use it right now
-        if (!hasPortal || SpawnSystem.IsLocalPlayerOnTeleportCooldown || !SpawnSystem.CanUseStoredPortal(Main.LocalPlayer))
-            SpawnSystem.DrawForbiddenIcon(sb, pos, 2f);
+        if (!hasPortal || !SpawnSystem.CanUseStoredPortal(Main.LocalPlayer))
+        {
+            Vector2 origin = Ass.Icon_Forbidden.Value.Size() * 0.5f;
+            sb.Draw(Ass.Icon_Forbidden.Value, pos, null, Color.White, 0f, origin, 2f, SpriteEffects.None, 0f);
+        }
     }
 
 
@@ -118,10 +119,6 @@ public class UIMyPortalButton : UIPanel
         {
             //text = "Can only teleport to your portal from a spawn region";
             text = "Your portal is being created...";
-        }
-        else if (SpawnSystem.IsLocalPlayerOnTeleportCooldown)
-        {
-            text = SpawnSystem.LocalTeleportCooldownText;
         }
         else if (ready)
         {

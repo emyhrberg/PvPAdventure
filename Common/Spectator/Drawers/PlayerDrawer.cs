@@ -1,9 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PvPAdventure.UI;
 using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.Graphics;
+using PvPAdventure.Common.Spectator;
 
 namespace PvPAdventure.Common.Spectator.Drawers;
 
@@ -15,26 +17,17 @@ public static class PlayerDrawer
     {
         const int pad = 8;
         const float scale = 1f;
-        //const float footXOffset = 32f;
-        float footXOffset = MathHelper.Lerp(40f, 32f, MathHelper.Clamp((box.Height - 64f) / 48f, 0f, 1f));
-        //const float footOffsetY = 4f;
-        //float footOffsetY = MathHelper.Lerp(-4f, 4f, MathHelper.Clamp((box.Height - 64f) / 48f, 0f, 1f));
-        //float footOffsetY = MathHelper.Lerp(-10f, 4f, MathHelper.Clamp((box.Height - 64f) / 48f, 0f, 1f));
-        //float footOffsetY = MathHelper.Lerp(14f, 4f, MathHelper.Clamp((box.Height - 64f) / 48f, 0f, 1f));
-        //float footOffsetY = MathHelper.Lerp(-12f, 4f, MathHelper.Clamp((box.Height - 64f) / 48f, 0f, 1f));
-        float footOffsetY = MathHelper.Lerp(-0f, 4f, MathHelper.Clamp((box.Height - 64f) / 48f, 0f, 1f));
+        const float footXOffset = 32f; // fixed horizontal anchor from left
+        const float footOffsetY = 4f;  // moves player up/down together
         const float nameScale = 1f;
         const float nameGap = -8f;
 
-        Rectangle previewBox = new(box.X + pad + 8, box.Y + pad, box.Height - pad * 2, box.Height - pad * 2);
+        Rectangle previewBox = new(box.X + pad, box.Y + pad, box.Height - pad * 2, box.Height - pad * 2);
 
-        string name = StatDrawer.Truncate(FontAssets.MouseText.Value, player.name, previewBox.Width + 50, nameScale);
+        string name = StatDrawer.Truncate(FontAssets.MouseText.Value, player.name, previewBox.Width - 8, nameScale);
         Vector2 nameSize = FontAssets.MouseText.Value.MeasureString(name) * nameScale;
 
         Player drawPlayer = CreateFullDrawPlayer(player);
-
-        float clearedSpace = Math.Max(0f, box.Width - box.Height);
-        float nameLift = MathHelper.Clamp((100f - box.Height) * 0.5f - 10f, -12f, 14f);
 
         float feetX = previewBox.X + footXOffset;
         float feetY = previewBox.Bottom + footOffsetY;
@@ -47,14 +40,19 @@ public static class PlayerDrawer
 
         Vector2 namePos = new(
             (int)MathF.Round(feetX - nameSize.X * 0.5f),
-            (int)MathF.Round(playerTopY - nameSize.Y - nameGap + nameLift));
+            (int)MathF.Round(playerTopY - nameSize.Y - nameGap));
 
         DrawFullPlayer(sb, player, drawPos, scale);
         Utils.DrawBorderString(sb, name, namePos, Color.White, nameScale);
+    }
 
-#if DEBUG
-        //DebugDrawer.DrawScreenRectangle(previewBox, Color.Cyan);
-#endif
+    public static void DrawPlayerBackground(SpriteBatch sb, Rectangle rect, Color color = default, int borderX = 4, int borderY = 4)
+    {
+        if (color == default)
+            color = Color.White;
+
+        Texture2D texture = Main.Assets.Request<Texture2D>("Images/UI/PlayerBackground").Value;
+        //DrawNineSlice(sb, texture, rect, borderX, borderY, borderX, borderY, color);
     }
 
     public static void DrawFullPlayer(SpriteBatch sb, Player player, Vector2 position, float scale = 1f)
@@ -62,17 +60,9 @@ public static class PlayerDrawer
         Player drawPlayer = CreateFullDrawPlayer(player);
 
         sb.End();
-        sb.Begin(
-            SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            SamplerState.PointClamp,
-            DepthStencilState.None,
-            RasterizerState.CullNone,
-            null,
-            Main.UIScaleMatrix);
+        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 
-        FullBrightPlayerDrawer.ForceFullBrightOnce = true;
-
+        FullBrightDrawer.ForceFullBrightOnce = true;
         try
         {
             if (drawPlayer.ghost)
@@ -82,18 +72,11 @@ public static class PlayerDrawer
         }
         finally
         {
-            FullBrightPlayerDrawer.ForceFullBrightOnce = false;
+            FullBrightDrawer.ForceFullBrightOnce = false;
         }
 
         sb.End();
-        sb.Begin(
-            SpriteSortMode.Deferred,
-            BlendState.AlphaBlend,
-            SamplerState.LinearClamp,
-            DepthStencilState.None,
-            RasterizerState.CullNone,
-            null,
-            Main.UIScaleMatrix);
+        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
     }
 
     private static Player CreateFullDrawPlayer(Player player)
@@ -118,7 +101,7 @@ public static class PlayerDrawer
         drawPlayer.gfxOffY = player.gfxOffY;
 
         drawPlayer.dead = false;
-        drawPlayer.ghost = (player.ghost || player.dead) && DisableGhostsDrawSystem.ShouldDrawGhost(player);
+        drawPlayer.ghost = (player.ghost || player.dead) && SpectatorGhostDrawPlayer.ShouldDrawGhost(player);
         if (drawPlayer.ghost)
         {
             drawPlayer.ghostFade = 1f;
@@ -173,14 +156,14 @@ public static class PlayerDrawer
     {
         Player drawPlayer = CreateHeadDrawPlayer(player);
 
-        FullBrightPlayerDrawer.ForceFullBrightOnce = true;
+        FullBrightDrawer.ForceFullBrightOnce = true;
         try
         {
             Main.PlayerRenderer.DrawPlayerHead(Main.Camera, drawPlayer, position, 1f, scale, Color.Transparent);
         }
         finally
         {
-            FullBrightPlayerDrawer.ForceFullBrightOnce = false;
+            FullBrightDrawer.ForceFullBrightOnce = false;
         }
     }
 
@@ -189,7 +172,7 @@ public static class PlayerDrawer
     {
         Player headPlayer = player.SerializedClone();
         headPlayer.dead = false;
-        headPlayer.ghost = (player.ghost || player.dead) && DisableGhostsDrawSystem.ShouldDrawGhost(player);
+        headPlayer.ghost = (player.ghost || player.dead) && SpectatorGhostDrawPlayer.ShouldDrawGhost(player);
 
         if (headPlayer.ghost)
         {

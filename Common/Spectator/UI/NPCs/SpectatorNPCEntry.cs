@@ -1,50 +1,34 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoMod.Core.Utils;
 using PvPAdventure.Common.Spectator.Drawers;
-using PvPAdventure.Common.Spectator.UI.NPCs;
+using PvPAdventure.Common.Spectator.UI.Players;
 using PvPAdventure.Common.Spectator.UI.State;
 using PvPAdventure.Core.Utilities;
 using PvPAdventure.UI;
 using ReLogic.Content;
-using ReLogic.Graphics;
 using System;
 using System.Text;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
-using Terraria.Graphics;
-using Terraria.Graphics.Light;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader.UI;
 using Terraria.UI;
 
-namespace PvPAdventure.Common.Spectator.UI.Players;
+namespace PvPAdventure.Common.Spectator.UI.NPCs;
 
-internal sealed class SpectatorPlayerEntry : UIBrowserEntry
+internal sealed class SpectatorNPCEntry : UIBrowserEntry
 {
-    private readonly Player player;
+    private readonly NPC npc;
     private readonly UIElement listChrome;
     private readonly UIText buttonLabel;
+    private bool initialized;
     private bool needsLateLayout = true;
     private string hoveredStatText;
-    public Player Player => player;
 
-    public int TeamSortValue => player.team == 0 ? int.MaxValue : player.team;
-
-    public int BiomeSortValue
+    public SpectatorNPCEntry(NPC targetNpc) : base()
     {
-        get
-        {
-            int value = BiomeHelper.GetBiomeVisual(player).BackgroundIndex;
-            return value < 0 ? int.MaxValue : value;
-        }
-    }
-
-    public SpectatorPlayerEntry(Player targetPlayer) : base()
-    {
-        player = targetPlayer ?? new Player();
+        npc = targetNpc ?? new NPC();
         SearchText = BuildSearchText();
 
         listChrome = new UIElement();
@@ -68,18 +52,27 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
         buttonLabel.Left.Set(right - 4f, 0f);
 
+        initialized = true;
         ApplyLayout();
     }
 
     public override void SetListMode(bool value)
     {
         listMode = value;
+
+        if (!initialized)
+            return;
+
         ApplyLayout();
     }
 
     public override void SetEntrySize(int size)
     {
         entrySize = size;
+
+        if (!initialized)
+            return;
+
         ApplyLayout();
     }
 
@@ -92,6 +85,7 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
             if (listChrome.Parent is null)
                 Append(listChrome);
+
         }
         else
         {
@@ -112,9 +106,7 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
         ApplyLateLayout();
 
         if (IsMouseHovering)
-        {
             Main.LocalPlayer.mouseInterface = true;
-        }
     }
 
     private void ApplyLateLayout()
@@ -136,12 +128,12 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
         hoveredStatText = null;
 
         Utils.DrawInvBG(spriteBatch, box, Color.Black * 0.35f);
-        BackgroundDrawer.DrawMapFullscreenBackground(spriteBatch, box, player, listMode);
-        //Utils.DrawInvBG(spriteBatch, box, IsMouseHovering ? new Color(73, 94, 171, 50) : new Color(0,0,0,25));
+        BackgroundDrawer.DrawMapFullscreenBackground(spriteBatch, box, npc, listMode);
+        Utils.DrawInvBG(spriteBatch, box, IsMouseHovering ? new Color(73, 94, 171, 185) : new Color(63, 82, 151, 145));
 
         if (listMode)
         {
-            PlayerDrawer.DrawFullPlayerPreview(spriteBatch, player, box);
+            NPCDrawer.DrawFullNPC(spriteBatch, npc, new Rectangle(box.X + 4, box.Y + 4, box.Height - 8, box.Height - 8));
             DrawListMode(spriteBatch, box);
         }
         else
@@ -151,19 +143,28 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
             UICommon.TooltipMouseText(hoveredStatText);
     }
 
+    private void DrawListMode(SpriteBatch spriteBatch, Rectangle box)
+    {
+        int previewWidth = box.Height - 8;
+        Rectangle area = new(box.X + 4 + previewWidth + 5, box.Y + 30, box.Width - previewWidth - 22, box.Height - 50);
+        if (area.Width <= 0 || area.Height <= 0)
+            return;
+
+        hoveredStatText = StatDrawer.DrawNPCListStats(spriteBatch, area, BuildStats(skipNpcHead: true)) ?? hoveredStatText;
+    }
+
     private void DrawGridMode(SpriteBatch spriteBatch, Rectangle box)
     {
         const int outerPadding = 6;
         const int statSpacing = 2;
         const int statHeight = 27;
-
         int availableHeight = box.Height - outerPadding * 2;
         int totalRows = Math.Max(0, (availableHeight + statSpacing) / (statHeight + statSpacing));
         if (totalRows <= 0)
             return;
 
         Rectangle headStatBox = new(box.X + outerPadding, box.Y + outerPadding, box.Width - outerPadding * 2, statHeight);
-        hoveredStatText = StatDrawer.DrawPlayerHeadStat(spriteBatch, headStatBox, player) ?? hoveredStatText;
+        DrawNPCHeadStat(spriteBatch, headStatBox);
 
         int statRows = Math.Max(0, totalRows - 1);
         if (statRows <= 0)
@@ -172,18 +173,34 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
         int top = headStatBox.Bottom + statSpacing;
         Rectangle statArea = new(box.X + outerPadding, top, box.Width - outerPadding * 2, box.Bottom - outerPadding - top);
         int columns = StatDrawer.GetGridColumns(statArea);
-
-        hoveredStatText = StatDrawer.DrawPlayerStatGrid(spriteBatch, statArea, BuildStats(skipPlayerHead: true), columns, statRows, statHeight, statSpacing) ?? hoveredStatText;
+        DrawStatGrid(spriteBatch, statArea, BuildStats(skipNpcHead: true), columns, statRows, statHeight, statSpacing);
     }
 
-    private void DrawListMode(SpriteBatch spriteBatch, Rectangle box)
+    private void DrawNPCHeadStat(SpriteBatch spriteBatch, Rectangle area)
     {
-        int previewWidth = box.Height - 8;
-        Rectangle area = new(box.X + 4 + previewWidth + 5, box.Y + 30, box.Width - previewWidth - 22, box.Height - 50);
-        if (area.Width <= 0 || area.Height <= 0)
+        hoveredStatText = NPCDrawer.DrawNPCHeadStat(spriteBatch, area, npc) ?? hoveredStatText;
+    }
+
+    private void DrawStatGrid(SpriteBatch spriteBatch, Rectangle area, NPCStatSnapshot[] stats, int columns, int rows, int statHeight, int statSpacing)
+    {
+        if (rows <= 0 || columns <= 0 || stats.Length == 0)
             return;
 
-        hoveredStatText = StatDrawer.DrawPlayerListStats(spriteBatch, area, BuildStats(skipPlayerHead: true));
+        int panelWidth = (area.Width - statSpacing * (columns - 1)) / columns;
+        int count = Math.Min(stats.Length, columns * rows);
+        Point mouse = Main.MouseScreen.ToPoint();
+
+        for (int i = 0; i < count; i++)
+        {
+            int column = i % columns;
+            int row = i / columns;
+            Rectangle panel = new(area.X + column * (panelWidth + statSpacing), area.Y + row * (statHeight + statSpacing), panelWidth, statHeight);
+
+            StatDrawer.DrawNPCStat(spriteBatch, panel, stats[i]);
+
+            if (panel.Contains(mouse))
+                hoveredStatText = stats[i].HoverText;
+        }
     }
 
     private void AddTopRightButton(Asset<Texture2D> texture, ref float rightOffset, string label, UIElement.MouseEvent click = null)
@@ -201,13 +218,13 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
         rightOffset -= 24f;
     }
 
-    private PlayerStatSnapshot[] BuildStats(bool skipPlayerHead)
+    private NPCStatSnapshot[] BuildStats(bool skipNpcHead)
     {
-        int start = skipPlayerHead ? 1 : 0;
-        PlayerStatSnapshot[] stats = new PlayerStatSnapshot[PlayerStats.All.Count - start];
+        int start = skipNpcHead ? 1 : 0;
+        NPCStatSnapshot[] stats = new NPCStatSnapshot[NPCStats.All.Count - start];
 
         for (int i = 0; i < stats.Length; i++)
-            stats[i] = PlayerStats.All[i + start].Build(player);
+            stats[i] = NPCStats.All[i + start].Build(npc);
 
         return stats;
     }
@@ -215,18 +232,16 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
     private string BuildSearchText()
     {
         StringBuilder text = new();
-        text.Append(player.name);
+        text.Append(npc.FullName);
         text.Append(' ');
-        text.Append(player.whoAmI);
+        text.Append(npc.whoAmI);
         text.Append(' ');
-        text.Append(player.team);
+        text.Append(npc.type);
 
-        for (int i = 0; i < PlayerStats.All.Count; i++)
+        for (int i = 0; i < NPCStats.All.Count; i++)
         {
-            PlayerStatSnapshot stat = PlayerStats.All[i].Build(player);
-            //text.Append(' ');
-            //text.Append(stat.Label);
-            //text.Append(' ');
+            NPCStatSnapshot stat = NPCStats.All[i].Build(npc);
+            text.Append(' ');
             text.Append(stat.Text);
         }
 
@@ -235,46 +250,45 @@ internal sealed class SpectatorPlayerEntry : UIBrowserEntry
 
     private void OnSpectateClicked(UIMouseEvent evt, UIElement listeningElement)
     {
-        if (player is null || !player.active)
+        if (npc is null || !npc.active)
             return;
 
         Player localPlayer = Main.LocalPlayer;
-        Player currentTarget = SpectatorSystem.GetPlayerTarget();
+        NPC currentTarget = SpectatorSystem.GetNPCTarget();
 
         if (SpectatorSystem.IsInSpectateMode(localPlayer) &&
-            SpectatorSystem.GetCurrentTargetKind() == SpectatorTargetKind.Player &&
+            SpectatorSystem.GetCurrentTargetKind() == SpectatorTargetKind.NPC &&
             currentTarget != null &&
-            currentTarget.whoAmI == player.whoAmI)
+            currentTarget.whoAmI == npc.whoAmI)
         {
             localPlayer.GetModPlayer<SpectatorPlayer>().ClearTarget();
-            SpectatorUISystem.TogglePlayerSpectatorControls();
-            Log.Chat($"Stopped spectating {player.name}");
+            SpectatorUISystem.ToggleNpcSpectatorControls();
+            Log.Chat($"Stopped spectating {npc.FullName}");
             return;
         }
 
         if (!SpectatorSystem.IsInSpectateMode(localPlayer))
             SpectatorSystem.RequestSetLocalMode(PlayerMode.Spectator);
 
-        SpectatorSystem.SetPlayerTarget(player.whoAmI);
-        SpectatorUISystem.EnsurePlayerSpectatorControlsOpen();
+        SpectatorSystem.SetNPCTarget(npc.whoAmI);
+        SpectatorUISystem.EnsureNpcSpectatorControlsOpen();
 
-        Log.Chat($"Now spectating {player.name}");
+        Log.Chat($"Now spectating {npc.FullName}");
     }
 
     private void OnTeleportClicked(UIMouseEvent evt, UIElement listeningElement)
     {
-        if (player is null || !player.active)
+        if (npc is null || !npc.active)
             return;
 
         Player localPlayer = Main.LocalPlayer;
-
-        Vector2 telePos = player.Center - new Vector2(localPlayer.width, localPlayer.height) * 0.5f;
+        Vector2 telePos = npc.Center - new Vector2(localPlayer.width, localPlayer.height) * 0.5f;
 
         if (Main.netMode == NetmodeID.SinglePlayer)
             localPlayer.Teleport(telePos, TeleportationStyleID.RodOfDiscord);
         else if (Main.netMode == NetmodeID.MultiplayerClient)
             NetMessage.SendData(MessageID.TeleportEntity, -1, -1, null, 2, Main.LocalPlayer.whoAmI, telePos.X, telePos.Y, TeleportationStyleID.PotionOfReturn);
 
-        Log.Chat($"Teleported to {player.name}");
+        Log.Chat($"Teleported to {npc.FullName}");
     }
 }

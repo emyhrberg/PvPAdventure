@@ -1,9 +1,8 @@
+using AssGen;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.Spectator.Drawers;
 using PvPAdventure.Common.Spectator.Trackers;
 using PvPAdventure.Core.Utilities;
-using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -44,16 +43,14 @@ internal static class PlayerStats
     public static readonly PlayerStatDefinition HeldItem = new(
         "HeldItem",
         "Held Item",
-        GetHeldItemIcon,
-        GetHeldItemText,
-        getIconFrame: GetHeldItemFrame);
+        Ass.HeldItem,
+        GetHeldItemText);
 
     public static readonly PlayerStatDefinition Biome = new(
         "BiomeName",
         "Biome",
-        GetBiomeIcon,
-        GetBiomeText,
-        getIconFrame: GetBiomeIconFrame);
+        Ass.Biome,
+        GetBiomeText);
 
     public static readonly PlayerStatDefinition MovementSpeed = new(
         "MovementSpeed",
@@ -86,44 +83,40 @@ internal static class PlayerStats
         player => $"{CountInventoryItems(player)} items");
 
     public static readonly PlayerStatDefinition CoinCount = new(
-    "CoinCount",
-    "Coins",
-    GetHighestCoinIcon,
-    player => FormatTotalCoins(CountTotalCoins(player), out _));
+        "CoinCount",
+        "Coins",
+        TextureAssets.Item[ItemID.GoldCoin],
+        player => FormatTotalCoins(CountTotalCoins(player), out _));
 
     public static readonly PlayerStatDefinition AmmoCount = new(
         "AmmoCount",
         "Ammo",
-        GetMostStackedAmmoIcon,
-        GetMostStackedAmmoText,
-        getIconFrame: GetMostStackedAmmoFrame);
+        TextureAssets.Item[ItemID.MusketBall],
+        player => $"{CountAmmo(player)} ammo");
+
+    public static readonly PlayerStatDefinition MinionCount = new(
+        "MinionCount",
+        "Minions",
+        Ass.MinionCount,
+        player => $"{CountPlayerMinions(player)}/{player.maxMinions} minions");
 
     public static readonly PlayerStatDefinition NearbyEnemies = new(
         "NearbyEnemies",
         "Nearby Enemies",
-        GetNearestHostileNPCIcon,
-        GetNearestHostileNPCText,
-        getIconFrame: GetNearestHostileNPCFrame);
+        TextureAssets.Item[ItemID.LifeformAnalyzer],
+        player => $"{CountNearbyEnemies(player, 1200f)} nearby");
 
     public static readonly PlayerStatDefinition LastEnemyHit = new(
         "LastEnemyHit",
         "Last Enemy Hit",
-        GetLastEnemyHitIcon,
-        GetLastEnemyHitText,
-        getIconFrame: GetLastEnemyHitFrame);
+        Ass.PvE,
+        GetLastEnemyHitText);
 
     public static readonly PlayerStatDefinition LastPlayerHit = new(
         "LastPlayerHit",
         "Last Player Hit",
         Ass.PvP,
         GetLastPlayerHitText);
-
-    public static readonly PlayerStatDefinition MinionCount = new(
-    "MinionCount",
-    "Minions",
-    GetLatestSummonStaffIcon,
-    player => $"{CountPlayerMinions(player)}/{player.maxMinions} minions",
-    getIconFrame: GetLatestSummonStaffFrame);
 
     public static readonly PlayerStatDefinition BossDamage = new(
         "BossDamage",
@@ -149,8 +142,8 @@ internal static class PlayerStats
         SessionTime,
         Ping,
         InventoryItemCount,
-        //CoinCount,
-        //AmmoCount,
+        CoinCount,
+        AmmoCount,
         MinionCount,
         NearbyEnemies,
         LastEnemyHit,
@@ -158,50 +151,15 @@ internal static class PlayerStats
         //DeathCount,
         BossDamage
     ];
-
-    private static Asset<Texture2D> GetBiomeIcon(Player player)
+    private static string GetTeamText(Player player) => player.team switch
     {
-        PlayerBiomeVisual biome = BiomeHelper.GetBiomeVisual(player);
-
-        if (BiomeHelper.TryGetBestiaryIconDrawData(biome.BestiaryBiome, out Asset<Texture2D> texture, out _))
-            return texture;
-
-        return Ass.Biome;
-    }
-
-    private static Rectangle? GetBiomeIconFrame(Player player)
-    {
-        PlayerBiomeVisual biome = BiomeHelper.GetBiomeVisual(player);
-
-        if (BiomeHelper.TryGetBestiaryIconDrawData(biome.BestiaryBiome, out _, out Rectangle source))
-            return source;
-
-        return null;
-    }
-
-    private static Asset<Texture2D> GetHeldItemIcon(Player player)
-    {
-        Item item = player.HeldItem;
-
-        if (item == null || item.IsAir || item.type <= 0 || item.type >= TextureAssets.Item.Length)
-            return Ass.HeldItem;
-
-        Main.instance.LoadItem(item.type);
-        return TextureAssets.Item[item.type];
-    }
-
-    private static Rectangle? GetHeldItemFrame(Player player)
-    {
-        Item item = player.HeldItem;
-
-        if (item == null || item.IsAir || item.type <= 0 || item.type >= TextureAssets.Item.Length)
-            return null;
-
-        Main.instance.LoadItem(item.type);
-        Texture2D texture = TextureAssets.Item[item.type].Value;
-
-        return Main.itemAnimations[item.type]?.GetFrame(texture) ?? texture.Frame();
-    }
+        1 => "Red",
+        2 => "Green",
+        3 => "Blue",
+        4 => "Yellow",
+        5 => "Pink",
+        _ => "None"
+    };
 
     private static string GetHeldItemText(Player player)
     {
@@ -272,18 +230,27 @@ internal static class PlayerStats
         long silver = totalCopper / 100L;
         long copper = totalCopper % 100L;
 
-        if (platinum > 9999)
-            return "9999+ plat";
         if (platinum > 0)
-            return $"{platinum} plat {gold} gold";
+            return $"{platinum}p {gold}g {silver}s {copper}c";
         if (gold > 0)
-            return $"{gold} gold {silver} silver";
+            return $"{gold}g {silver}s {copper}c";
         if (silver > 0)
-            return $"{silver} silver {copper} copper";
-        if (copper <= 0)
-            return "No coins";
+            return $"{silver}s {copper}c";
 
-        return $"{copper} copper";
+        return $"{copper}c";
+    }
+
+    private static int CountAmmo(Player player)
+    {
+        int total = 0;
+        for (int i = 0; i < player.inventory.Length; i++)
+        {
+            Item item = player.inventory[i];
+            if (item != null && !item.IsAir && item.ammo > 0)
+                total += item.stack;
+        }
+
+        return total;
     }
 
     private static int CountPlayerMinions(Player player)
@@ -293,6 +260,23 @@ internal static class PlayerStats
         {
             Projectile projectile = Main.projectile[i];
             if (projectile.active && projectile.owner == player.whoAmI && projectile.minion)
+                total++;
+        }
+
+        return total;
+    }
+
+    private static int CountNearbyEnemies(Player player, float range)
+    {
+        int total = 0;
+        float rangeSq = range * range;
+        for (int i = 0; i < Main.maxNPCs; i++)
+        {
+            NPC npc = Main.npc[i];
+            if (npc == null || !npc.active || npc.friendly || npc.townNPC || npc.dontTakeDamage)
+                continue;
+
+            if (Vector2.DistanceSquared(player.Center, npc.Center) <= rangeSq)
                 total++;
         }
 
@@ -317,263 +301,51 @@ internal static class PlayerStats
         return damage.ToString("N0");
     }
 
+    // Taken from Main.DrawInfoAccs(), if (info == InfoDisplay.Stopwatch)...
     private static string GetMovementSpeed(Player player)
     {
         Vector2 vector = player.velocity + player.instantMovementAccumulatedThisFrame;
-
-        if (player.mount.Active && player.mount.IsConsideredASlimeMount && player.velocity.Y != 0f && !player.SlimeDontHyperJump)
-            vector.Y += player.velocity.Y;
-
-        const int TilesPerMile = 42240;
-        const int TicksPerHour = 216000;
-        float speed = vector.Length() * TicksPerHour / TilesPerMile;
-
-        if (!player.merman && !player.ignoreWater)
+        if (Main.LocalPlayer.mount.Active && Main.player[Main.myPlayer].mount.IsConsideredASlimeMount && player.velocity.Y != 0f && !player.SlimeDontHyperJump)
         {
-            if (player.honeyWet)
+            vector.Y += Main.player[Main.myPlayer].velocity.Y;
+        }
+        int num15 = (int)(1f + vector.Length() * 6f);
+        if (num15 > Main.player[Main.myPlayer].speedSlice.Length)
+        {
+            num15 = Main.player[Main.myPlayer].speedSlice.Length;
+        }
+        float num16 = 0f;
+        for (int num17 = num15 - 1; num17 > 0; num17--)
+        {
+            Main.player[Main.myPlayer].speedSlice[num17] = Main.player[Main.myPlayer].speedSlice[num17 - 1];
+        }
+        Main.player[Main.myPlayer].speedSlice[0] = vector.Length();
+        for (int m = 0; m < Main.player[Main.myPlayer].speedSlice.Length; m++)
+        {
+            if (m < num15)
             {
-                speed /= 4f;
+                num16 += Main.player[Main.myPlayer].speedSlice[m];
             }
-            else if (player.wet)
+            else
             {
-                speed /= 2f;
+                Main.player[Main.myPlayer].speedSlice[m] = num16 / (float)num15;
             }
         }
-        return Language.GetTextValue("GameUI.Speed", Math.Round(speed));
-    }
-
-    private static Asset<Texture2D> GetHighestCoinIcon(Player player)
-    {
-        return GetHighestCoinType(player) switch
+        num16 /= (float)num15;
+        int num18 = 42240;
+        int num19 = 216000;
+        float num20 = num16 * (float)num19 / (float)num18;
+        if (!Main.player[Main.myPlayer].merman && !Main.player[Main.myPlayer].ignoreWater)
         {
-            ItemID.PlatinumCoin => TextureAssets.Item[ItemID.PlatinumCoin],
-            ItemID.GoldCoin => TextureAssets.Item[ItemID.GoldCoin],
-            ItemID.SilverCoin => TextureAssets.Item[ItemID.SilverCoin],
-            ItemID.CopperCoin => TextureAssets.Item[ItemID.CopperCoin],
-            _ => TextureAssets.Item[ItemID.CopperCoin]
-        };
-    }
-
-    private static int GetHighestCoinType(Player player)
-    {
-        int highest = 0;
-
-        for (int i = 0; i < player.inventory.Length; i++)
-        {
-            Item item = player.inventory[i];
-
-            if (item == null || item.IsAir || item.stack <= 0)
-                continue;
-
-            if (item.type == ItemID.PlatinumCoin)
-                return ItemID.PlatinumCoin;
-
-            if (item.type == ItemID.GoldCoin)
-                highest = ItemID.GoldCoin;
-            else if (item.type == ItemID.SilverCoin && highest != ItemID.GoldCoin)
-                highest = ItemID.SilverCoin;
-            else if (item.type == ItemID.CopperCoin && highest == 0)
-                highest = ItemID.CopperCoin;
+            if (Main.player[Main.myPlayer].honeyWet)
+            {
+                num20 /= 4f;
+            }
+            else if (Main.player[Main.myPlayer].wet)
+            {
+                num20 /= 2f;
+            }
         }
-
-        return highest;
-    }
-
-    private static Item GetMostStackedAmmo(Player player)
-    {
-        Item best = null;
-        int bestStack = 0;
-
-        for (int i = 54; i < 58 && i < player.inventory.Length; i++)
-        {
-            Item item = player.inventory[i];
-
-            if (item == null || item.IsAir || item.stack <= bestStack)
-                continue;
-
-            best = item;
-            bestStack = item.stack;
-        }
-
-        return best;
-    }
-
-    private static Asset<Texture2D> GetMostStackedAmmoIcon(Player player)
-    {
-        Item item = GetMostStackedAmmo(player);
-
-        if (item == null || item.IsAir || item.type <= 0 || item.type >= TextureAssets.Item.Length)
-            return TextureAssets.Item[ItemID.MusketBall];
-
-        Main.instance.LoadItem(item.type);
-        return TextureAssets.Item[item.type];
-    }
-
-    private static Rectangle? GetMostStackedAmmoFrame(Player player)
-    {
-        Item item = GetMostStackedAmmo(player);
-
-        if (item == null || item.IsAir || item.type <= 0 || item.type >= TextureAssets.Item.Length)
-            return null;
-
-        Main.instance.LoadItem(item.type);
-        Texture2D texture = TextureAssets.Item[item.type].Value;
-        return Main.itemAnimations[item.type]?.GetFrame(texture) ?? texture.Frame();
-    }
-
-    private static string GetMostStackedAmmoText(Player player)
-    {
-        Item item = GetMostStackedAmmo(player);
-        return item == null || item.IsAir ? "No ammo" : $"{item.stack} {item.Name}";
-    }
-
-    private static NPC FindNearestHostileNPC(Player player, float range)
-    {
-        NPC nearest = null;
-        float nearestDistanceSq = range * range;
-
-        for (int i = 0; i < Main.maxNPCs; i++)
-        {
-            NPC npc = Main.npc[i];
-
-            if (npc == null || !npc.active || npc.friendly || npc.townNPC || npc.dontTakeDamage || npc.lifeMax <= 5)
-                continue;
-
-            float distanceSq = Vector2.DistanceSquared(player.Center, npc.Center);
-
-            if (distanceSq >= nearestDistanceSq)
-                continue;
-
-            nearest = npc;
-            nearestDistanceSq = distanceSq;
-        }
-
-        return nearest;
-    }
-
-    private static Asset<Texture2D> GetNearestHostileNPCIcon(Player player)
-    {
-        NPC npc = FindNearestHostileNPC(player, 1200f);
-
-        if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
-            return TextureAssets.Item[ItemID.LifeformAnalyzer];
-
-        Main.instance.LoadNPC(npc.type);
-        return TextureAssets.Npc[npc.type];
-    }
-
-    private static Rectangle? GetNearestHostileNPCFrame(Player player)
-    {
-        NPC npc = FindNearestHostileNPC(player, 1200f);
-
-        if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
-            return null;
-
-        return npc.frame;
-    }
-
-    private static string GetNearestHostileNPCText(Player player)
-    {
-        NPC npc = FindNearestHostileNPC(player, 1200f);
-        return npc == null ? "None nearby" : npc.FullName;
-    }
-
-    private static NPC FindLastEnemyHitNPC(Player player)
-    {
-        NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
-
-        if (string.IsNullOrWhiteSpace(tracker.LastEnemyHitName))
-            return null;
-
-        for (int i = 0; i < Main.maxNPCs; i++)
-        {
-            NPC npc = Main.npc[i];
-
-            if (npc?.active == true && npc.FullName == tracker.LastEnemyHitName)
-                return npc;
-        }
-
-        return null;
-    }
-
-    private static Asset<Texture2D> GetLastEnemyHitIcon(Player player)
-    {
-        NPC npc = FindLastEnemyHitNPC(player);
-
-        if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
-            return Ass.PvE;
-
-        Main.instance.LoadNPC(npc.type);
-        return TextureAssets.Npc[npc.type];
-    }
-
-    private static Rectangle? GetLastEnemyHitFrame(Player player)
-    {
-        NPC npc = FindLastEnemyHitNPC(player);
-
-        if (npc == null || npc.type <= 0 || npc.type >= TextureAssets.Npc.Length)
-            return null;
-
-        return npc.frame;
-    }
-
-    private static Player FindLastPlayerHit(Player player)
-    {
-        NPCHitTrackerPlayer tracker = player.GetModPlayer<NPCHitTrackerPlayer>();
-
-        if (string.IsNullOrWhiteSpace(tracker.LastPlayerHitName))
-            return null;
-
-        for (int i = 0; i < Main.maxPlayers; i++)
-        {
-            Player target = Main.player[i];
-
-            if (target?.active == true && target.name == tracker.LastPlayerHitName)
-                return target;
-        }
-
-        return null;
-    }
-
-    private static void DrawLastPlayerHitHead(SpriteBatch spriteBatch, Rectangle area, Player player)
-    {
-        Player target = FindLastPlayerHit(player);
-
-        if (target == null)
-        {
-            spriteBatch.Draw(Ass.PvP.Value, area, Color.White);
-            return;
-        }
-
-        Vector2 position = area.Center.ToVector2();
-        PlayerDrawer.DrawPlayerHead(spriteBatch, target, position, 0.85f);
-    }
-
-    private static Asset<Texture2D> GetLatestSummonStaffIcon(Player player)
-    {
-        if (player.GetModPlayer<SummonTrackerPlayer>().TryGetLatestSummonItem(out int itemType) &&
-            itemType > 0 &&
-            itemType < TextureAssets.Item.Length)
-        {
-            Main.instance.LoadItem(itemType);
-            return TextureAssets.Item[itemType];
-        }
-
-        return Ass.MinionCount;
-    }
-
-    private static Rectangle? GetLatestSummonStaffFrame(Player player)
-    {
-        if (!player.GetModPlayer<SummonTrackerPlayer>().TryGetLatestSummonItem(out int itemType) ||
-            itemType <= 0 ||
-            itemType >= TextureAssets.Item.Length)
-        {
-            return null;
-        }
-
-        Main.instance.LoadItem(itemType);
-        Texture2D texture = TextureAssets.Item[itemType].Value;
-
-        return Main.itemAnimations[itemType]?.GetFrame(texture) ?? texture.Frame();
+        return Language.GetTextValue("GameUI.Speed", Math.Round(num20));
     }
 }

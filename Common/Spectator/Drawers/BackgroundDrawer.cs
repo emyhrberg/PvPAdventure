@@ -50,20 +50,20 @@ internal static class BackgroundDrawer
         if (listMode)
         {
             // If you want perfect aspect ratio, keep these 3 lines.
-            int drawWidth = (int)(rect.Height * (tex.Width / (float)tex.Height));
-            Rectangle drawRect = new(rect.X, rect.Y, drawWidth, rect.Height);
-            DrawFade(sb, tex, drawRect, tex.Bounds, color, fadeLeft: 0.02f, fadeRight: 1f, fadeTop: 0.02f, fadeBottom: 0.02f);
-
-            //float widthScale = 0.8f; // or 0.8f
-            //int drawWidth = (int)(rect.Width * widthScale);
-
-            //Rectangle drawRect = new(
-            //    rect.X,
-            //    rect.Y,
-            //    drawWidth,
-            //    rect.Height);
-
+            //int drawWidth = (int)(rect.Height * (tex.Width / (float)tex.Height));
+            //Rectangle drawRect = new(rect.X, rect.Y, drawWidth, rect.Height);
             //DrawFade(sb, tex, drawRect, tex.Bounds, color, fadeLeft: 0.02f, fadeRight: 1f, fadeTop: 0.02f, fadeBottom: 0.02f);
+
+            float widthScale = 0.8f; // or 0.8f
+            int drawWidth = (int)(rect.Width * widthScale);
+
+            Rectangle drawRect = new(
+                rect.X,
+                rect.Y,
+                drawWidth,
+                rect.Height);
+
+            DrawFade(sb, tex, drawRect, tex.Bounds, color, fadeLeft: 0.02f, fadeRight: 1f, fadeTop: 0.02f, fadeBottom: 0.02f);
 
             // If you want stretched out, keep this line.
             //DrawFade(sb, tex, drawRect, tex.Bounds, color, fadeLeft: 0.02f, fadeRight: 1f, fadeTop: 0.02f, fadeBottom: 0.02f);
@@ -92,37 +92,21 @@ internal static class BackgroundDrawer
         fadeTop = MathHelper.Clamp(fadeTop, 0f, 1f);
         fadeBottom = MathHelper.Clamp(fadeBottom, 0f, 1f);
 
-        if (fadeLeft <= 0f && fadeRight <= 0f && fadeTop <= 0f && fadeBottom <= 0f)
-        {
-            sb.Draw(texture, target, source, color);
-            return;
-        }
-
-        const int MaxHorizontalSlices = 28;
-        const int MaxVerticalSlices = 12;
-
         sliceWidth = Math.Max(1, sliceWidth);
         sliceHeight = Math.Max(1, sliceHeight);
-
-        int xSlices = Math.Clamp((target.Width + sliceWidth - 1) / sliceWidth, 1, Math.Min(MaxHorizontalSlices, target.Width));
-        int ySlices = Math.Clamp((target.Height + sliceHeight - 1) / sliceHeight, 1, Math.Min(MaxVerticalSlices, target.Height));
 
         int leftFadeWidth = (int)(target.Width * fadeLeft);
         int rightFadeWidth = (int)(target.Width * fadeRight);
         int topFadeHeight = (int)(target.Height * fadeTop);
         int bottomFadeHeight = (int)(target.Height * fadeBottom);
 
-        for (int yi = 0; yi < ySlices; yi++)
+        for (int y = 0; y < target.Height; y += sliceHeight)
         {
-            int y = yi * target.Height / ySlices;
-            int nextY = (yi + 1) * target.Height / ySlices;
-            int currentSliceHeight = Math.Max(1, nextY - y);
+            int currentSliceHeight = Math.Min(sliceHeight, target.Height - y);
 
-            for (int xi = 0; xi < xSlices; xi++)
+            for (int x = 0; x < target.Width; x += sliceWidth)
             {
-                int x = xi * target.Width / xSlices;
-                int nextX = (xi + 1) * target.Width / xSlices;
-                int currentSliceWidth = Math.Max(1, nextX - x);
+                int currentSliceWidth = Math.Min(sliceWidth, target.Width - x);
 
                 Rectangle dest = new(target.X + x, target.Y + y, currentSliceWidth, currentSliceHeight);
 
@@ -144,20 +128,17 @@ internal static class BackgroundDrawer
                 float alphaX = 1f;
                 float alphaY = 1f;
 
-                float sampleX = x + currentSliceWidth * 0.5f;
-                float sampleY = y + currentSliceHeight * 0.5f;
+                if (leftFadeWidth > 0 && x < leftFadeWidth)
+                    alphaX = Math.Min(alphaX, x / (float)leftFadeWidth);
 
-                if (leftFadeWidth > 0 && sampleX < leftFadeWidth)
-                    alphaX = Math.Min(alphaX, sampleX / leftFadeWidth);
+                if (rightFadeWidth > 0 && x > target.Width - rightFadeWidth)
+                    alphaX = Math.Min(alphaX, (target.Width - x) / (float)rightFadeWidth);
 
-                if (rightFadeWidth > 0 && sampleX > target.Width - rightFadeWidth)
-                    alphaX = Math.Min(alphaX, (target.Width - sampleX) / rightFadeWidth);
+                if (topFadeHeight > 0 && y < topFadeHeight)
+                    alphaY = Math.Min(alphaY, y / (float)topFadeHeight);
 
-                if (topFadeHeight > 0 && sampleY < topFadeHeight)
-                    alphaY = Math.Min(alphaY, sampleY / topFadeHeight);
-
-                if (bottomFadeHeight > 0 && sampleY > target.Height - bottomFadeHeight)
-                    alphaY = Math.Min(alphaY, (target.Height - sampleY) / bottomFadeHeight);
+                if (bottomFadeHeight > 0 && y > target.Height - bottomFadeHeight)
+                    alphaY = Math.Min(alphaY, (target.Height - y) / (float)bottomFadeHeight);
 
                 float alpha = MathHelper.Clamp(alphaX * alphaY, 0f, 1f);
                 sb.Draw(texture, dest, src, color * alpha);

@@ -10,15 +10,12 @@ internal class SessionTracker : ModSystem
 {
 	internal static readonly Dictionary<int, DateTime> Sessions = [];
 
-    public override void OnWorldLoad()
-    {
-        Sessions.Clear();
+	public override void OnWorldLoad()
+	{
+		Sessions.Clear();
+	}
 
-        if (Main.netMode == NetmodeID.MultiplayerClient)
-            SessionTrackerNetHandler.SendRequestFullSync();
-    }
-
-    public override void OnWorldUnload()
+	public override void OnWorldUnload()
 	{
 		Sessions.Clear();
 	}

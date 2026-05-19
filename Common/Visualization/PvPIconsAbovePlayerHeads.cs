@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.GameTimer;
 using PvPAdventure.Common.Spawnbox;
-using PvPAdventure.Common.Spectator;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -24,19 +23,12 @@ public class PvPIconDrawerLayer : ModSystem
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             Player p = Main.player[i];
-            if (!p.active)
+            if (!p.active || p.dead || p.ghost)
                 continue;
-
-            var mp = p.GetModPlayer<PvPIconPlayer>();
-
-            if (p.dead || p.ghost || SpectatorSystem.IsInSpectateMode(p))
-            {
-                mp.ShowPvPIcon = false;
-                mp.PvPEnabledIconTimer = 0;
-                continue;
-            }
 
             bool inRegion = rm.GetRegionContaining(p.Center.ToTileCoordinates()) != null;
+
+            var mp = p.GetModPlayer<PvPIconPlayer>();
 
             bool wasInRegion = mp.ShowPvPIcon;
 
@@ -71,7 +63,7 @@ public class PvPIconDrawerLayer : ModSystem
 
         protected override bool DrawSelf()
         {
-            if (Main.LocalPlayer.ghost || SpectatorSystem.IsInSpectateMode(Main.LocalPlayer))
+            if (Main.LocalPlayer.ghost)
                 return true;
 
             SpriteBatch sb = Main.spriteBatch;
@@ -88,7 +80,7 @@ public class PvPIconDrawerLayer : ModSystem
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 Player p = Main.player[i];
-                if (!p.active || p.dead || p.ghost || SpectatorSystem.IsInSpectateMode(p))
+                if (!p.active || p.dead)
                     continue;
 
                 var mp = p.GetModPlayer<PvPIconPlayer>();

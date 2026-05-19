@@ -59,7 +59,6 @@ public abstract class WhipDebuffPlayer : ModPlayer
     protected abstract int BaseDuration { get; }
     protected abstract int FlatDamageBonus { get; }
     protected virtual float PercentDamageBonus => 0f;
-    protected virtual float FairyQueenDamageMultiplier => 0.25f; // Multiplier applied to both flat and percent damage bonuses
 
     public override void PostHurt(Player.HurtInfo info)
     {
@@ -132,20 +131,15 @@ public abstract class WhipDebuffPlayer : ModPlayer
 
             if (!isSummon && !isDebuffApplier)
             {
-                // Reduce bonuses if the hit came from a Nightglow projectile.
-                bool isFairyQueen = modifiers.DamageSource.SourceProjectileType == ProjectileID.FairyQueenMagicItemShot;
-                float multiplier = isFairyQueen ? FairyQueenDamageMultiplier : 1f;
-
                 if (FlatDamageBonus > 0)
                 {
-                    int scaledFlat = (int)(FlatDamageBonus * multiplier);
                     modifiers.ModifyHurtInfo += (ref Player.HurtInfo info) => {
-                        info.Damage += scaledFlat;
+                        info.Damage += FlatDamageBonus;
                     };
                 }
                 if (PercentDamageBonus > 0f)
                 {
-                    modifiers.FinalDamage *= (1f + PercentDamageBonus * multiplier);
+                    modifiers.FinalDamage *= (1f + PercentDamageBonus);
                 }
             }
         }

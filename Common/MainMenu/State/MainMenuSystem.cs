@@ -11,6 +11,7 @@ using Terraria.UI;
 
 namespace PvPAdventure.Common.MainMenu.State;
 
+#if DEBUG // TEMP TODO: Remove me when launching!
 /// <summary>
 /// Adds a TPVPA History button to the Main Menu.
 /// Upon click, enter <see cref="MatchHistoryUIState"/>
@@ -21,11 +22,8 @@ public class MainMenuSystem : ModSystem
     public UserInterface ui;
     private bool wasHovered;
 
-    public static bool IsEnabled => false;
     public override void Load()
     {
-        if (!IsEnabled) return;
-
         Main.QueueMainThreadAction(() => IL_Main.DrawMenu += InjectMatchmakingButton);
 
         ui = new UserInterface();
@@ -36,8 +34,6 @@ public class MainMenuSystem : ModSystem
 
     public override void Unload()
     {
-        if (!IsEnabled) return;
-
         Main.QueueMainThreadAction(() => IL_Main.DrawMenu -= InjectMatchmakingButton);
         On_Main.DrawVersionNumber -= DrawMenuUI;
         On_Main.UpdateUIStates -= PostUpdateUIStates;
@@ -206,3 +202,4 @@ public class MainMenuSystem : ModSystem
         }
     }
 }
+#endif

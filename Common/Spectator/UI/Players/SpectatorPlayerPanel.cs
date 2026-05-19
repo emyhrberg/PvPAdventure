@@ -15,7 +15,7 @@ internal sealed class SpectatorPlayerPanel : UIBrowserPanel
 {
     private readonly List<Player> debugPlayers = [];
 
-    public SpectatorPlayerPanel() : base("Spectate")
+    public SpectatorPlayerPanel() : base("Players")
     {
         Width.Set(560f, 0f);
         Height.Set(560f, 0f);
@@ -23,12 +23,10 @@ internal sealed class SpectatorPlayerPanel : UIBrowserPanel
         VAlign = 0.45f;
     }
 
-    protected override float MinResizeH => base.MinResizeH+10;
+    protected override float MinResizeH => base.MinResizeH;
     protected override float MaxResizeH => base.MaxResizeH;
     protected override float MinResizeW => base.MinResizeW;
     protected override float MaxResizeW => base.MaxResizeW;
-    public override int ListMinEntrySize => 60;
-    public override int ListMaxEntrySize => 132;
     protected override Asset<Texture2D> ActionPanelIconAsset => Ass.Icon_Eye;
     protected override string ActionPanelHoverText => "Open player spectate controls";
 
@@ -43,13 +41,6 @@ internal sealed class SpectatorPlayerPanel : UIBrowserPanel
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             Player p = Main.player[i];
-
-            // Skip myself and other ghosts (spectators)
-#if !DEBUG
-            if (p.whoAmI == Main.myPlayer || p.ghost)
-                continue;
-#endif
-
             if (p.active)
             {
                 AddEntry(new SpectatorPlayerEntry(p));
@@ -125,32 +116,13 @@ internal sealed class SpectatorPlayerPanel : UIBrowserPanel
         ];
     }
 
-    public override void Draw(SpriteBatch spriteBatch)
-    {
-        base.Draw(spriteBatch);
-        SpectatorPlayerEntry.DrawSelectedInventory(spriteBatch);
-    }
-
     private void PopulateDebugPlayers()
     {
-        string GetNextDebugName()
-        {
-            int count = debugPlayers.Count + 1; // +1 because we haven't added yet
-            if (count <= 9)
-            {
-                string seq = "";
-                for (int i = 1; i <= count; i++)
-                    seq += i;
-                return $"Debug{seq}";
-            }
-            return $"Debug{Main.rand.Next(10000, 99999999)}";
-        }
-
         // Numpad 1: Clone the local player and add them to the debug list
         if (Main.keyState.IsKeyDown(Keys.NumPad1) && !Main.oldKeyState.IsKeyDown(Keys.NumPad1))
         {
             Player clonedPlayer = (Player)Main.LocalPlayer.Clone();
-            clonedPlayer.name = GetNextDebugName();
+            clonedPlayer.name = $"Debug {Main.rand.Next(100, 1000)}"; // Give them a unique name
 
             debugPlayers.Add(clonedPlayer);
             Log.Chat($"Added debug player: {clonedPlayer.name}");

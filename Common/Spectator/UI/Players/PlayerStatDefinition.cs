@@ -2,56 +2,28 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Terraria;
 
 namespace PvPAdventure.Common.Spectator.UI.Players;
 
-internal sealed class PlayerStatDefinition
+internal sealed class PlayerStatDefinition(string id, string label, Asset<Texture2D> icon, Func<Player, string> getText, Func<Player, string>? getHoverText = null, Rectangle? iconFrame = null)
 {
-    public PlayerStatDefinition(
-        string id,
-        string label,
-        Asset<Texture2D> icon,
-        Func<Player, string> getText,
-        Func<Player, string>? getHoverText = null,
-        Microsoft.Xna.Framework.Rectangle? iconFrame = null)
-        : this(id, label, _ => icon, getText, getHoverText, _ => iconFrame)
-    {
-    }
-
-    public PlayerStatDefinition(
-        string id,
-        string label,
-        Func<Player, Asset<Texture2D>> getIcon,
-        Func<Player, string> getText,
-        Func<Player, string>? getHoverText = null,
-        Func<Player, Microsoft.Xna.Framework.Rectangle?>? getIconFrame = null)
-    {
-        Id = id;
-        Label = label;
-        GetIcon = getIcon;
-        GetText = getText;
-        GetHoverText = getHoverText;
-        GetIconFrame = getIconFrame;
-    }
-
-    public string Id { get; }
-    public string Label { get; }
-    public Func<Player, Asset<Texture2D>> GetIcon { get; }
-    public Func<Player, string> GetText { get; }
-    public Func<Player, string>? GetHoverText { get; }
-    public Func<Player, Rectangle?>? GetIconFrame { get; }
+    public string Id { get; } = id;
+    public string Label { get; } = label;
+    public Asset<Texture2D> Icon { get; } = icon;
+    public Rectangle? IconFrame { get; } = iconFrame;
+    public Func<Player, string> GetText { get; } = getText;
+    public Func<Player, string>? GetHoverText { get; } = getHoverText;
 
     public PlayerStatSnapshot Build(Player player)
     {
         string text = GetText(player);
-        return new PlayerStatSnapshot(Label, text, GetHoverText?.Invoke(player) ?? $"{Label}: {text}", GetIcon(player), GetIconFrame?.Invoke(player));
+        return new(Label, text, GetHoverText?.Invoke(player) ?? $"{Label}: {text}", Icon, IconFrame);
     }
 }
 
-internal readonly record struct PlayerStatSnapshot(
-    string Label,
-    string Text,
-    string HoverText,
-    Asset<Texture2D> Icon,
-    Rectangle? IconFrame);
+internal readonly record struct PlayerStatSnapshot(string Label, string Text, string HoverText, Asset<Texture2D> Icon, Rectangle? IconFrame);
