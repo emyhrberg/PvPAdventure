@@ -34,7 +34,12 @@ public class RecipeManager : ModSystem
             ItemID.FlaskofNanites,
             ItemID.FlaskofParty,
             ItemID.SpectreBar,
-            ItemID.SuspiciousLookingEye
+            ItemID.SuspiciousLookingEye,
+            ItemID.DemonWings,
+            ItemID.AngelWings,
+            ItemID.FairyWings,
+            ItemID.ManaCrystal
+
 
         };
 
@@ -51,6 +56,10 @@ public class RecipeManager : ModSystem
         Recipe.Create(ItemID.Headstone)
             .AddIngredient(ItemID.StoneBlock, 50)
             .AddTile(TileID.HeavyWorkBench)
+            .Register();
+
+        Recipe.Create(ItemID.ManaCrystal)
+            .AddIngredient(ItemID.FallenStar, 3)
             .Register();
 
 
@@ -125,13 +134,32 @@ public class RecipeManager : ModSystem
             .AddIngredient(ItemID.ChlorophyteOre, 4)
             .AddTile(TileID.AdamantiteForge)
             .Register();
-        // Make Make spectre bars cheaper
+        // Make spectre bars cheaper
         Recipe.Create(ItemID.SpectreBar, 3)
             .AddIngredient(ItemID.ChlorophyteBar, 3)
             .AddIngredient(ItemID.Ectoplasm, 1)
             .AddTile(TileID.AdamantiteForge)
             .Register();
-
+        // Make Demon Wings cheaper
+        Recipe.Create(ItemID.DemonWings, 1)
+            .AddIngredient(ItemID.SoulofNight, 5)
+            .AddIngredient(ItemID.Feather, 10)
+            .AddIngredient(ItemID.SoulofFlight, 20)
+            .AddTile(TileID.MythrilAnvil)
+            .Register();
+        // Make Angel Wings cheaper
+        Recipe.Create(ItemID.AngelWings, 1)
+            .AddIngredient(ItemID.SoulofLight, 5)
+            .AddIngredient(ItemID.Feather, 10)
+            .AddIngredient(ItemID.SoulofFlight, 20)
+            .AddTile(TileID.MythrilAnvil)
+            .Register();
+        // Make Fairy Wings cheaper
+        Recipe.Create(ItemID.FairyWings, 1)
+            .AddIngredient(ItemID.PixieDust, 25)
+            .AddIngredient(ItemID.SoulofFlight, 20)
+            .AddTile(TileID.MythrilAnvil)
+            .Register();
         //temp sudo terrablade (no longer used)
         //Recipe.Create(ItemID.TrueNightsEdge)
         //    .AddIngredient(ItemID.SoulofFright, 20)

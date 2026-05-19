@@ -76,7 +76,21 @@ public class ItemTooltips : GlobalItem
         {
             TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
             if (setBonusLine != null)
-                setBonusLine.Text = "Set bonus:\nIncreases your max number of minions\nIncreases whip range by 20%\nIncreases whip debuff duration against players by 150%";
+                setBonusLine.Text = "Set bonus:\nIncreases your max number of minions\nIncreases whip range by 20%\nIncreases whip debuff duration against players by 100%";
+        }
+
+        if (item.type == ItemID.BeeHeadgear || item.type == ItemID.BeeBreastplate || item.type == ItemID.BeeGreaves)
+        {
+            TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
+            if (setBonusLine != null)
+                setBonusLine.Text = "Set bonus:\nIncreases summon damage by 10%\nIncreases whip debuff duration against players by 100%";
+        }
+
+        if (item.type == ItemID.SpiderMask || item.type == ItemID.SpiderBreastplate || item.type == ItemID.SpiderGreaves)
+        {
+            TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
+            if (setBonusLine != null)
+                setBonusLine.Text = "Set bonus:\nIncreases summon damage by 12%\nIncreases whip debuff duration against players by 100%";
         }
 
         if (item.type == ItemID.ObsidianHelm || item.type == ItemID.ObsidianShirt || item.type == ItemID.ObsidianPants)
