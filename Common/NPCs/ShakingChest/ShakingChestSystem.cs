@@ -50,8 +50,7 @@ public class ShakingChestSystem : ModSystem
     {
         orig(self, type, spawnparams);
 
-        if (self.type != NPCID.BoundTownSlimeOld)
-            return;
+        if (self.type != NPCID.BoundTownSlimeOld) return;
 
         self.scale = 4f;
         self.width = self.width * 4;
@@ -68,15 +67,17 @@ public class ShakingChestSystem : ModSystem
         if (Main.LocalPlayer.talkNPC < 0) return;
         NPC npc = Main.npc[Main.LocalPlayer.talkNPC];
 
-        if (npc.type == NPCID.BoundTownSlimeOld)
-            button = Language.GetTextValue("LegacyInterface.28"); // "Shop"
+        if (npc.type != NPCID.BoundTownSlimeOld) return;
+
+        button = Language.GetTextValue("LegacyInterface.28");
+        if (ShopPager.TotalPages > 1)
+            button2 = $"Next Page ({ShopPager.CurrentPage + 1}/{ShopPager.TotalPages})";
     }
 
     private static bool OnTryFreeingElderSlime(On_Main.orig_TryFreeingElderSlime orig, int npcIndex)
     {
         NPC npc = Main.npc[npcIndex];
-        if (npc.townNPC)
-            return false;
+        if (npc.townNPC) return false;
         return orig(npcIndex);
     }
 
@@ -94,6 +95,8 @@ public class ShakingChestSystem : ModSystem
 
         c.GotoNext(i => i.MatchLdcI4(NPCID.BoundTownSlimeOld));
         c.Next.Operand = -1;
+
+        _logger?.Info("[ShakingChestPatches] Successfully patched BoundTownSlimeOld branch.");
     }
 
     public override void OnWorldLoad()
@@ -138,7 +141,7 @@ public class ShakingChestSystem : ModSystem
 
     private static void SpawnShakingChest()
     {
-        int extraHeightPixels = 18 * 3; // 54px extra height from scaling
+        int extraHeightPixels = 18 * 3;
         NPC.NewNPC(
             Entity.GetSource_NaturalSpawn(),
             Main.spawnTileX * 16,

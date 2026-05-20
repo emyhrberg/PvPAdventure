@@ -65,12 +65,6 @@ public class ItemTooltips : GlobalItem
                 }
             }
         }
-        if (item.type == ItemID.BeetleScaleMail)
-        {
-            TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
-            if (setBonusLine != null)
-                setBonusLine.Text = "Set bonus:\nGain Beetles from player kills\nBeetles increase your melee damage and attack speed";
-        }
 
         if (item.type == ItemID.TikiMask || item.type == ItemID.TikiShirt || item.type == ItemID.TikiPants)
         {
@@ -78,7 +72,49 @@ public class ItemTooltips : GlobalItem
             if (setBonusLine != null)
                 setBonusLine.Text = "Set bonus:\nIncreases your max number of minions\nIncreases whip range by 20%\nIncreases whip debuff duration against players by 100%";
         }
+        if (item.type == ItemID.TurtleHelmet || item.type == ItemID.TurtleScaleMail || item.type == ItemID.TurtleLeggings)
+        {
+            TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
+            if (setBonusLine != null)
+                setBonusLine.Text = "Set bonus:\nAttackers also take double damage\nReduces damage taken by 15%";
 
+            bool wearingFullTurtle = Main.LocalPlayer.armor[0].type == ItemID.TurtleHelmet &&
+                                     Main.LocalPlayer.armor[1].type == ItemID.TurtleScaleMail &&
+                                     Main.LocalPlayer.armor[2].type == ItemID.TurtleLeggings;
+            if (wearingFullTurtle)
+            {
+                tooltips.Add(new TooltipLine(Mod, "HeavyArmorPenalty", "-50% ranged, magic, and summon damage")
+                {
+                    OverrideColor = Color.Red
+                });
+                tooltips.Add(new TooltipLine(Mod, "HeavyArmorDashPenalty", "Reduces dash speed")
+                {
+                    OverrideColor = Color.Red
+                });
+            }
+        }
+
+        if (item.type == ItemID.BeetleHelmet || item.type == ItemID.BeetleShell || item.type == ItemID.BeetleLeggings)
+        {
+            TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
+            if (setBonusLine != null)
+                setBonusLine.Text = "Set bonus:\nBeetles protect you from damage";
+
+            bool wearingFullBeetle = Main.LocalPlayer.armor[0].type == ItemID.BeetleHelmet &&
+                                     Main.LocalPlayer.armor[1].type == ItemID.BeetleShell &&
+                                     Main.LocalPlayer.armor[2].type == ItemID.BeetleLeggings;
+            if (wearingFullBeetle)
+            {
+                tooltips.Add(new TooltipLine(Mod, "HeavyArmorPenalty", "-50% ranged, magic, and summon damage")
+                {
+                    OverrideColor = Color.Red
+                });
+                tooltips.Add(new TooltipLine(Mod, "HeavyArmorDashPenalty", "Greatly reduces dash speed")
+                {
+                    OverrideColor = Color.Red
+                });
+            }
+        }
         if (item.type == ItemID.BeeHeadgear || item.type == ItemID.BeeBreastplate || item.type == ItemID.BeeGreaves)
         {
             TooltipLine setBonusLine = tooltips.FirstOrDefault(x => x.Name == "SetBonus" && x.Mod == "Terraria");
@@ -138,7 +174,13 @@ public class ItemTooltips : GlobalItem
                 OverrideColor = new Color(255, 100, 100)
             });
         }
-
+        if (item.type == ItemID.FairyQueenMagicItem)
+        {
+            tooltips.Add(new TooltipLine(Mod, "FairyQueenMagicItemCursor", "Projectiles Follow the Cursor")
+            {
+                OverrideColor = new Color(100, 255, 100)
+            });
+        }
         if (item.type == ItemID.TempleKey)
         {
             for (int i = 0; i < tooltips.Count; i++)
