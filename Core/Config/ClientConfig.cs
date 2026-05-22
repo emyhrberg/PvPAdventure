@@ -34,20 +34,22 @@ public class ClientConfig : ModConfig
     public bool PlayerOutlines = true;
 
     [BackgroundColor(50, 70, 120)]
+    [DefaultValue(true)]
+    public bool TownNPCOutlines = true;
+
+    [BackgroundColor(50, 70, 120)]
     [DefaultValue(true)] 
     public bool BedOutlines = true;
 
     [BackgroundColor(50, 70, 120)]
-    [DefaultValue(true)]
-    public bool TeamItemOutlines = true;
+    [DefaultValue(true)] 
+    public bool LootOutlines = true;
 
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(true)]
     public bool ProjectileOutlines = true;
 
-    [BackgroundColor(50, 70, 120)]
-    [DefaultValue(true)] 
-    public bool LootOutlines = true;
+    [Header("Vanity")]
 
     [BackgroundColor(50, 70, 120)]
     [DefaultValue(false)] 
@@ -80,7 +82,6 @@ public class ClientConfig : ModConfig
     public SoundEffectConfig SoundEffect = new();
 
     [Header("Chat")]
-    [DefaultValue(true)] public bool ShowSavePlayerMessages;
     [DefaultValue(true)] public bool ShowTeleportPlayerMessages;
     [DefaultValue(false)] public bool ShowDebugMessages;
 

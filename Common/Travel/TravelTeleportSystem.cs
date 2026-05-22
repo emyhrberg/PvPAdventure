@@ -16,7 +16,6 @@ internal class TravelTeleportSystem : ModSystem
 {
     private static TravelTarget selectedTarget;
     private static bool hasSelection;
-    private static bool sentSelection;
     private static bool wasUsingDeathTravelSelection;
 
     public static bool HasSelection => hasSelection;
@@ -72,7 +71,7 @@ internal class TravelTeleportSystem : ModSystem
         if (ModContent.GetInstance<GameManager>().CurrentPhase == GameManager.Phase.Waiting)
             return false;
 
-        return player.dead || TravelRegionSystem.CanUseTravelUI(player) || IsUsingPortalCreator(player);
+        return player.dead || TravelRegions.CanUseTravelUI(player) || IsUsingPortalCreator(player);
     }
 
     public static bool ShouldUseDeathTravelSelection(Player player)
