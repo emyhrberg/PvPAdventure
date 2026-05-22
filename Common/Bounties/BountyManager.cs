@@ -133,20 +133,9 @@ public class BountyManager : ModSystem
         public string Context => null;
     }
 
-    private class UIItemSlotScalable : UIItemSlot
+    private class UIItemSlotScalable(Item[] itemArray, int itemIndex, int itemSlotContext)
+        : UIItemSlot(itemArray, itemIndex, itemSlotContext)
     {
-        private readonly Item[] _scaledSlotItems;
-        private readonly int _scaledSlotIndex;
-        private readonly int _scaledSlotContext;
-
-        public UIItemSlotScalable(Item[] itemArray, int itemIndex, int itemSlotContext)
-            : base(itemArray, itemIndex, itemSlotContext)
-        {
-            _scaledSlotItems = itemArray;
-            _scaledSlotIndex = itemIndex;
-            _scaledSlotContext = itemSlotContext;
-        }
-
         public float InventoryScale { get; set; }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
@@ -156,9 +145,9 @@ public class BountyManager : ModSystem
             try
             {
                 Main.inventoryScale = InventoryScale;
-                var item = _scaledSlotItems[_scaledSlotIndex];
+                var item = itemArray[itemIndex];
                 var position = GetDimensions().Center() + new Vector2(52f, 52f) * -0.5f * Main.inventoryScale;
-                ItemSlot.Draw(spriteBatch, ref item, _scaledSlotContext, position);
+                ItemSlot.Draw(spriteBatch, ref item, itemSlotContext, position);
             }
             finally
             {

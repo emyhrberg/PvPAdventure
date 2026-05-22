@@ -15,12 +15,6 @@ internal class TeamPings : ModSystem
             On_NetPingModule.Deserialize += OnNetPingModuleDeserialize;
     }
 
-    public override void Unload()
-    {
-        if (Main.dedServ)
-            On_NetPingModule.Deserialize -= OnNetPingModuleDeserialize;
-    }
-
     // NOTE: This should only ever be applied to the server.
     private bool OnNetPingModuleDeserialize(On_NetPingModule.orig_Deserialize orig, NetPingModule self,
         BinaryReader reader, int userid)

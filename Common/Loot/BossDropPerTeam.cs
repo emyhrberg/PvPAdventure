@@ -68,7 +68,7 @@ internal sealed class BossDropPerTeamSystem : ModSystem
         if (ItemLoader.PreDrawInWorld(item, Main.spriteBatch, color, currentColor, ref num, ref scale, whoami))
         {
             int num2 = item.glowMask;
-            if (!Main.gamePaused && (item.IsACoin || item.type == ItemID.Heart || item.type == ItemID.ManaCrystal) && color.R > 60 && (float)Main.rand.Next(500) - (Math.Abs(item.velocity.X) + Math.Abs(item.velocity.Y)) * 10f < (float)(color.R / 50))
+            if (!Main.gamePaused && (item.IsACoin || item.type == 58 || item.type == 109) && color.R > 60 && (float)Main.rand.Next(500) - (Math.Abs(item.velocity.X) + Math.Abs(item.velocity.Y)) * 10f < (float)(color.R / 50))
             {
                 int type = 43;
                 Color newColor = Color.White;
@@ -82,16 +82,16 @@ internal sealed class BossDropPerTeamSystem : ModSystem
                 }
                 switch (item.type)
                 {
-                    case ItemID.CopperCoin:
+                    case 71:
                         type = 244;
                         break;
-                    case ItemID.SilverCoin:
+                    case 72:
                         type = 245;
                         break;
-                    case ItemID.GoldCoin:
+                    case 73:
                         type = 246;
                         break;
-                    case ItemID.PlatinumCoin:
+                    case 74:
                         type = 247;
                         break;
                 }
@@ -118,7 +118,7 @@ internal sealed class BossDropPerTeamSystem : ModSystem
                     //Main.spriteBatch.Draw(texture, vector3 + new Vector2(0f, 4f).RotatedBy((num6 + num4) * ((float)Math.PI * 2f)) * globalTimeWrappedHourly, frame, new Color(140, 120, 255, 77), num, vector, scale, SpriteEffects.None, 0f);
                 }
             }
-            else if (item.type == ItemID.FallenStar)
+            else if (item.type == 75)
             {
                 float num7 = (float)item.timeSinceItemSpawned / 240f + Main.GlobalTimeWrappedHourly * 0.04f;
                 float globalTimeWrappedHourly2 = Main.GlobalTimeWrappedHourly;
@@ -138,7 +138,7 @@ internal sealed class BossDropPerTeamSystem : ModSystem
                     Main.spriteBatch.Draw(TextureAssets.Item[item.type].Value, vector3 + new Vector2(0f, 4f).RotatedBy((num9 + num7) * ((float)Math.PI * 2f)) * globalTimeWrappedHourly2, frame, new Color(120, 120, 255, 127), num, vector, scale, SpriteEffects.None, 0f);
                 }
             }
-            else if (item.type == ItemID.ManaCloakStar)
+            else if (item.type == 4143)
             {
                 float num10 = (float)item.timeSinceItemSpawned / 240f + Main.GlobalTimeWrappedHourly * 0.04f;
                 float globalTimeWrappedHourly3 = Main.GlobalTimeWrappedHourly;
@@ -159,12 +159,12 @@ internal sealed class BossDropPerTeamSystem : ModSystem
                 }
                 Main.spriteBatch.Draw(texture, vector3, frame, new Color(255, 255, 255, 128), num, vector, scale, SpriteEffects.None, 0f);
             }
-            if ((item.type >= ItemID.LargeAmethyst && item.type <= ItemID.LargeDiamond) || item.type == ItemID.LargeAmber)
+            if ((item.type >= 1522 && item.type <= 1527) || item.type == 3643)
             {
                 currentColor = ((!(item.shimmerTime > 0f)) ? new Color(250, 250, 250, Main.mouseTextColor / 2) : new Color((int)(250f * (1f - item.shimmerTime)), (int)(250f * (1f - item.shimmerTime)), (int)(250f * (1f - item.shimmerTime)), (int)((float)(Main.mouseTextColor / 2) * (1f - item.shimmerTime))));
                 scale = (float)(int)Main.mouseTextColor / 1000f + 0.8f;
             }
-            if (item.type == ItemID.SpiritFlame)
+            if (item.type == 3779)
             {
                 num2 = -1;
             }
@@ -180,7 +180,7 @@ internal sealed class BossDropPerTeamSystem : ModSystem
             if (num2 != -1)
             {
                 Color color2 = new Color(250, 250, 250, item.alpha);
-                if (item.type == ItemID.FishingBobberGlowingRainbow)
+                if (item.type == 5146)
                 {
                     color2 = new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
                 }
@@ -190,14 +190,14 @@ internal sealed class BossDropPerTeamSystem : ModSystem
             {
                 Main.spriteBatch.Draw(TextureAssets.Wire.Value, vector3 + frame.Size().RotatedBy(num) * 0.45f * item.scale, new Rectangle(4, 58, 8, 8), currentColor, 0f, new Vector2(4f), 1f, SpriteEffects.None, 0f);
             }
-            if (item.type == ItemID.MonkStaffT3)
+            if (item.type == 3858)
             {
                 Main.spriteBatch.Draw(TextureAssets.GlowMask[233].Value, vector3, glowmaskFrame, new Color(255, 255, 255, 63) * 0.75f, num, glowmaskFrame.Size() / 2f, scale, SpriteEffects.None, 0f);
             }
             if (ItemID.Sets.DrawUnsafeIndicator[item.type])
             {
                 Vector2 vector4 = new Vector2(-4f, -4f) * scale;
-                Texture2D value = TextureAssets.Extra[ExtrasID.UnsafeIndicator].Value;
+                Texture2D value = TextureAssets.Extra[258].Value;
                 Rectangle rectangle = value.Frame();
                 Main.spriteBatch.Draw(value, vector3 + vector4 + frame.Size().RotatedBy(num) * 0.45f * item.scale, rectangle, currentColor, num, rectangle.Size() / 2f, 1f, SpriteEffects.None, 0f);
             }

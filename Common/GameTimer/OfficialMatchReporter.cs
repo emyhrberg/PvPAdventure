@@ -1,162 +1,139 @@
-﻿using PvPAdventure.Common.Statistics;
-using PvPHub.Common.Authentication;
-using PvPHub.Common.MainMenu.API.MatchHistory;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Terraria;
-using Terraria.Enums;
-using Terraria.ID;
-using Terraria.ModLoader;
+﻿//using PvPAdventure.Common.Authentication;
+//using PvPAdventure.Common.Statistics;
+//using System;
+//using System.Collections.Generic;
+//using System.Threading.Tasks;
+//using Terraria;
+//using Terraria.Enums;
+//using Terraria.ID;
+//using Terraria.ModLoader;
 
-namespace PvPAdventure.Common.GameTimer;
+//namespace PvPAdventure.Common.GameTimer;
 
-[JITWhenModsEnabled("PvPHub")]
-[ExtendsFromMod("PvPHub")]
-internal static class OfficialMatchReporter
-{
-    public static void PostCompletedMatchSafe(DateTime startUtc, DateTime endUtc)
-    {
-        if (!ModLoader.TryGetMod("PvPHub", out Mod _))
-            return;
+//internal static class OfficialMatchReporter
+//{
+//    public static void PostCompletedMatch(DateTime startUtc, DateTime endUtc)
+//    {
+//        if (Main.netMode != NetmodeID.Server)
+//            return;
 
-        ExecutePost(startUtc, endUtc);
-    }
+//        MatchResult match = BuildMatchResult(startUtc, endUtc);
+//        LogMatchResult(match);
+//        _ = PostMatchSafeAsync(match);
+//    }
 
-    private static void ExecutePost(DateTime startUtc, DateTime endUtc)
-    {
-        if (Main.netMode != NetmodeID.Server)
-            return;
+//    private static async Task PostMatchSafeAsync(MatchResult match)
+//    {
+//        try
+//        {
+//            ApiResult<string> result = await MatchApi.PostOfficialMatchAsync(match).ConfigureAwait(false);
 
-        MatchApi.MatchPayload payload = BuildMatchPayload(startUtc, endUtc);
-        LogMatchPayload(payload);
-        _ = PostMatchSafeAsync(payload);
-    }
+//            if (!result.IsSuccess)
+//            {
+//                DebugLog.Error($"[OfficialMatchReporter] Failed to post match. Status={(int)result.Status}, Error={result.ErrorMessage}");
+//                return;
+//            }
 
-    private static async Task PostMatchSafeAsync(MatchApi.MatchPayload payload)
-    {
-        try
-        {
-            var result = await MatchApi.PostOfficialMatchAsync(payload).ConfigureAwait(false);
+//            if (string.IsNullOrWhiteSpace(result.Data))
+//            {
+//                DebugLog.Info("[OfficialMatchReporter] Posted match successfully.");
+//                return;
+//            }
 
-            if (!result.IsSuccess)
-            {
-                Log.Error($"[OfficialMatchReporter] Failed to post match. Status={(int)result.Status}, Error={result.ErrorMessage}");
-                return;
-            }
+//            DebugLog.Info($"[OfficialMatchReporter] Posted match successfully. MatchId={result.Data}");
+//        }
+//        catch (Exception ex)
+//        {
+//            DebugLog.Error($"[OfficialMatchReporter] Unexpected error while posting match: {ex}");
+//        }
+//    }
 
-            if (result.Data == null)
-            {
-                Log.Info("[OfficialMatchReporter] Posted match successfully, but received no data payload back.");
-                return;
-            }
+//    private static MatchResult BuildMatchResult(DateTime startUtc, DateTime endUtc)
+//    {
+//        PointsManager pointsManager = ModContent.GetInstance<PointsManager>();
 
-            Log.Info($"[OfficialMatchReporter] Posted match successfully. MatchId={result.Data.Id}");
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"[OfficialMatchReporter] Unexpected error while posting match: {ex}");
-        }
-    }
+//        TeamPoints[] teamPoints = BuildTeamPointsArray(pointsManager);
+//        PlayerKD[] players = BuildPlayerKDArray();
+//        TeamBossCompletion[] bosses = BuildBossCompletionArray(pointsManager);
 
-    private static MatchApi.MatchPayload BuildMatchPayload(DateTime startUtc, DateTime endUtc)
-    {
-        PointsManager pointsManager = ModContent.GetInstance<PointsManager>();
+//        return new MatchResult(
+//            start: DateTime.SpecifyKind(startUtc, DateTimeKind.Utc),
+//            end: DateTime.SpecifyKind(endUtc, DateTimeKind.Utc),
+//            win: false,
+//            localSteamId: 0,
+//            teamPoints: teamPoints,
+//            players: players,
+//            bossScoreboard: bosses);
+//    }
 
-        var players = BuildPlayersDictionary();
-        var teams = BuildTeamsList(pointsManager);
-        var metrics = new Dictionary<string, string>(); // empty for now
+//    private static TeamPoints[] BuildTeamPointsArray(PointsManager pointsManager)
+//    {
+//        List<TeamPoints> result = [];
 
-        return new MatchApi.MatchPayload(
-            Start: DateTime.SpecifyKind(startUtc, DateTimeKind.Utc),
-            End: DateTime.SpecifyKind(endUtc, DateTimeKind.Utc),
-            Players: players,
-            Metrics: metrics,
-            Teams: teams
-        );
-    }
+//        foreach ((Team team, int points) in pointsManager.Points)
+//        {
+//            if (team == Team.None)
+//                continue;
 
-    private static Dictionary<ulong, MatchApi.MatchPlayerPayload> BuildPlayersDictionary()
-    {
-        var result = new Dictionary<ulong, MatchApi.MatchPlayerPayload>();
+//            result.Add(new TeamPoints(team, points));
+//        }
 
-        foreach (Player player in Main.ActivePlayers)
-        {
-            StatisticsPlayer statsPlayer = player.GetModPlayer<StatisticsPlayer>();
-            int team = player.team;
+//        return [.. result];
+//    }
 
-            // Skip players without a valid SteamID to prevent dictionary key collisions
-            if (!TryGetPlayerSteamId(player, out ulong steamId) || steamId == 0)
-                continue;
+//    private static PlayerKD[] BuildPlayerKDArray()
+//    {
+//        List<PlayerKD> result = [];
 
-            result[steamId] = new MatchApi.MatchPlayerPayload(
-                Name: player.name,
-                Team: team,
-                Reward: 0, 
-                Kills: statsPlayer.Kills,
-                Deaths: statsPlayer.Deaths
-            );
-        }
+//        foreach (Player player in Main.ActivePlayers)
+//        {
+//            StatisticsPlayer statsPlayer = player.GetModPlayer<StatisticsPlayer>();
+//            Team team = (Team)player.team;
 
-        return result;
-    }
+//            ulong steamId = 0;
+//            if (!TryGetPlayerSteamId(player, out steamId))
+//                steamId = 0;
 
-    private static List<MatchApi.MatchTeamPayload?> BuildTeamsList(PointsManager pointsManager)
-    {
-        var result = new List<MatchApi.MatchTeamPayload?>();
+//            result.Add(new PlayerKD(team, steamId, player.name, statsPlayer.Kills, statsPlayer.Deaths));
+//        }
 
-        // Empty team results (6 teams)
-        for (int i = 0; i <= 6; i++)
-        {
-            result.Add(null);
-        }
+//        return [.. result];
+//    }
 
-        foreach ((Team team, int points) in pointsManager.Points)
-        {
-            if (team == Team.None)
-                continue;
+//    private static TeamBossCompletion[] BuildBossCompletionArray(PointsManager pointsManager)
+//    {
+//        List<TeamBossCompletion> result = [];
 
-            int teamId = (int)team;
+//        foreach ((Team team, ISet<short> downedNpcs) in pointsManager.DownedNpcs)
+//        {
+//            if (team == Team.None)
+//                continue;
 
-            var bossesList = new List<short>();
-            if (pointsManager.DownedNpcs.TryGetValue(team, out ISet<short> downedNpcs))
-            {
-                bossesList.AddRange(downedNpcs);
-            }
+//            foreach (short bossId in downedNpcs)
+//                result.Add(new TeamBossCompletion(bossId, team));
+//        }
 
-            while (result.Count <= teamId)
-                result.Add(null);
+//        return [.. result];
+//    }
 
-            result[teamId] = new MatchApi.MatchTeamPayload(points, bossesList);
-        }
+//    private static void LogMatchResult(MatchResult match)
+//    {
+//        DebugLog.Info($"Match ended! Start={match.Start:yyyy-MM-dd HH:mm:ss}, End={match.End:yyyy-MM-dd HH:mm:ss}, Win={match.Win}, LocalSteamId={match.LocalSteamId}");
 
-        return result;
-    }
+//        foreach (TeamPoints tp in match.TeamPoints)
+//            DebugLog.Info($"{tp.Team}: {tp.Points} points");
+//    }
 
-    private static void LogMatchPayload(MatchApi.MatchPayload payload)
-    {
-        Log.Info($"Match ended! Start={payload.Start:yyyy-MM-dd HH:mm:ss}, End={payload.End:yyyy-MM-dd HH:mm:ss}");
+//    private static bool TryGetPlayerSteamId(Player player, out ulong steamId)
+//    {
+//        var id = player.GetModPlayer<AuthenticatedPlayer>().SteamId;
+//        if (id.HasValue)
+//        {
+//            steamId = id.Value;
+//            return true;
+//        }
 
-        for (int i = 0; i < payload.Teams.Count; i++)
-        {
-            var teamInfo = payload.Teams[i];
-            if (teamInfo != null)
-            {
-                Log.Info($"Team {i}: {teamInfo.Value.Points} points");
-            }
-        }
-    }
-
-    private static bool TryGetPlayerSteamId(Player player, out ulong steamId)
-    {
-        var id = player.GetModPlayer<AuthenticatedPlayer>().SteamId;
-        if (id.HasValue)
-        {
-            steamId = id.Value;
-            return true;
-        }
-
-        steamId = 0;
-        return false;
-    }
-}
+//        steamId = 0;
+//        return false;
+//    }
+//}

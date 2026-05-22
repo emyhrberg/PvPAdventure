@@ -2,9 +2,7 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 
-#nullable enable
-
-namespace PvPAdventure.Common.Combat.EJ;
+namespace PvPAdventure.Common.Projectiles;
 
 /// <summary>
 /// Grants buffs to whip users in PvP when they hit a player.

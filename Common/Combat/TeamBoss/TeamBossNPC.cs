@@ -26,8 +26,7 @@ public sealed class TeamBossNPC : GlobalNPC
     private readonly HashSet<Team> _hasBeenHurtByTeam = new();
     public IReadOnlySet<Team> HasBeenHurtByTeam => _hasBeenHurtByTeam;
 
-    private Team _pendingStrikeTeam;
-    private Team _lastAppliedStrikeTeam;
+    private Team _lastStrikeTeam;
 
     public class DamageInfo(byte who)
     {
@@ -39,13 +38,6 @@ public sealed class TeamBossNPC : GlobalNPC
         On_NPC.PlayerInteraction += OnNPCPlayerInteraction;
         On_NPC.StrikeNPC_HitInfo_bool_bool += OnNPCStrikeNPC;
         On_NetMessage.SendStrikeNPC += OnNetMessageSendStrikeNPC;
-    }
-
-    public override void Unload()
-    {
-        On_NPC.PlayerInteraction -= OnNPCPlayerInteraction;
-        On_NPC.StrikeNPC_HitInfo_bool_bool -= OnNPCStrikeNPC;
-        On_NetMessage.SendStrikeNPC -= OnNetMessageSendStrikeNPC;
     }
 
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
@@ -126,25 +118,21 @@ public sealed class TeamBossNPC : GlobalNPC
 
     private static void RecordHit(NPC npc, int playerIndex, Team team)
     {
-        if (team == Team.None)
-            return;
-
         // For segmented bosses, consolidate state on the owning NPC (realLife).
         NPC owner = GetOwner(npc);
 
         var ownerG = owner.GetGlobalNPC<TeamBossNPC>();
         ownerG.LastDamageFromPlayer = new DamageInfo((byte)playerIndex);
+        ownerG._lastStrikeTeam = team;
         ownerG._hasBeenHurtByTeam.Add(team);
 
         if (npc.whoAmI != owner.whoAmI)
         {
             var segG = npc.GetGlobalNPC<TeamBossNPC>();
             segG.LastDamageFromPlayer = new DamageInfo((byte)playerIndex);
+            segG._lastStrikeTeam = team;
             segG._hasBeenHurtByTeam.Add(team);
         }
-
-        if (IsConfiguredTeamBoss(owner, out _))
-            SetPendingStrikeTeam(npc, owner, team);
     }
 
     public override void OnKill(NPC npc)
@@ -175,31 +163,15 @@ public sealed class TeamBossNPC : GlobalNPC
         bool noPlayerInteraction)
     {
         NPC owner = GetOwner(self);
+        //NRE?
         var boss = owner.GetGlobalNPC<TeamBossNPC>();
-        Team strikeTeam = ConsumePendingStrikeTeam(self, owner);
-        boss._lastAppliedStrikeTeam = Team.None;
 
-        int StrikeVanilla()
-        {
-            try
-            {
-                return orig(self, hit, fromNet, noPlayerInteraction);
-            }
-            finally
-            {
-                ClearPendingStrikeTeam(self, owner);
-            }
-        }
+        Team strikeTeam = boss._lastStrikeTeam;
 
-        if (!TryGetConfiguredTeamBoss(self, out _, out _, out var balanceEntry))
-            return StrikeVanilla();
-
-        if (strikeTeam == Team.None || !IsTeamActive(strikeTeam))
-            return StrikeVanilla();
-
+        // Always suppress vanilla PvE combat text; we draw our own.
         hit.HideCombatText = true;
 
-        if (!Main.dedServ)
+        if (!Main.dedServ && strikeTeam != Team.None)
         {
             CombatText.NewText(
                 new Rectangle((int)self.position.X, (int)self.position.Y, self.width, self.height),
@@ -208,8 +180,20 @@ public sealed class TeamBossNPC : GlobalNPC
                 hit.Crit);
         }
 
+        var config = ModContent.GetInstance<ServerConfig>();
+
+        // Runtime is generally safe, but name-based keeps this consistent with SetDefaults safety constraints.
+        if (!NPCID.Search.TryGetName(owner.type, out string ownerName))
+            return orig(self, hit, fromNet, noPlayerInteraction);
+
+        var definition = new NPCDefinition(ownerName);
+
+        // Not configured: do vanilla damage/behavior, but still keep our custom combat text above.
+        if (!config.BossBalance.TryGetValue(definition, out var balanceEntry))
+            return orig(self, hit, fromNet, noPlayerInteraction);
+
         if (Main.netMode == NetmodeID.MultiplayerClient)
-            return StrikeVanilla();
+            return orig(self, hit, fromNet, noPlayerInteraction);
 
         // Only configured bosses participate in TeamLife.
         var teamLife = boss._teamLife;
@@ -224,6 +208,9 @@ public sealed class TeamBossNPC : GlobalNPC
                 teamLife[team] = owner.lifeMax;
             }
         }
+
+        if (strikeTeam == Team.None || !IsTeamActive(strikeTeam))
+            return orig(self, hit, fromNet, noPlayerInteraction);
 
         int currentLife = owner.life;
 
@@ -247,9 +234,6 @@ public sealed class TeamBossNPC : GlobalNPC
         int strikerNew = Math.Max(0, strikerOld - hit.Damage);
         teamLife[strikeTeam] = strikerNew;
 
-        if (Main.netMode == NetmodeID.Server)
-            boss._lastAppliedStrikeTeam = strikeTeam;
-
         // Save/restore immortality, we temporarily flip it to block "real" HP changes.
         bool prevSelfImmortal = self.immortal;
         bool prevOwnerImmortal = owner.immortal;
@@ -263,7 +247,7 @@ public sealed class TeamBossNPC : GlobalNPC
                 owner.immortal = true;
 
                 owner.netUpdate = true;
-                return StrikeVanilla();
+                return orig(self, hit, fromNet, noPlayerInteraction);
             }
 
             int allowed = Math.Max(0, currentLife - strikerNew);
@@ -291,7 +275,7 @@ public sealed class TeamBossNPC : GlobalNPC
             }
 
             owner.netUpdate = true;
-            return StrikeVanilla();
+            return orig(self, hit, fromNet, noPlayerInteraction);
         }
         finally
         {
@@ -302,10 +286,21 @@ public sealed class TeamBossNPC : GlobalNPC
 
     public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment)
     {
-        if (!TryGetConfiguredTeamBoss(npc, out NPC owner, out TeamBossNPC boss, out _))
-            return;
+        NPC owner = GetOwner(npc);
+        var boss = owner.GetGlobalNPC<TeamBossNPC>();
 
         if (boss._teamLife.Count > 0)
+            return;
+
+        var config = ModContent.GetInstance<ServerConfig>();
+
+        if (!NPCID.Search.TryGetName(owner.type, out string ownerName))
+            return;
+
+        var definition = new NPCDefinition(ownerName);
+
+        // Only configured bosses receive per-team pools.
+        if (!config.BossBalance.ContainsKey(definition))
             return;
 
         foreach (var team in Enum.GetValues<Team>())
@@ -325,25 +320,17 @@ public sealed class TeamBossNPC : GlobalNPC
         ref NPC.HitInfo hit,
         int ignoreClient)
     {
-        TeamBossNPC boss = null;
-
         if (Main.netMode == NetmodeID.Server)
         {
             NPC owner = GetOwner(npc);
-            boss = owner.GetGlobalNPC<TeamBossNPC>();
+            var boss = owner.GetGlobalNPC<TeamBossNPC>();
 
-            if (TryGetConfiguredTeamBoss(npc, out _, out _, out _) &&
-                boss._lastAppliedStrikeTeam != Team.None &&
-                IsTeamActive(boss._lastAppliedStrikeTeam))
-            {
-                var packet = Mod.GetPacket();
-                packet.Write((byte)AdventurePacketIdentifier.NpcStrikeTeam);
-                packet.Write((short)npc.whoAmI);
-                packet.Write((byte)boss._lastAppliedStrikeTeam);
-                packet.Send(ignoreClient: ignoreClient);
-            }
-
-            boss._lastAppliedStrikeTeam = Team.None;
+            // FIXME: Proper packet format/versioning.
+            var packet = Mod.GetPacket();
+            packet.Write((byte)AdventurePacketIdentifier.NpcStrikeTeam);
+            packet.Write((short)npc.whoAmI);
+            packet.Write((byte)boss._lastStrikeTeam);
+            packet.Send(ignoreClient: ignoreClient);
         }
 
         orig(npc, ref hit, ignoreClient);
@@ -399,76 +386,6 @@ public sealed class TeamBossNPC : GlobalNPC
         return npc;
     }
 
-    private static bool TryGetConfiguredTeamBoss(
-        NPC npc,
-        out NPC owner,
-        out TeamBossNPC boss,
-        out ServerConfig.BossBalanceEntry balanceEntry)
-    {
-        owner = GetOwner(npc);
-        boss = owner.GetGlobalNPC<TeamBossNPC>();
-        balanceEntry = null;
-
-        return IsConfiguredTeamBoss(owner, out balanceEntry);
-    }
-
-    private static bool IsConfiguredTeamBoss(NPC owner, out ServerConfig.BossBalanceEntry balanceEntry)
-    {
-        balanceEntry = null;
-
-        if (owner?.active != true)
-            return false;
-
-        if (!NPCID.Search.TryGetName(owner.type, out string ownerName))
-            return false;
-
-        var definition = new NPCDefinition(ownerName);
-        return ModContent.GetInstance<ServerConfig>().BossBalance.TryGetValue(definition, out balanceEntry);
-    }
-
-    private static void SetPendingStrikeTeam(NPC npc, NPC owner, Team team)
-    {
-        if (team == Team.None)
-            return;
-
-        var ownerBoss = owner.GetGlobalNPC<TeamBossNPC>();
-        ownerBoss._pendingStrikeTeam = team;
-        ownerBoss._hasBeenHurtByTeam.Add(team);
-
-        if (npc.whoAmI == owner.whoAmI)
-            return;
-
-        var segmentBoss = npc.GetGlobalNPC<TeamBossNPC>();
-        segmentBoss._pendingStrikeTeam = team;
-        segmentBoss._hasBeenHurtByTeam.Add(team);
-    }
-
-    private static Team ConsumePendingStrikeTeam(NPC npc, NPC owner)
-    {
-        var ownerBoss = owner.GetGlobalNPC<TeamBossNPC>();
-        Team team = ownerBoss._pendingStrikeTeam;
-        ownerBoss._pendingStrikeTeam = Team.None;
-
-        if (npc.whoAmI == owner.whoAmI)
-            return team;
-
-        var segmentBoss = npc.GetGlobalNPC<TeamBossNPC>();
-
-        if (team == Team.None)
-            team = segmentBoss._pendingStrikeTeam;
-
-        segmentBoss._pendingStrikeTeam = Team.None;
-        return team;
-    }
-
-    private static void ClearPendingStrikeTeam(NPC npc, NPC owner)
-    {
-        owner.GetGlobalNPC<TeamBossNPC>()._pendingStrikeTeam = Team.None;
-
-        if (npc.whoAmI != owner.whoAmI)
-            npc.GetGlobalNPC<TeamBossNPC>()._pendingStrikeTeam = Team.None;
-    }
-
     private static bool IsTeamActive(Team team)
     {
         if (team == Team.None)
@@ -490,14 +407,18 @@ public sealed class TeamBossNPC : GlobalNPC
 
     public void MarkNextStrikeForTeam(NPC npc, Team team)
     {
-        if (team == Team.None)
-            return;
-
-        if (!TryGetConfiguredTeamBoss(npc, out NPC owner, out _, out _))
-            return;
-
         // Called from client packet handling to tag the next local strike color/team.
-        SetPendingStrikeTeam(npc, owner, team);
+        _lastStrikeTeam = team;
+        _hasBeenHurtByTeam.Add(team);
+
+        NPC owner = GetOwner(npc);
+
+        if (owner.whoAmI != npc.whoAmI)
+        {
+            var boss = owner.GetGlobalNPC<TeamBossNPC>();
+            boss._lastStrikeTeam = team;
+            boss._hasBeenHurtByTeam.Add(team);
+        }
     }
 
     

@@ -1,7 +1,6 @@
-using DragonLens.Core.Loaders.UILoading;
+﻿using DragonLens.Core.Loaders.UILoading;
 using DragonLens.Core.Systems;
 using Microsoft.Xna.Framework;
-using MonoMod.RuntimeDetour;
 using System.Reflection;
 using Terraria;
 using Terraria.ID;
@@ -17,22 +16,14 @@ public sealed class DLUnpausedUICompat : ModSystem
     private delegate void orig_UpdateUI(UILoader self, GameTime gameTime);
 
     private static FieldInfo drawDelay;
-    private static Hook updateUIHook;
 
     public override void PostSetupContent()
     {
         var mi = typeof(UILoader).GetMethod(nameof(UILoader.UpdateUI), BindingFlags.Instance | BindingFlags.Public);
         if (mi != null)
         {
-            updateUIHook = new Hook(mi, OnUpdateUI);
+            MonoModHooks.Add(mi, OnUpdateUI);
         }
-    }
-
-    public override void Unload()
-    {
-        updateUIHook?.Dispose();
-        updateUIHook = null;
-        drawDelay = null;
     }
 
     private static void OnUpdateUI(orig_UpdateUI orig, UILoader self, GameTime gameTime)

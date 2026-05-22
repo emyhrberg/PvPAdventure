@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using DragonLens.Core.Systems.ThemeSystem;
+﻿using DragonLens.Core.Systems.ThemeSystem;
 using DragonLens.Core.Systems.ToolbarSystem;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Core.Utilities;

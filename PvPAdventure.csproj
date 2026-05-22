@@ -4,7 +4,6 @@
 	<PropertyGroup>
 		<AssemblyName>PvPAdventure</AssemblyName>
 		<LangVersion>latest</LangVersion>
-		<NoWarn>$(NoWarn);CS0436</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -13,11 +12,6 @@
 		<Reference Include="DragonLens">
 			<HintPath>lib\DragonLens.dll</HintPath>
 		</Reference>
-
-		<!-- Add DragonLens for match history, achievements and more -->
-		<Reference Include="PvPHub">
-			<HintPath>lib\PvPHub.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 	
 	<!-- Makes use of Krafs Publicizer when compiling tModLoader.dll, making all access modifiers public -->
@@ -25,6 +19,8 @@
 		<PackageReference Include="Krafs.Publicizer" PrivateAssets="true" Version="2.2.1" />
 		<Publicize Include="tModLoader" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
 		<Publicize Include="DragonLens" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
-		<Publicize Include="PvPHub" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Core\Debug\" />
 	</ItemGroup>
 </Project>

@@ -14,12 +14,6 @@ public class NetworkInspector : ModSystem
             IL_Main.DedServ_PostModLoad += EditMainDedServ_PostModLoad;
     }
 
-    public override void Unload()
-    {
-        if (Main.dedServ)
-            IL_Main.DedServ_PostModLoad -= EditMainDedServ_PostModLoad;
-    }
-
     private void EditMainDedServ_PostModLoad(ILContext il)
     {
         var cursor = new ILCursor(il);
