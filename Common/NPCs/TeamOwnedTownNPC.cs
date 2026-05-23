@@ -16,7 +16,7 @@ namespace PvPAdventure.Common.NPCs;
 public sealed class TeamOwnedTownNPC : GlobalNPC
 {
     private const string OwnerTeamKey = "OwnerTeam";
-    private const string DeniedInteractionText = "Your team is not allowed to interact with this NPC!";
+    //private const string DeniedInteractionText = "Your team is not allowed to interact with this NPC!";
 
     public override bool InstancePerEntity => true;
 
@@ -101,11 +101,11 @@ public sealed class TeamOwnedTownNPC : GlobalNPC
         return player == null || !player.active || (Team)player.team != OwnerTeam;
     }
 
-    private static void ShowDeniedInteractionText()
-    {
-        if (Main.netMode != NetmodeID.Server)
-            Main.NewText(DeniedInteractionText, Color.Red);
-    }
+    //private static void ShowDeniedInteractionText()
+    //{
+    //    if (Main.netMode != NetmodeID.Server)
+    //        Main.NewText(DeniedInteractionText, Color.Red);
+    //}
 
     private static Team NormalizeTeam(Team team)
     {
@@ -122,7 +122,7 @@ public sealed class TeamOwnedTownNPC : GlobalNPC
 
         var config = ModContent.GetInstance<ClientConfig>();
 
-        if (!config.PlayerOutlines)
+        if (!config.Outlines.DrawOutlines || !config.Outlines.TownNPCOutlines)
             return true;
 
         Rectangle screenBounds = new(
