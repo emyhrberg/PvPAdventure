@@ -142,7 +142,7 @@ internal class CombatPlayer : ModPlayer
     {
         // FIXME: This does not truly belong here.
         // This sets PvP enabled for the player every tick.
-        Player.hostile = true;
+        //Player.hostile = true;
     }
     public override void PreUpdate()
     {

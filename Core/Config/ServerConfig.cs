@@ -260,7 +260,7 @@ public class ServerConfig : ModConfig
         public int PortalCreationOffset = 30;
 
         [RequiresField(nameof(IsTravelSystemEnabled))]
-        [Range(0, 60)]
+        [Range(0, 120)]
         [DefaultValue(5)]
         public int TeleportCooldownSeconds = 5;
     }

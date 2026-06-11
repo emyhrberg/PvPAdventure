@@ -1,4 +1,5 @@
-﻿using PvPAdventure.Common.Statistics;
+﻿using PvPAdventure.Common.Game.StatTrackers;
+using PvPAdventure.Common.Statistics;
 using PvPHub.Common.MainMenu.API;
 using PvPHub.Common.MainMenu.API.MatchHistory;
 using System;
@@ -182,6 +183,25 @@ internal static class MatchReporter
         throw new MissingMethodException(typeof(MatchApi.MatchPayload).FullName, ".ctor");
     }
 
+    private static MatchApi.MatchPlayerPayload BuildPlayerPayload(
+        Player player, uint team, uint reward, StatisticsPlayer statsPlayer)
+    {
+        MatchStatsPlayer matchStats = player.GetModPlayer<MatchStatsPlayer>();
+
+        foreach (ConstructorInfo ctor in typeof(MatchApi.MatchPlayerPayload).GetConstructors())
+        {
+            if (ctor.GetParameters().Length == 7)
+            {
+                return (MatchApi.MatchPlayerPayload)ctor.Invoke([
+                    player.name, team, reward, statsPlayer.Kills, statsPlayer.Deaths,
+                    matchStats.BuildStats(), matchStats.BuildItemStats()
+                ]);
+            }
+        }
+
+        return new MatchApi.MatchPlayerPayload(player.name, team, reward, statsPlayer.Kills, statsPlayer.Deaths);
+    }
+
     private static ConstructorInfo GetMatchPayloadConstructor(int parameterCount)
     {
         foreach (ConstructorInfo constructor in typeof(MatchApi.MatchPayload).GetConstructors())
@@ -221,12 +241,7 @@ internal static class MatchReporter
             MatchRewardContext rewardContext = MatchRewardCalculator.CreateContext(player, pointsManager);
             uint reward = MatchRewardCalculator.Calculate(rewardContext);
 
-            result[steamId] = new MatchApi.MatchPlayerPayload(
-                Name: player.name,
-                Team: (uint)rewardContext.Team,
-                Reward: reward,
-                Kills: statsPlayer.Kills,
-                Deaths: statsPlayer.Deaths);
+            result[steamId] = BuildPlayerPayload(player, (uint)rewardContext.Team, reward, statsPlayer);
 
             Log.Info($"Reward for {player.name}: Team={rewardContext.Team}, TeamPoints={rewardContext.TeamPoints}, Kills={rewardContext.Kills}, Deaths={rewardContext.Deaths}, Reward={reward}");
         }

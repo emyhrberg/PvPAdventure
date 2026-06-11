@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using PvPAdventure.Common.Combat.TeamBoss;
 using PvPAdventure.Common.Game;
 using PvPAdventure.Common.Loot.DropRates;
 using PvPAdventure.Common.Statistics;
@@ -26,7 +25,7 @@ public class NPCRules : GlobalNPC
         // Prevent Empress of Light from targeting players during daytime, so she will despawn.
         On_NPC.TargetClosest += OnNPCTargetClosest;
         // Prevent Empress of Light from being enraged, so she won't instantly kill players.
-        On_NPC.ShouldEmpressBeEnraged += OnNPCShouldEmpressBeEnraged;
+        //On_NPC.ShouldEmpressBeEnraged += OnNPCShouldEmpressBeEnraged;
         // Clients and servers sync the Shimmer buff upon all collisions constantly for NPCs.
         // Mark it as quiet so just the server does this.
         IL_NPC.Collision_WaterCollision += EditNPCCollision_WaterCollision;
@@ -40,20 +39,20 @@ public class NPCRules : GlobalNPC
         // Make Guide Voodoo Doll spawn Wall of Flesh without the Guide NPC being alive.
         On_Item.CheckLavaDeath += OnItemCheckLavaDeath;
         // Prevent some global drop rules from being registered.
-        On_ItemDropDatabase.RegisterToGlobal += AdventureDropDatabase.OnItemDropDatabaseRegisterToGlobal;
+        //On_ItemDropDatabase.RegisterToGlobal += AdventureDropDatabase.OnItemDropDatabaseRegisterToGlobal;
     }
 
     public override void Unload()
     {
         On_NPC.TargetClosest -= OnNPCTargetClosest;
-        On_NPC.ShouldEmpressBeEnraged -= OnNPCShouldEmpressBeEnraged;
+        //On_NPC.ShouldEmpressBeEnraged -= OnNPCShouldEmpressBeEnraged;
         IL_NPC.Collision_WaterCollision -= EditNPCCollision_WaterCollision;
         On_NPC.Transform -= OnNPCTransform;
         On_NPC.ScaleStats -= OnNPCScaleStats;
         IL_NPC.CheckActive -= EditNPCCheckActive;
         IL_NPC.SpawnNPC -= EditNPCSpawnNPC;
         On_Item.CheckLavaDeath -= OnItemCheckLavaDeath;
-        On_ItemDropDatabase.RegisterToGlobal -= AdventureDropDatabase.OnItemDropDatabaseRegisterToGlobal;
+        //On_ItemDropDatabase.RegisterToGlobal -= AdventureDropDatabase.OnItemDropDatabaseRegisterToGlobal;
     }
 
     private void OnNPCScaleStats(On_NPC.orig_ScaleStats orig, NPC self, int? activeplayerscount,
@@ -164,13 +163,13 @@ public class NPCRules : GlobalNPC
         orig(self, facetarget);
     }
 
-    private bool OnNPCShouldEmpressBeEnraged(On_NPC.orig_ShouldEmpressBeEnraged orig)
-    {
-        if (Main.remixWorld)
-            return orig();
+    //private bool OnNPCShouldEmpressBeEnraged(On_NPC.orig_ShouldEmpressBeEnraged orig)
+    //{
+    //    if (Main.remixWorld)
+    //        return orig();
 
-        return false;
-    }
+    //    return false;
+    //}
 
     private void EditNPCCollision_WaterCollision(ILContext il)
     {
@@ -355,7 +354,7 @@ public class NPCRules : GlobalNPC
             }
         }
 
-        AdventureDropDatabase.ModifyNPCLoot(npc, npcLoot);
+        //AdventureDropDatabase.ModifyNPCLoot(npc, npcLoot);
     }
 
     public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)

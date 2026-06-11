@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PvPAdventure.Common.AdminTools.Tools.PointsSetter;
 using PvPAdventure.Common.Bounties;
-using PvPAdventure.Common.Combat.TeamBoss;
 using PvPAdventure.Common.NPCs;
 using PvPAdventure.Core.Config;
 using System;

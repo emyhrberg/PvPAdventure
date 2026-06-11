@@ -1,5 +1,4 @@
-﻿using PvPAdventure.Common.Combat.TeamBoss;
-using PvPAdventure.Common.NPCs;
+﻿using PvPAdventure.Common.NPCs;
 using PvPAdventure.Common.Statistics;
 using PvPAdventure.Core.Config;
 using System.Linq;

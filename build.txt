@@ -1,4 +1,4 @@
-displayName = PvP Adventure
+displayName = Something Else
 author = resin <hey@amberres.in>
 version = 0.9.1
 homepage = https://tpvpa.terraria.sh

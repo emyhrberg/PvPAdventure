@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Input;
+using PvPAdventure.Common.Game;
 using PvPAdventure.Common.Game.GameReporters;
+using PvPAdventure.Common.Game.StatTrackers;
 using PvPAdventure.Common.Teams;
 using PvPAdventure.Core.Config;
 using PvPAdventure.Core.Net;
@@ -156,6 +158,14 @@ internal class StatisticsPlayer : ModPlayer
 
         RecentDamageFromPlayer = new((byte)damagerPlayer.whoAmI,
             ModContent.GetInstance<ServerConfig>().Immunity.RecentDamagePreservationFrames);
+
+        if (ModContent.GetInstance<GameManager>().CurrentPhase == GameManager.Phase.Playing)
+        {
+            uint dmg = (uint)info.Damage;
+            int weaponId = info.DamageSource.SourceItem?.type ?? 0;
+            damagerPlayer.GetModPlayer<MatchStatsPlayer>().AddDamageDealt(weaponId, dmg);
+            Player.GetModPlayer<MatchStatsPlayer>().AddDamageTaken(dmg);
+        }
     }
     public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
     {
@@ -221,6 +231,14 @@ internal class StatisticsPlayer : ModPlayer
             }
         }
     }
+    public void ResetMatchStats()
+    {
+        Kills = 0;
+        Deaths = 0;
+        if (Main.netMode != NetmodeID.MultiplayerClient)
+            SyncStatistics();
+    }
+
     private void SyncStatistics(int to = -1, int ignore = -1)
     {
         var packet = Mod.GetPacket();

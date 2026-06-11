@@ -1,5 +1,4 @@
 using MonoMod.Cil;
-using PvPAdventure.Common.Combat.TeamBoss;
 using PvPAdventure.Core.Config;
 using System;
 using System.Collections.Generic;
@@ -64,7 +63,7 @@ public class CombatManager : ModSystem
         // Remove player i-frames to allow ours to function.
         On_Player.Hurt_HurtInfo_bool += OnPlayerHurt;
         // Remove random damage variation.
-        On_Main.DamageVar_float_int_float += OnMainDamageVar;
+        //On_Main.DamageVar_float_int_float += OnMainDamageVar;
         // Stub this method, as our previous Player.Hurt hook does the job of this (part of our ModPlayer.ModifyHurt PvP
         // fixes).
         On_NetMessage.SendPlayerHurt_int_PlayerDeathReason_int_int_bool_bool_int_int_int += SuppressSendPlayerHurt;
@@ -91,7 +90,7 @@ public class CombatManager : ModSystem
     public override void Unload()
     {
         On_Player.Hurt_HurtInfo_bool -= OnPlayerHurt;
-        On_Main.DamageVar_float_int_float -= OnMainDamageVar;
+        //On_Main.DamageVar_float_int_float -= OnMainDamageVar;
         On_NetMessage.SendPlayerHurt_int_PlayerDeathReason_int_int_bool_bool_int_int_int -= SuppressSendPlayerHurt;
         IL_Player.Hurt_PlayerDeathReason_int_int_refHurtInfo_bool_bool_int_bool_float_float_float -= EditPlayerHurt2;
         IL_Projectile.Damage -= EditProjectileDamage;
@@ -116,25 +115,25 @@ public class CombatManager : ModSystem
     {
     }
 
-    public override bool HijackGetData(ref byte messageType, ref BinaryReader reader, int playerNumber)
-    {
-        if (Main.dedServ && messageType == MessageID.DamageNPC)
-        {
-            var previousPosition = reader.BaseStream.Position;
+    //public override bool HijackGetData(ref byte messageType, ref BinaryReader reader, int playerNumber)
+    //{
+    //    if (Main.dedServ && messageType == MessageID.DamageNPC)
+    //    {
+    //        var previousPosition = reader.BaseStream.Position;
 
-            try
-            {
-                var npc = Main.npc[reader.ReadInt16()];
-                npc.GetGlobalNPC<TeamBossNPC>().MarkNextStrikeForTeam(npc, (Team)Main.player[playerNumber].team);
-            }
-            finally
-            {
-                reader.BaseStream.Position = previousPosition;
-            }
-        }
+    //        try
+    //        {
+    //            var npc = Main.npc[reader.ReadInt16()];
+    //            npc.GetGlobalNPC<TeamBossNPC>().MarkNextStrikeForTeam(npc, (Team)Main.player[playerNumber].team);
+    //        }
+    //        finally
+    //        {
+    //            reader.BaseStream.Position = previousPosition;
+    //        }
+    //    }
 
-        return false;
-    }
+    //    return false;
+    //}
 
     private void OnPlayerHurt(On_Player.orig_Hurt_HurtInfo_bool orig, Player self, Player.HurtInfo info, bool quiet)
     {

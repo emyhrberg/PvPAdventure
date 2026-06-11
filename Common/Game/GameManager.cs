@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using PvPAdventure.Common.Game.GameReporters;
+using PvPAdventure.Common.Game.StatTrackers;
 using PvPAdventure.Common.Game.MatchReplays;
 using PvPAdventure.Common.Spawnbox;
 using PvPAdventure.Common.Statistics;
@@ -452,6 +453,12 @@ public class GameManager : ModSystem
                 }
             case Phase.Playing:
                 {
+                    foreach (Player player in Main.ActivePlayers)
+                    {
+                        player.GetModPlayer<Statistics.StatisticsPlayer>().ResetMatchStats();
+                        player.GetModPlayer<MatchStatsPlayer>().Reset();
+                    }
+
                     // NOTE: We currently have one region, which is the spawn region. We'll use this assumption for now.
                     var spawnRegion = ModContent.GetInstance<RegionManager>().Regions[0];
                     spawnRegion.CanRandomTeleport = true;

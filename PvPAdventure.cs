@@ -44,13 +44,13 @@ public class PvPAdventure : Mod
                 Common.Travel.Beds.TeamBedNetHandler.HandlePacket(reader, whoAmI);
                 break;
 
-            case AdventurePacketIdentifier.NpcStrikeTeam:
-                Common.Combat.TeamBoss.TeamBossNetHandler.HandlePacket(reader, whoAmI);
-                break;
+            //case AdventurePacketIdentifier.NpcStrikeTeam:
+            //    Common.Combat.TeamBoss.TeamBossNetHandler.HandlePacket(reader, whoAmI);
+            //    break;
 
-            case AdventurePacketIdentifier.Dash:
-                Common.Movement.Dash.DashInputSystem.HandlePacket(reader, whoAmI);
-                break;
+            //case AdventurePacketIdentifier.Dash:
+                //Common.Movement.Dash.DashInputSystem.HandlePacket(reader, whoAmI);
+                //break;
 
             case AdventurePacketIdentifier.GameTimer:
                 Common.Game.GameTimerNetHandler.HandlePacket(reader, whoAmI);
@@ -64,12 +64,16 @@ public class PvPAdventure : Mod
                 Common.Travel.Portals.PortalNetHandler.HandlePacket(reader, whoAmI);
                 break;
 
-            case AdventurePacketIdentifier.BeetleArmor:
-                Common.Combat.PvP.PvPBeetleArmorPlayer.ReceivePacket(reader, whoAmI);
-                break;
+            //case AdventurePacketIdentifier.BeetleArmor:
+            //    Common.Combat.PvP.PvPBeetleArmorPlayer.ReceivePacket(reader, whoAmI);
+            //    break;
 
             case AdventurePacketIdentifier.TeamCombatText:
                 ModContent.GetInstance<Common.Visualization.TeamCombatText>().HandlePacket(reader, whoAmI);
+                break;
+
+            case AdventurePacketIdentifier.MatchStatsDelta:
+                Common.Game.StatTrackers.MatchStatsPlayer.HandleDeltaPacket(reader, whoAmI);
                 break;
 
             default:
